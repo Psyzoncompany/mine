@@ -295,6 +295,7 @@
         import { Porco } from './mobs/Porco.js';
         import { Cavaleiro } from './mobs/Cavaleiro.js';
         import { MonstroVazio } from './mobs/MonstroVazio.js';
+        import { CavaleiroTrevas } from './mobs/CavaleiroTrevas.js';
         import { criarPicaretaElite } from './items/PicaretaElite.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
@@ -531,9 +532,10 @@
             } else if (slot.kind === "tool" && slot.unlocked) {
                 if (slot.toolId === "picareta") {
                     itemSegurado = criarPicaretaElite();
-                    // 🔄 TWEAK: Picareta na vertical estilo Minecraft
+                    // 🔄 TWEAK: Picareta na vertical estilo Minecraft, girada em 90 graus
                     // O braço invisível central do jogador segura a base
                     itemSegurado.rotation.x = -Math.PI / 4; // Bico ligeiramente pra frente
+                    itemSegurado.rotation.y = Math.PI / 2;  // Rotação de 90 graus no eixo Y (direita/esquerda)
                     itemSegurado.position.set(0, 0.1, -0.2);
                 } else {
                     // Machado genérico
@@ -588,10 +590,17 @@
             const tipos = ['porco', 'vaca', 'ovelha'];
             const sumChunks = Math.abs(cx) + Math.abs(cz);
 
+            // Cavaleiro das Trevas a cada 15 chunks
+            const isDarkKnight = sumChunks > 0 && sumChunks % 15 === 0;
             // Cavaleiro a cada 20 chunks
             const isKnight = sumChunks % 20 === 0 && Math.random() < 0.5;
             // Mob 1 (Monstro Vazio) a cada 25 chunks - Spawnamos 2
             const isMob1 = sumChunks > 0 && sumChunks % 25 === 0;
+
+            if (isDarkKnight) {
+                animais.push(new CavaleiroTrevas(cena, x, y, z, `${cx},${cz}`));
+                return;
+            }
 
             if (isMob1) {
                 animais.push(new MonstroVazio(cena, x, y, z, `${cx},${cz}`));
