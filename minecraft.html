@@ -294,6 +294,7 @@
         import { Porco } from './mobs/Porco.js';
         import { Cavaleiro } from './mobs/Cavaleiro.js';
         import { MonstroVazio } from './mobs/MonstroVazio.js';
+        import { criarPicaretaElite } from './items/PicaretaElite.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -500,44 +501,10 @@
         const matMao = new THREE.MeshLambertMaterial({ color: 0xffccaa });
         const braco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.15), matMao);
         braco.position.set(0, -0.2, 0);
+        braco.rotation.x = -Math.PI / 12; // Leve inclinação para frente
         grupoMao.add(braco);
 
         let itemSegurado;
-        function criarPicaretaElite() {
-            const grupo = new THREE.Group();
-            const matIron = new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 1.0, roughness: 0.2 });
-            const matDarkIron = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.9, roughness: 0.4 });
-            const matGlow = new THREE.MeshStandardMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 2 });
-            const s = 0.25;
-
-            const handle = new THREE.Mesh(new THREE.BoxGeometry(0.1 * s, 3 * s, 0.1 * s), matDarkIron);
-            grupo.add(handle);
-
-            const head = new THREE.Group();
-            head.position.y = 1.3 * s;
-            const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(0.3 * s, 0.4 * s, 0.3 * s), matIron);
-            head.add(centerBlock);
-
-            const bladeL = new THREE.Group();
-            const part1L = new THREE.Mesh(new THREE.BoxGeometry(1.2 * s, 0.3 * s, 0.2 * s), matIron);
-            part1L.position.x = 0.6 * s; part1L.rotation.z = 0.2;
-            const tipL = new THREE.Mesh(new THREE.BoxGeometry(0.4 * s, 0.2 * s, 0.2 * s), matIron);
-            tipL.position.set(1.4 * s, -0.2 * s, 0); tipL.rotation.z = 0.5;
-            bladeL.add(part1L, tipL);
-            head.add(bladeL);
-
-            const bladeR = bladeL.clone(); bladeR.scale.x = -1;
-            head.add(bladeR);
-
-            const crystal = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.2 * s, 0.3 * s), matGlow);
-            head.add(crystal);
-            grupo.add(head);
-            // 🔄 Picareta na vertical estilo Minecraft
-            grupo.rotation.x = -Math.PI / 2;
-            grupo.rotation.y = Math.PI / 2;
-            grupo.position.set(0, 0.3, -0.2);
-            return grupo;
-        }
 
         function atualizarMao() {
             if (itemSegurado) grupoMao.remove(itemSegurado);
@@ -551,6 +518,10 @@
             } else if (slot.kind === "tool" && slot.unlocked) {
                 if (slot.toolId === "picareta") {
                     itemSegurado = criarPicaretaElite();
+                    // 🔄 TWEAK: Picareta na vertical estilo Minecraft
+                    // O braço invisível central do jogador segura a base
+                    itemSegurado.rotation.x = -Math.PI / 4; // Bico ligeiramente pra frente
+                    itemSegurado.position.set(0, 0.1, -0.2);
                 } else {
                     // Machado genérico
                     itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.3), new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
@@ -881,9 +852,9 @@
                         item.mesh.position.y = blockY + 1.125; item.vy = 0;
                     }
 
-                    // Coleta universal (todos os tipos 1..5)
+                    // Coleta universal com ímã de 2 blocos
                     const distToPlayer = camera.position.distanceTo(item.mesh.position);
-                    if (distToPlayer < 1.5) {
+                    if (distToPlayer < 2.0) {
                         if (addItem(item.tipo, 1)) {
                             soundManager.playSound('collect');
                             cena.remove(item.mesh); item.mesh.geometry.dispose();
