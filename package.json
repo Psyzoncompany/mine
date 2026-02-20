@@ -1,0 +1,12 @@
+{
+    "name": "meu-craft-infinito",
+    "version": "1.0.0",
+    "description": "Minecraft Clone em Three.js",
+    "main": "minecraft.html",
+    "scripts": {
+        "start": "serve ."
+    },
+    "dependencies": {
+        "serve": "^14.2.0"
+    }
+}
