@@ -15,13 +15,18 @@
 
         #vida-player {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #ff4444;
-            font-weight: bold;
-            text-shadow: 2px 2px 0 #000;
-            font-size: 24px;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 2px;
             z-index: 100;
+        }
+
+        .heart {
+            width: 24px;
+            height: 24px;
+            background-size: cover;
+            display: inline-block;
         }
 
         #damage-flash {
@@ -82,8 +87,11 @@
         .slot {
             width: 50px;
             height: 50px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 3px solid #666;
+            background-color: #8b8b8b;
+            border-top: 3px solid #d4d4d4;
+            border-left: 3px solid #d4d4d4;
+            border-bottom: 3px solid #373737;
+            border-right: 3px solid #373737;
             color: white;
             display: flex;
             align-items: center;
@@ -92,6 +100,7 @@
             position: relative;
             background-size: cover;
             cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
         }
 
         .slot .qty {
@@ -110,9 +119,9 @@
         }
 
         .slot.active {
-            border-color: #FFF;
-            background-color: rgba(255, 255, 255, 0.2);
+            border: 4px solid white;
             transform: scale(1.1);
+            z-index: 2;
         }
 
         #menu,
@@ -244,8 +253,8 @@
 <body>
 
     <div id="loading">🌍 Carregando mundo...</div>
-    <div id="recursos">🪵 Madeira: <span id="qtd-madeira">0</span></div>
-    <div id="vida-player">❤️ Life: <span id="player-hp">20</span></div>
+    <div id="recursos" style="display:none;"></div> <!-- Ocultando pq agora temos inventário real -->
+    <div id="vida-player"></div>
     <div id="damage-flash"></div>
     <div id="crosshair"></div>
 
@@ -300,8 +309,9 @@
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
-        cena.background = new THREE.Color(0x87CEEB);
-        cena.fog = new THREE.Fog(0x87CEEB, 20, 60);
+        const corCeu = 0x78A7FF; // Azul mais parecido com o do Minecraft
+        cena.background = new THREE.Color(corCeu);
+        cena.fog = new THREE.Fog(corCeu, 20, 60);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderizador = new THREE.WebGLRenderer({ antialias: false });
@@ -391,7 +401,26 @@
                 grid.appendChild(div);
             });
 
-            document.getElementById('player-hp').innerText = playerHP;
+            // Atualiza Vida (10 Corações)
+            const hpContainer = document.getElementById('vida-player');
+            hpContainer.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const h = document.createElement('div');
+                h.className = 'heart';
+                // Lógica de meio coração e coração vazio
+                const hpRelativo = playerHP - (i * 2);
+                if (hpRelativo >= 2) {
+                    // Coração cheio
+                    h.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 Q6 0 8 1 Q10 3 9 5 Z%22 fill=%22red%22 stroke=%22black%22 stroke-width=%221%22/></svg>')";
+                } else if (hpRelativo === 1) {
+                    // Meio Coração
+                    h.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 Q6 0 8 1 Q10 3 9 5 Z%22 fill=%22none%22 stroke=%22black%22 stroke-width=%221%22/><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 V9 Z%22 fill=%22red%22/></svg>')";
+                } else {
+                    // Vazio
+                    h.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 Q6 0 8 1 Q10 3 9 5 Z%22 fill=%22none%22 stroke=%22black%22 stroke-width=%221.5%22/></svg>')";
+                }
+                hpContainer.appendChild(h);
+            }
             document.getElementById('btn-craft-picareta').disabled = getItemCount(4) < 5 || hotbar[5].unlocked;
             document.getElementById('btn-craft-machado').disabled = getItemCount(4) < 5 || hotbar[6].unlocked;
 
@@ -436,9 +465,9 @@
         });
 
         // 💡 ILUMINAÇÃO
-        cena.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const luzSol = new THREE.DirectionalLight(0xffffff, 0.8);
-        luzSol.position.set(20, 40, 20); luzSol.castShadow = true;
+        cena.add(new THREE.AmbientLight(0xcce0ff, 0.4)); // Luz ambiente mais suave
+        const luzSol = new THREE.DirectionalLight(0xfff5b6, 1.0); // Sol mais quente
+        luzSol.position.set(20, 50, 20); luzSol.castShadow = true;
         luzSol.shadow.camera.left = -30; luzSol.shadow.camera.right = 30; luzSol.shadow.camera.top = 30; luzSol.shadow.camera.bottom = -30;
         luzSol.shadow.camera.near = 0.5; luzSol.shadow.camera.far = 100; luzSol.shadow.mapSize.width = 1024; luzSol.shadow.mapSize.height = 1024; luzSol.shadow.bias = -0.001;
         cena.add(luzSol); cena.add(luzSol.target);
@@ -556,9 +585,9 @@
         let animais = [];
         const geometriaBloco = new THREE.BoxGeometry(1, 1, 1);
 
-        // 🔲 CONTORNO DO BLOCO MIRADO
-        const geoContorno = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.005, 1.005, 1.005));
-        const matContorno = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+        // 🔲 CONTORNO DO BLOCO MIRADO (Fino e sutil)
+        const geoContorno = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002));
+        const matContorno = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1, transparent: true, opacity: 0.4 });
         const contornoBloco = new THREE.LineSegments(geoContorno, matContorno);
         contornoBloco.visible = false; cena.add(contornoBloco);
 
@@ -768,14 +797,21 @@
             }
         }
 
-        // ⛏️ INTERAÇÃO
+        // ⛏️ INTERAÇÃO & COMBATE
         const raycaster = new THREE.Raycaster(); const centroTela = new THREE.Vector2(0, 0);
         let quebrandoBloco = null;
         let tempoQuebrando = 0;
         const TEMPO_PARA_QUEBRAR = 1.3;
 
+        function balancarMao() {
+            animandoMao = true;
+            progressoMao = 0;
+        }
+
         document.addEventListener('mousedown', (e) => {
             if (!controles.isLocked) return;
+
+            balancarMao(); // Toda vez que clica, balança a mão
 
             if (e.button === 0) { // Tentativa de quebrar
                 raycaster.setFromCamera(centroTela, camera);
@@ -865,24 +901,27 @@
                 let moveZ = Number(teclas.w) - Number(teclas.s); let moveX = Number(teclas.a) - Number(teclas.d);
                 let movendo = moveX !== 0 || moveZ !== 0;
 
-                // ✋ ANIMAÇÃO DA MÃO (Bobbing - Andando & Quebrando)
+                // ✋ ANIMAÇÃO DA MÃO (Bobbing & Clicar)
                 if (animandoMao) {
-                    progressoMao += delta * 15;
+                    // Swing da batida de machado/picareta ("Hit animation")
+                    progressoMao += delta * 20;
                     if (progressoMao > Math.PI) {
-                        if (quebrandoBloco) progressoMao = 0; // Loop enquanto quebra
-                        else { animandoMao = false; grupoMao.rotation.x = 0; }
+                        animandoMao = false;
+                        grupoMao.rotation.x = 0;
+                    } else {
+                        // Swing natural (baixa e volta)
+                        grupoMao.rotation.x = -Math.sin(progressoMao) * 0.8;
                     }
-                    else { grupoMao.rotation.x = -Math.sin(progressoMao) * 0.6; }
                 }
 
                 if (movendo && noChao) {
-                    bobTimer += delta * 12; // Velocidade do balanço
+                    bobTimer += delta * 15; // Velocidade do balanço mais rápido
                     grupoMao.position.y = -0.4 + Math.abs(Math.sin(bobTimer)) * 0.05;
                     grupoMao.position.x = 0.6 + Math.sin(bobTimer / 2) * 0.05;
                 } else {
                     bobTimer = 0;
-                    grupoMao.position.y = THREE.MathUtils.lerp(grupoMao.position.y, -0.4, 0.1);
-                    grupoMao.position.x = THREE.MathUtils.lerp(grupoMao.position.x, 0.6, 0.1);
+                    grupoMao.position.y = THREE.MathUtils.lerp(grupoMao.position.y, -0.4, 0.2);
+                    grupoMao.position.x = THREE.MathUtils.lerp(grupoMao.position.x, 0.6, 0.2);
                 }
 
                 // 📦 FÍSICA DOS DROPS & COLETA
@@ -1000,8 +1039,8 @@
                     }
                 }
 
-                if (teclas.space && noChao) { velocidadeY = 0.15; noChao = false; soundManager.playSound('jump'); }
-                velocidadeY -= 0.5 * delta; camera.position.y += velocidadeY;
+                if (teclas.space && noChao) { velocidadeY = 0.22; noChao = false; soundManager.playSound('jump'); } // Pulo mais forte (Minecraft)
+                velocidadeY -= 0.6 * delta; camera.position.y += velocidadeY; // Gravidade mais forte
 
                 if (checarColisao(camera.position.x, camera.position.y, camera.position.z)) { camera.position.y = posAntiga.y; velocidadeY = 0; noChao = true; } else noChao = false;
                 if (camera.position.y < -30) { camera.position.set(camera.position.x, 20, camera.position.z); velocidadeY = 0; }
