@@ -82,36 +82,41 @@
         .slot {
             width: 50px;
             height: 50px;
-            border: 3px solid #555;
-            display: flex;
-            align-items: flex-end;
-            justify-content: flex-end;
+            background: rgba(0, 0, 0, 0.3);
+            border: 3px solid #666;
             color: white;
-            font-weight: bold;
-            font-size: 14px;
-            padding: 2px;
-            box-sizing: border-box;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
             background-size: cover;
-            background-position: center;
-            image-rendering: pixelated;
-            /* 🧊 Texturas ficam pixeladas na UI */
+            cursor: pointer;
+        }
+
+        .slot .qty {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px #000;
+            pointer-events: none;
+        }
+
+        .slot.empty {
+            opacity: 0.4;
         }
 
         .slot.active {
             border-color: #FFF;
+            background-color: rgba(255, 255, 255, 0.2);
             transform: scale(1.1);
         }
 
-        /* Ferramentas (Desbloqueáveis) */
-        #slot-6,
-        #slot-7 {
-            background-color: #444;
-            display: none;
-        }
-
         #menu,
-        #crafting-menu {
+        #inventory-menu {
             position: absolute;
             top: 0;
             left: 0;
@@ -126,15 +131,52 @@
             z-index: 10;
         }
 
-        #crafting-menu {
+        #inventory-menu {
             display: none;
-            background: rgba(139, 69, 19, 0.9);
-            border: 10px solid #5C4033;
-            width: 400px;
-            height: 300px;
+            background: rgba(60, 60, 60, 0.95);
+            border: 4px solid #1e1e1e;
+            width: 500px;
+            height: 450px;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .inv-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #555;
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .inv-item .qty {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .inv-item .icon {
+            font-size: 24px;
+            display: block;
+        }
+
+        .inv-item .name {
+            font-size: 10px;
+            color: #aaa;
+            text-transform: uppercase;
         }
 
         button {
@@ -207,36 +249,39 @@
     <div id="crosshair"></div>
 
     <div id="hotbar">
-        <div class="slot active" id="slot-1">1</div>
-        <div class="slot" id="slot-2">2</div>
-        <div class="slot" id="slot-3">3</div>
-        <div class="slot" id="slot-4">4</div>
-        <div class="slot" id="slot-5">5</div>
-        <div class="slot" id="slot-6"
-            style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 80 L80 20 M70 10 L90 30 M80 20 L20 80%22 stroke=%22brown%22 stroke-width=%228%22/><path d=%22M60 10 Q80 -10 100 10 Q110 30 90 40 L60 10%22 fill=%22silver%22 stroke=%22#555%22 stroke-width=%222%22/></svg>');">
-            6</div>
-        <div class="slot" id="slot-7"
-            style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 80 L80 20%22 stroke=%22brown%22 stroke-width=%228%22/><path d=%22M50 20 L80 50 L90 30 L60 10 Z%22 fill=%22silver%22 stroke=%22#555%22 stroke-width=%222%22/></svg>');">
-            7</div>
+        <div class="slot active" id="slot-0"><span class="qty"></span></div>
+        <div class="slot" id="slot-1"><span class="qty"></span></div>
+        <div class="slot" id="slot-2"><span class="qty"></span></div>
+        <div class="slot" id="slot-3"><span class="qty"></span></div>
+        <div class="slot" id="slot-4"><span class="qty"></span></div>
+        <div class="slot" id="slot-5"><span class="qty"></span></div>
+        <div class="slot" id="slot-6"><span class="qty"></span></div>
     </div>
 
     <div id="menu">
         <h1>🌍 Meu Craft Infinito</h1>
         <button id="btn-play">▶️ Jogar</button>
         <div class="instructions">
-            🏃‍♂️ <b>WASD</b>: Andar | <b>Espaço</b>: Pular<br>
+            🏃‍♂️ <b>WASD</b>: Andar | <b>Espaço</b>: Pular | <b>Mouse</b>: Olhar<br>
             ⛏️ <b>Clique Esq</b>: Quebrar | 🧱 <b>Clique Dir</b>: Colocar<br>
-            🎒 <b>1 a 7</b>: Selecionar Bloco/Ferramenta<br>
-            🛠️ <b>E</b>: Abrir Crafting
+            🎒 <b>1 a 7 / Scroll</b>: Hotbar | 🎒 <b>E</b>: Inventário / Crafting<br>
         </div>
     </div>
 
-    <div id="crafting-menu">
-        <h2>🛠️ Mesa de Crafting</h2>
-        <p>🪵 Madeira disponível: <span id="craft-madeira">0</span></p>
-        <button id="btn-craft-picareta">Criar Picareta (5 Madeira)</button>
-        <button id="btn-craft-machado">Criar Machado (5 Madeira)</button>
-        <button id="btn-fechar-craft">Fechar (E)</button>
+    <div id="inventory-menu">
+        <h2>🎒 Inventário & Crafting</h2>
+        <div class="inv-grid" id="inv-grid">
+            <!-- Items via JS -->
+        </div>
+        <hr style="width:100%; border:1px solid #444;">
+        <div style="margin-top: 15px; display:flex; gap: 20px; align-items:center;">
+            <div>
+                <p>🛠️ <b>Crafting:</b> Aproveite sua madeira!</p>
+                <button id="btn-craft-picareta">Criar Picareta (5 Madeira)</button>
+                <button id="btn-craft-machado">Criar Machado (5 Madeira)</button>
+            </div>
+            <button id="btn-fechar-inv" style="background:#555; box-shadow: 0 4px 0 #333;">Fechar (E)</button>
+        </div>
     </div>
 
     <script type="module">
@@ -264,24 +309,95 @@
 
         const controles = new PointerLockControls(camera, document.body);
         const menu = document.getElementById('menu');
-        const craftingMenu = document.getElementById('crafting-menu');
+        const inventoryMenu = document.getElementById('inventory-menu');
 
         const soundManager = new SoundManager();
-        let inventario = { madeira: 0, picareta: false, machado: false };
-        let blocoSelecionado = 1;
         let playerHP = 20;
 
-        function atualizarUI() {
-            document.getElementById('qtd-madeira').innerText = inventario.madeira;
-            document.getElementById('craft-madeira').innerText = inventario.madeira;
-            document.getElementById('btn-craft-picareta').disabled = inventario.madeira < 5 || inventario.picareta;
-            document.getElementById('btn-craft-machado').disabled = inventario.madeira < 5 || inventario.machado;
+        // 🎒 SISTEMA DE INVENTÁRIO
+        const STACK_MAX = 64;
+        const itemDefs = {
+            1: { id: 1, nome: "Grama", icon: "🟩", type: "block" },
+            2: { id: 2, nome: "Terra", icon: "🟫", type: "block" },
+            3: { id: 3, nome: "Pedra", icon: "⬜", type: "block" },
+            4: { id: 4, nome: "Madeira", icon: "🪵", type: "block" },
+            5: { id: 5, nome: "Folhas", icon: "🍃", type: "block" }
+        };
+
+        let inventory = new Map(); // key: itemId, value: amount
+
+        function addItem(itemId, amount = 1) {
+            let current = inventory.get(itemId) || 0;
+            if (current >= STACK_MAX) return false;
+            inventory.set(itemId, Math.min(STACK_MAX, current + amount));
+            renderUI();
+            return true;
+        }
+
+        function removeItem(itemId, amount = 1) {
+            let current = inventory.get(itemId) || 0;
+            if (current < amount) return false;
+            inventory.set(itemId, current - amount);
+            renderUI();
+            return true;
+        }
+
+        function getItemCount(itemId) { return inventory.get(itemId) || 0; }
+
+        // 🎒 HOTBAR
+        const HOTBAR_SIZE = 7;
+        let hotbar = [
+            { kind: "block", itemId: 1 },
+            { kind: "block", itemId: 2 },
+            { kind: "block", itemId: 3 },
+            { kind: "block", itemId: 4 },
+            { kind: "block", itemId: 5 },
+            { kind: "tool", toolId: "picareta", unlocked: false },
+            { kind: "tool", toolId: "machado", unlocked: false }
+        ];
+        let selectedHotbarIndex = 0;
+
+        function renderUI() {
+            // Atualiza Hotbar
+            hotbar.forEach((slot, i) => {
+                const el = document.getElementById(`slot-${i}`);
+                el.classList.toggle('active', i === selectedHotbarIndex);
+                const qtyEl = el.querySelector('.qty');
+
+                if (slot.kind === "block") {
+                    const count = getItemCount(slot.itemId);
+                    qtyEl.innerText = count > 0 ? count : "";
+                    el.classList.toggle('empty', count === 0);
+                } else {
+                    el.classList.toggle('empty', !slot.unlocked);
+                    qtyEl.innerText = "";
+                    // Visual das ferramentas facilitado
+                    if (slot.toolId === "picareta") el.style.background = slot.unlocked ? "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 80 L80 20 M70 10 L90 30 M80 20 L20 80%22 stroke=%22cyan%22 stroke-width=%228%22/><path d=%22M60 10 Q80 -10 100 10 Q110 30 90 40 L60 10%22 fill=%22silver%22/></svg>')" : "#333";
+                    if (slot.toolId === "machado") el.style.background = slot.unlocked ? "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 80 L80 20%22 stroke=%22brown%22 stroke-width=%228%22/><path d=%22M50 20 L80 50 L90 30 L60 10 Z%22 fill=%22silver%22/></svg>')" : "#333";
+                }
+            });
+
+            // Atualiza Menu Inventário
+            const grid = document.getElementById('inv-grid');
+            grid.innerHTML = "";
+            Object.values(itemDefs).forEach(item => {
+                const count = getItemCount(item.id);
+                const div = document.createElement('div');
+                div.className = "inv-item";
+                div.innerHTML = `<span class="icon">${item.icon}</span><span class="name">${item.nome}</span><span class="qty">${count}</span>`;
+                grid.appendChild(div);
+            });
+
             document.getElementById('player-hp').innerText = playerHP;
+            document.getElementById('btn-craft-picareta').disabled = getItemCount(4) < 5 || hotbar[5].unlocked;
+            document.getElementById('btn-craft-machado').disabled = getItemCount(4) < 5 || hotbar[6].unlocked;
+
+            atualizarMao();
         }
 
         window.addEventListener('playerDamage', (e) => {
             playerHP -= e.detail.amount;
-            atualizarUI();
+            renderUI();
             const flash = document.getElementById('damage-flash');
             if (flash) {
                 flash.style.background = 'rgba(255, 0, 0, 0.4)';
@@ -289,26 +405,31 @@
             }
             soundManager.playSound('hit');
             if (playerHP <= 0) {
-                alert("Game Over! Você foi derrotado pelo Cavaleiro.");
+                alert("Game Over! Você foi derrotado.");
                 location.reload();
             }
         });
-
-
 
         document.getElementById('btn-play').addEventListener('click', () => {
             menu.style.display = 'none';
             controles.lock();
             if (soundManager.ctx.state === 'suspended') soundManager.ctx.resume();
         });
-        document.getElementById('btn-fechar-craft').addEventListener('click', () => { craftingMenu.style.display = 'none'; controles.lock(); });
-        controles.addEventListener('unlock', () => { if (craftingMenu.style.display !== 'flex') menu.style.display = 'flex'; });
+
+        document.getElementById('btn-fechar-inv').addEventListener('click', () => {
+            inventoryMenu.style.display = 'none';
+            controles.lock();
+        });
+
+        controles.addEventListener('unlock', () => {
+            if (inventoryMenu.style.display !== 'flex') menu.style.display = 'flex';
+        });
 
         document.getElementById('btn-craft-picareta').addEventListener('click', () => {
-            if (inventario.madeira >= 5) { inventario.madeira -= 5; inventario.picareta = true; document.getElementById('slot-6').style.display = 'flex'; atualizarUI(); }
+            if (removeItem(4, 5)) { hotbar[5].unlocked = true; renderUI(); }
         });
         document.getElementById('btn-craft-machado').addEventListener('click', () => {
-            if (inventario.madeira >= 5) { inventario.madeira -= 5; inventario.machado = true; document.getElementById('slot-7').style.display = 'flex'; atualizarUI(); }
+            if (removeItem(4, 5)) { hotbar[6].unlocked = true; renderUI(); }
         });
 
         // 💡 ILUMINAÇÃO
@@ -334,7 +455,7 @@
                     ctx.fillStyle = cor; ctx.fillRect(x, y, 1, 1);
                 }
             }
-            if (uiSlot) document.getElementById(`slot-${uiSlot}`).style.backgroundImage = `url(${canvas.toDataURL()})`;
+            if (uiSlot !== undefined) document.getElementById(`slot-${uiSlot}`).style.backgroundImage = `url(${canvas.toDataURL()})`;
 
             const textura = new THREE.CanvasTexture(canvas);
             textura.magFilter = THREE.NearestFilter; textura.minFilter = THREE.NearestFilter; textura.colorSpace = THREE.SRGBColorSpace; return textura;
@@ -377,8 +498,8 @@
         camera.add(grupoMao); cena.add(camera);
 
         const matMao = new THREE.MeshLambertMaterial({ color: 0xffccaa });
-        const braco = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), matMao);
-        braco.position.set(0, -0.3, 0); braco.rotation.x = -Math.PI / 6;
+        const braco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.15), matMao);
+        braco.position.set(0, -0.2, 0);
         grupoMao.add(braco);
 
         let itemSegurado;
@@ -411,25 +532,36 @@
             const crystal = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.2 * s, 0.3 * s), matGlow);
             head.add(crystal);
             grupo.add(head);
-            grupo.rotation.z = Math.PI / 4;
+            // 🔄 Picareta na vertical estilo Minecraft
+            grupo.rotation.x = -Math.PI / 2;
+            grupo.rotation.y = Math.PI / 2;
+            grupo.position.set(0, 0.3, -0.2);
             return grupo;
         }
 
         function atualizarMao() {
             if (itemSegurado) grupoMao.remove(itemSegurado);
-            if (blocoSelecionado <= 5) {
-                itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), materiais[blocoSelecionado]);
-                itemSegurado.position.set(0, 0.2, -0.2);
-            } else if (blocoSelecionado === 6) { // Picareta Elite!
-                itemSegurado = criarPicaretaElite();
-                itemSegurado.position.set(0, 0.3, -0.2);
-            } else {
-                itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.4), new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
-                itemSegurado.position.set(0, 0.3, -0.2);
-            }
-            grupoMao.add(itemSegurado);
+            const slot = hotbar[selectedHotbarIndex];
+
+            if (slot.kind === "block") {
+                if (getItemCount(slot.itemId) > 0) {
+                    itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), materiais[slot.itemId]);
+                    itemSegurado.position.set(0, 0.1, -0.3);
+                } else itemSegurado = null;
+            } else if (slot.kind === "tool" && slot.unlocked) {
+                if (slot.toolId === "picareta") {
+                    itemSegurado = criarPicaretaElite();
+                } else {
+                    // Machado genérico
+                    itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.3), new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
+                    itemSegurado.rotation.x = -Math.PI / 4;
+                    itemSegurado.position.set(0, 0.3, -0.2);
+                }
+            } else itemSegurado = null;
+
+            if (itemSegurado) grupoMao.add(itemSegurado);
         }
-        atualizarMao();
+        renderUI();
 
         let animandoMao = false; let progressoMao = 0; let bobTimer = 0; // Para animar andando
 
@@ -573,25 +705,31 @@
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyW') teclas.w = true; if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'Space') teclas.space = true;
 
-            if (e.code === 'KeyE') {
-                if (controles.isLocked) { controles.unlock(); craftingMenu.style.display = 'flex'; atualizarUI(); }
-                else { craftingMenu.style.display = 'none'; controles.lock(); }
+            if (e.key >= '1' && e.key <= '7') {
+                selectedHotbarIndex = parseInt(e.key) - 1;
+                renderUI();
             }
-
-            if (['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
-                let numero = parseInt(e.key);
-                if (numero === 6 && !inventario.picareta) return;
-                if (numero === 7 && !inventario.machado) return;
-
-                blocoSelecionado = numero;
-                document.querySelectorAll('.slot').forEach(el => el.classList.remove('active'));
-                document.getElementById(`slot-${blocoSelecionado}`).classList.add('active');
-                atualizarMao();
+            if (e.key.toLowerCase() === 'e') {
+                if (inventoryMenu.style.display === 'flex') {
+                    inventoryMenu.style.display = 'none';
+                    controles.lock();
+                } else {
+                    inventoryMenu.style.display = 'flex';
+                    menu.style.display = 'none';
+                    controles.unlock();
+                }
             }
         });
 
         document.addEventListener('keyup', (e) => {
             if (e.code === 'KeyW') teclas.w = false; if (e.code === 'KeyS') teclas.s = false; if (e.code === 'KeyA') teclas.a = false; if (e.code === 'KeyD') teclas.d = false; if (e.code === 'Space') teclas.space = false;
+        });
+
+        document.addEventListener('wheel', (e) => {
+            if (!controles.isLocked) return;
+            if (e.deltaY > 0) selectedHotbarIndex = (selectedHotbarIndex + 1) % HOTBAR_SIZE;
+            else selectedHotbarIndex = (selectedHotbarIndex - 1 + HOTBAR_SIZE) % HOTBAR_SIZE;
+            renderUI();
         });
 
         function checarColisao(x, y, z) {
@@ -637,7 +775,7 @@
                     quebrandoBloco = { x: hitX, y: hitY, z: hitZ };
                     tempoQuebrando = 0;
                 } else {
-                    // Tenta bater em animal se no acertou bloco
+                    // Tenta bater em animal
                     const animalIntersects = raycaster.intersectObjects(animais.map(a => a.mesh), true);
                     if (animalIntersects.length > 0) {
                         const meshHit = animalIntersects[0].object;
@@ -650,7 +788,10 @@
                         animandoMao = true; progressoMao = 0;
                     }
                 }
-            } else if (e.button === 2 && blocoSelecionado <= 5) { // Colocar
+            } else if (e.button === 2) { // Colocar
+                const slot = hotbar[selectedHotbarIndex];
+                if (slot.kind !== "block" || getItemCount(slot.itemId) === 0) return;
+
                 raycaster.setFromCamera(centroTela, camera);
                 const objetos = Array.from(chunksVisuais.values()).flatMap(g => g.children);
                 const interseccoes = raycaster.intersectObjects(objetos);
@@ -659,16 +800,21 @@
                     const nx = Math.round(normal.x); const ny = Math.round(normal.y); const nz = Math.round(normal.z);
                     const hitX = Math.round(pt.x - nx * 0.5); const hitY = Math.round(pt.y - ny * 0.5); const hitZ = Math.round(pt.z - nz * 0.5);
                     const placeX = hitX + nx; const placeY = hitY + ny; const placeZ = hitZ + nz;
-                    const pX = camera.position.x; const pY = camera.position.y; const pZ = camera.position.z;
-                    const dist = Math.sqrt((pX - (placeX + 0.5)) ** 2 + (pZ - (placeZ + 0.5)) ** 2);
-                    const noJogador = dist < 0.6 && pY > placeY && pY - 2.0 < placeY;
 
-                    if (!noJogador) {
-                        mundo.set(`${placeX},${placeY},${placeZ}`, blocoSelecionado);
+                    // Bloqueia se colocar no jogador (dist < 1.0)
+                    const distToPlayer = camera.position.distanceTo(new THREE.Vector3(placeX + 0.5, placeY + 0.5, placeZ + 0.5));
+                    if (distToPlayer < 1.0) return;
+
+                    if (!mundo.has(`${placeX},${placeY},${placeZ}`)) {
+                        mundo.set(`${placeX},${placeY},${placeZ}`, slot.itemId);
                         soundManager.playSound('place');
+                        removeItem(slot.itemId, 1);
                         recriarChunkVisual(placeX, placeZ);
-                        if (placeX % TAMANHO_CHUNK === 0) recriarChunkVisual(placeX - 1, placeZ); if (placeX % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(placeX + 1, placeZ);
-                        if (placeZ % TAMANHO_CHUNK === 0) recriarChunkVisual(placeX, placeZ - 1); if (placeZ % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(placeX, placeZ + 1);
+                        // Vizinhos
+                        if (placeX % TAMANHO_CHUNK === 0) recriarChunkVisual(placeX - 1, placeZ);
+                        if (placeX % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(placeX + 1, placeZ);
+                        if (placeZ % TAMANHO_CHUNK === 0) recriarChunkVisual(placeX, placeZ - 1);
+                        if (placeZ % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(placeX, placeZ + 1);
                     }
                 }
             }
@@ -726,21 +872,23 @@
                 // 📦 FÍSICA DOS DROPS & COLETA
                 for (let i = itensDropados.length - 1; i >= 0; i--) {
                     let item = itensDropados[i];
-                    item.vy -= 1.0 * delta; // Gravidade do item
+                    item.vy -= 1.0 * delta;
                     item.mesh.position.y += item.vy;
-                    item.mesh.rotation.y += delta; // Fica rodando bonitinho
+                    item.mesh.rotation.y += delta;
 
                     const blockY = Math.floor(item.mesh.position.y - 0.125);
                     if (mundo.has(`${Math.floor(item.mesh.position.x)},${blockY},${Math.floor(item.mesh.position.z)}`)) {
-                        item.mesh.position.y = blockY + 1 + 0.125; item.vy = 0; // Bateu no chão
+                        item.mesh.position.y = blockY + 1.125; item.vy = 0;
                     }
 
-                    // Checa se o player tá perto para coletar (Raio de 1.5 blocos)
+                    // Coleta universal (todos os tipos 1..5)
                     const distToPlayer = camera.position.distanceTo(item.mesh.position);
                     if (distToPlayer < 1.5) {
-                        if (item.tipo === 4) { inventario.madeira++; atualizarUI(); soundManager.playSound('collect'); } // Coletou Madeira!
-                        cena.remove(item.mesh); item.mesh.geometry.dispose();
-                        itensDropados.splice(i, 1);
+                        if (addItem(item.tipo, 1)) {
+                            soundManager.playSound('collect');
+                            cena.remove(item.mesh); item.mesh.geometry.dispose();
+                            itensDropados.splice(i, 1);
+                        }
                     }
                 }
 
