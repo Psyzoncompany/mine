@@ -248,6 +248,7 @@
         import { Vaca } from './mobs/Vaca.js';
         import { Porco } from './mobs/Porco.js';
         import { Cavaleiro } from './mobs/Cavaleiro.js';
+        import { MonstroVazio } from './mobs/MonstroVazio.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -415,8 +416,18 @@
 
         function criarAnimal(x, y, z, cx, cz) {
             const tipos = ['porco', 'vaca', 'ovelha'];
-            // Cavaleiro aparece a cada 20 chunks mais ou menos
-            const isKnight = (Math.abs(cx) + Math.abs(cz)) % 20 === 0 && Math.random() < 0.5;
+            const sumChunks = Math.abs(cx) + Math.abs(cz);
+
+            // Cavaleiro a cada 20 chunks
+            const isKnight = sumChunks % 20 === 0 && Math.random() < 0.5;
+            // Mob 1 (Monstro Vazio) a cada 25 chunks - Spawnamos 2
+            const isMob1 = sumChunks > 0 && sumChunks % 25 === 0;
+
+            if (isMob1) {
+                animais.push(new MonstroVazio(cena, x, y, z, `${cx},${cz}`));
+                animais.push(new MonstroVazio(cena, x + 1.2, y, z + 1.2, `${cx},${cz}`));
+                return;
+            }
 
             let animal;
             if (isKnight) {
@@ -449,7 +460,7 @@
             if (Math.random() < 0.4) {
                 const ax = cx * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
                 const az = cz * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
-                for (let y = 25; y >= -15; y--) { if (mundo.has(`${ax},${y},${az}`)) { criarAnimal(ax, y + 1.5, az, cx, cz); break; } }
+                for (let y = 25; y >= -15; y--) { if (mundo.has(`${ax},${y},${az}`)) { criarAnimal(ax, y + 1.62, az, cx, cz); break; } }
             }
         }
 
@@ -530,8 +541,12 @@
         });
 
         function checarColisao(x, y, z) {
-            const w = 0.2;
-            const pos = [[x - w, y - 1.5, z - w], [x + w, y - 1.5, z - w], [x - w, y - 1.5, z + w], [x + w, y - 1.5, z + w], [x - w, y - 0.5, z - w], [x + w, y - 0.5, z - w], [x - w, y - 0.5, z + w], [x + w, y - 0.5, z + w]];
+            const w = 0.3; // Um pouco mais largo para no atravessar cantos
+            const pos = [
+                [x - w, y - 1.62, z - w], [x + w, y - 1.62, z - w], [x - w, y - 1.62, z + w], [x + w, y - 1.62, z + w], // Pés
+                [x - w, y - 0.8, z - w], [x + w, y - 0.8, z - w], [x - w, y - 0.8, z + w], [x + w, y - 0.8, z + w],    // Cintura
+                [x - w, y + 0.1, z - w], [x + w, y + 0.1, z - w], [x - w, y + 0.1, z + w], [x + w, y + 0.1, z + w]      // Cabeça
+            ];
             return pos.some(p => mundo.has(`${Math.floor(p[0])},${Math.floor(p[1])},${Math.floor(p[2])}`));
         }
 
