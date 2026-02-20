@@ -5,12 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Craft 🌍 - Vaca 3D, Drops & Animação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #87CEEB;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #78A7FF;
+            font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
         }
 
         #vida-player {
@@ -96,11 +99,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 14px;
             position: relative;
-            background-size: cover;
+            background-size: 70%;
+            /* Padding interno pra não encostar nas bordas */
+            background-repeat: no-repeat;
+            background-position: center;
             cursor: pointer;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            image-rendering: pixelated;
+            /* Manter resolução serrilhada perfeita */
         }
 
         .slot .qty {
@@ -158,6 +166,8 @@
             grid-template-columns: repeat(5, 1fr);
             gap: 15px;
             margin: 20px 0;
+            image-rendering: pixelated;
+            /* Pra interface retro */
         }
 
         .inv-item {
@@ -175,11 +185,17 @@
             right: 6px;
             font-weight: bold;
             color: #fff;
+            text-shadow: 1px 1px 0 #000;
         }
 
         .inv-item .icon {
-            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 5px;
             display: block;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .inv-item .name {
@@ -329,12 +345,23 @@
 
         // 🎒 SISTEMA DE INVENTÁRIO
         const STACK_MAX = 64;
+
+        // SVGs texturizados como strings (estilo isométrico ou chapado voxel)
+        const svgGrama = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23795548%22/><rect width=%2216%22 height=%225%22 fill=%22%234CAF50%22/><rect x=%222%22 y=%225%22 width=%222%22 height=%222%22 fill=%22%234CAF50%22/><rect x=%226%22 y=%225%22 width=%223%22 height=%222%22 fill=%22%234CAF50%22/></svg>')";
+        const svgTerra = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23795548%22/><rect x=%223%22 y=%223%22 width=%222%22 height=%222%22 fill=%22%235D4037%22/><rect x=%2210%22 y=%228%22 width=%223%22 height=%222%22 fill=%22%235D4037%22/></svg>')";
+        const svgPedra = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%239E9E9E%22/><rect x=%222%22 y=%222%22 width=%224%22 height=%222%22 fill=%22%23757575%22/><rect x=%2210%22 y=%2211%22 width=%223%22 height=%222%22 fill=%22%23BDBDBD%22/></svg>')";
+        const svgMadeira = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%238D6E63%22/><rect x=%223%22 y=%220%22 width=%222%22 height=%2216%22 fill=%22%235D4037%22/><rect x=%2211%22 y=%220%22 width=%222%22 height=%2216%22 fill=%22%235D4037%22/></svg>')";
+        const svgFolhas = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%232E7D32%22/><rect x=%224%22 y=%224%22 width=%223%22 height=%223%22 fill=%22%231B5E20%22/><rect x=%2210%22 y=%2210%22 width=%224%22 height=%222%22 fill=%22%2343A047%22/></svg>')";
+
+        const svgPicareta = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M15 1 L9 1 L1 9 L3 11 L11 3 L15 3 Z%22 fill=%22%23BDBDBD%22 stroke=%22%23000%22/><path d=%22M10 6 L2 14 L4 16 L12 8 Z%22 fill=%22%23795548%22 stroke=%22%23000%22/></svg>')";
+        const svgMachado = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M14 2 L8 2 L6 6 L12 8 Z%22 fill=%22%23BDBDBD%22 stroke=%22%23000%22/><path d=%22M10 6 L2 14 L4 16 L12 8 Z%22 fill=%22%23795548%22 stroke=%22%23000%22/></svg>')";
+
         const itemDefs = {
-            1: { id: 1, nome: "Grama", icon: "🟩", type: "block" },
-            2: { id: 2, nome: "Terra", icon: "🟫", type: "block" },
-            3: { id: 3, nome: "Pedra", icon: "⬜", type: "block" },
-            4: { id: 4, nome: "Madeira", icon: "🪵", type: "block" },
-            5: { id: 5, nome: "Folhas", icon: "🍃", type: "block" }
+            1: { id: 1, nome: "Grama", svgBase: svgGrama, type: "block" },
+            2: { id: 2, nome: "Terra", svgBase: svgTerra, type: "block" },
+            3: { id: 3, nome: "Pedra", svgBase: svgPedra, type: "block" },
+            4: { id: 4, nome: "Mad.", svgBase: svgMadeira, type: "block" },
+            5: { id: 5, nome: "Folha", svgBase: svgFolhas, type: "block" }
         };
 
         let inventory = new Map(); // key: itemId, value: amount
@@ -381,12 +408,14 @@
                     const count = getItemCount(slot.itemId);
                     qtyEl.innerText = count > 0 ? count : "";
                     el.classList.toggle('empty', count === 0);
+                    // Aplica SVG correspondente do bloco como background
+                    el.style.backgroundImage = itemDefs[slot.itemId].svgBase;
                 } else {
                     el.classList.toggle('empty', !slot.unlocked);
                     qtyEl.innerText = "";
-                    // Visual das ferramentas facilitado
-                    if (slot.toolId === "picareta") el.style.background = slot.unlocked ? "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 80 L80 20 M70 10 L90 30 M80 20 L20 80%22 stroke=%22cyan%22 stroke-width=%228%22/><path d=%22M60 10 Q80 -10 100 10 Q110 30 90 40 L60 10%22 fill=%22silver%22/></svg>')" : "#333";
-                    if (slot.toolId === "machado") el.style.background = slot.unlocked ? "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 80 L80 20%22 stroke=%22brown%22 stroke-width=%228%22/><path d=%22M50 20 L80 50 L90 30 L60 10 Z%22 fill=%22silver%22/></svg>')" : "#333";
+                    // Visual das ferramentas
+                    if (slot.toolId === "picareta") el.style.backgroundImage = slot.unlocked ? svgPicareta : "none";
+                    if (slot.toolId === "machado") el.style.backgroundImage = slot.unlocked ? svgMachado : "none";
                 }
             });
 
@@ -397,7 +426,7 @@
                 const count = getItemCount(item.id);
                 const div = document.createElement('div');
                 div.className = "inv-item";
-                div.innerHTML = `<span class="icon">${item.icon}</span><span class="name">${item.nome}</span><span class="qty">${count}</span>`;
+                div.innerHTML = `<span class="icon" style="background-image: ${item.svgBase};"></span><span class="name">${item.nome}</span><span class="qty">${count}</span>`;
                 grid.appendChild(div);
             });
 

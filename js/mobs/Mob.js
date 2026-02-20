@@ -20,13 +20,20 @@ export class Mob {
 
         this.materials = [];
 
-        // 🎯 HITBOX (Invisível mas detectável por clique)
+        // 🎯 HITBOX E BARRA DE VIDA
         this.hitbox = new THREE.Mesh(
             new THREE.BoxGeometry(1.5, 2.5, 1.5),
             new THREE.MeshBasicMaterial({ visible: false })
         );
         this.hitbox.position.y = 0.5;
         this.mesh.add(this.hitbox);
+
+        const lifeGeo = new THREE.PlaneGeometry(1.5, 0.2);
+        const lifeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        this.lifeBar = new THREE.Mesh(lifeGeo, lifeMat);
+        this.lifeBar.position.y = 3.5; // Acima da cabeça na maioria
+        this.lifeBar.visible = false;
+        this.mesh.add(this.lifeBar);
 
         this.scene.add(this.mesh);
     }
@@ -43,6 +50,11 @@ export class Mob {
         this.vida -= quantidade;
         this.estado = 'dano';
         this.tempoAcao = 0;
+
+        if (this.lifeBar) {
+            this.lifeBar.visible = true;
+            this.lifeBar.scale.x = Math.max(0, this.vida / 10); // Normalizado para a base (animais e monstros menores)
+        }
 
         if (SoundManager) SoundManager.playSound('hit');
 
@@ -85,17 +97,18 @@ export class Mob {
             this.andando = Math.random() > 0.3;
             this.tempoAcao = 1 + Math.random() * 3;
 
-            // IA Agressiva do Cavaleiro
-            if (this.type === 'cavaleiro' && camera) {
+            // IA Agressiva do Cavaleiro / CavaleiroTrevas
+            if ((this.type === 'cavaleiro' || this.type === 'cavaleirotrevas') && camera) {
                 const dist = this.mesh.position.distanceTo(camera.position);
-                if (dist < 8) {
+                if (dist < 10) { // Raio de aggro de 10 blocos
                     this.direcao = Math.atan2(camera.position.x - this.mesh.position.x, camera.position.z - this.mesh.position.z);
                     this.andando = true;
                     if (dist < 2.5) {
                         this.estado = 'atacar';
                         this.tempoAcao = 1.0;
                         this.andando = false;
-                        window.dispatchEvent(new CustomEvent('playerDamage', { detail: { amount: 1 } }));
+                        // O trevas tira 2 de dano, cavaleiro normal tira 1
+                        window.dispatchEvent(new CustomEvent('playerDamage', { detail: { amount: this.type === 'cavaleirotrevas' ? 2 : 1 } }));
                     } else {
                         this.estado = 'andar';
                     }
@@ -108,7 +121,8 @@ export class Mob {
         }
 
         if (this.andando && this.estado !== 'dano' && this.estado !== 'atacar') {
-            const vel = (this.type === 'cavaleiro' ? 2.0 : 1.0) * delta;
+            const velMult = this.type === 'cavaleirotrevas' ? 3.0 : (this.type === 'cavaleiro' ? 2.5 : 1.0);
+            const vel = velMult * delta;
             const nextX = this.mesh.position.x + Math.sin(this.direcao) * vel;
             const nextZ = this.mesh.position.z + Math.cos(this.direcao) * vel;
 
