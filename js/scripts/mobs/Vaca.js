@@ -33,6 +33,7 @@ export class Vaca extends Mob {
         const corpo = new THREE.Mesh(new THREE.BoxGeometry(1.6 * s, 1.4 * s, 2.6 * s), matCorpoV); corpo.position.y = 1.0 * s; corpo.castShadow = true; this.mesh.add(corpo);
         const teta = new THREE.Mesh(new THREE.BoxGeometry(0.8 * s, 0.4 * s, 1.0 * s), matsTetaV); teta.position.set(0, 0.9 * s, 0.2 * s); teta.castShadow = true; this.mesh.add(teta);
         const cabeca = new THREE.Mesh(new THREE.BoxGeometry(1.2 * s, 1.2 * s, 1.0 * s), matCabecaV); cabeca.position.set(0, 1.5 * s, 1.5 * s); cabeca.castShadow = true; this.mesh.add(cabeca);
+        this.cabeca = cabeca;
         const focinho = new THREE.Mesh(new THREE.BoxGeometry(1.0 * s, 0.6 * s, 0.4 * s), matsFocinhoV); focinho.position.set(0, 1.2 * s, 2.2 * s); focinho.castShadow = true; this.mesh.add(focinho);
         const chifreEsq = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.6 * s, 0.2 * s), matChifreV); chifreEsq.position.set(0.5 * s, 2.3 * s, 1.3 * s); this.mesh.add(chifreEsq);
         const chifreDir = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.6 * s, 0.2 * s), matChifreV); chifreDir.position.set(-0.5 * s, 2.3 * s, 1.3 * s); this.mesh.add(chifreDir);

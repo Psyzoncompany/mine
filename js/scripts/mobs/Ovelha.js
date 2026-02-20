@@ -132,6 +132,7 @@ export class Ovelha extends Mob {
 
         this.mesh.add(cabecaGrupo);
         this.cabecaGrupo = cabecaGrupo;
+        this.cabeca = cabecaGrupo;
 
         const criarPerna = (x, z) => {
             const pernaG = new THREE.Group();

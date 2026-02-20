@@ -77,19 +77,20 @@
 
         #hotbar {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            border-radius: 5px;
+            gap: 2px;
+            background: rgba(40, 40, 40, 0.85);
+            /* HUD Background mais fechado */
+            padding: 4px;
+            border: 2px solid #111;
         }
 
         .slot {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             background-color: #8b8b8b;
             border-top: 3px solid #d4d4d4;
             border-left: 3px solid #d4d4d4;
@@ -99,36 +100,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
             position: relative;
             background-size: 70%;
-            /* Padding interno pra não encostar nas bordas */
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
             image-rendering: pixelated;
-            /* Manter resolução serrilhada perfeita */
         }
 
         .slot .qty {
             position: absolute;
-            bottom: 2px;
-            right: 4px;
+            bottom: -2px;
+            right: 2px;
             font-size: 14px;
             font-weight: bold;
             color: white;
-            text-shadow: 1px 1px 2px #000;
+            text-shadow: 2px 2px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             pointer-events: none;
         }
 
-        .slot.empty {
-            opacity: 0.4;
-        }
-
         .slot.active {
-            border: 4px solid white;
-            transform: scale(1.1);
+            box-shadow: 0 0 0 3px white inset, 0 0 0 5px rgba(255, 255, 255, 0.4);
+            border: 3px solid #fff;
             z-index: 2;
         }
 
@@ -251,6 +244,174 @@
             text-shadow: 1px 1px 0 #000;
             font-size: 18px;
         }
+
+        /* 📱 CONTROLES MOBILE (estilo Minecraft PE) */
+        #mobile-controls {
+            display: none;
+            /* Mostrado via JS se touch */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        #mobile-controls.active {
+            display: block;
+        }
+
+        /* D-PAD (esquerda) */
+        .dpad {
+            position: absolute;
+            bottom: 90px;
+            left: 20px;
+            width: 150px;
+            height: 150px;
+            pointer-events: auto;
+        }
+
+        .dpad-btn {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px #000;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .dpad-btn:active,
+        .dpad-btn.pressed {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.93);
+        }
+
+        .dpad-up {
+            top: 0;
+            left: 50px;
+        }
+
+        .dpad-down {
+            bottom: 0;
+            left: 50px;
+        }
+
+        .dpad-left {
+            top: 50px;
+            left: 0;
+        }
+
+        .dpad-right {
+            top: 50px;
+            right: 0;
+        }
+
+        /* BOTÕES DE AÇÃO (direita) */
+        .action-btns {
+            position: absolute;
+            bottom: 90px;
+            right: 20px;
+            width: 140px;
+            height: 170px;
+            pointer-events: auto;
+        }
+
+        .action-btn {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            text-shadow: 1px 1px 2px #000;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .action-btn:active,
+        .action-btn.pressed {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.93);
+        }
+
+        .btn-jump {
+            bottom: 0;
+            right: 0;
+            background: rgba(100, 200, 255, 0.3);
+        }
+
+        .btn-break {
+            top: 0;
+            left: 0;
+            background: rgba(255, 100, 100, 0.3);
+        }
+
+        .btn-place {
+            top: 0;
+            right: 0;
+            background: rgba(100, 255, 100, 0.3);
+        }
+
+        .btn-inv {
+            bottom: 0;
+            left: 0;
+            background: rgba(200, 200, 100, 0.3);
+        }
+
+        /* Joystick de câmera (área direita superior - invisível) */
+        .camera-zone {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 60%;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        /* Sprint (toque duplo no W) */
+        .btn-sprint {
+            position: absolute;
+            bottom: 250px;
+            left: 55px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(255, 165, 0, 0.3);
+            border: 2px solid rgba(255, 165, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            text-shadow: 1px 1px 2px #000;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        @media (min-width: 1025px) {
+            #mobile-controls {
+                display: none !important;
+            }
+        }
     </style>
 
     <script type="importmap">
@@ -259,7 +420,9 @@
                 "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
                 "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
                 "./systems/": "./js/systems/",
-                "./mobs/": "./js/mobs/",
+                "./world/": "./js/world/",
+                "./ui/": "./js/ui/",
+                "./scripts/mobs/": "./js/scripts/mobs/",
                 "./items/": "./js/items/"
             }
         }
@@ -310,18 +473,38 @@
         </div>
     </div>
 
+    <!-- 📱 CONTROLES MOBILE -->
+    <div id="mobile-controls">
+        <div class="camera-zone" id="camera-zone"></div>
+        <div class="dpad">
+            <div class="dpad-btn dpad-up" data-key="w">▲</div>
+            <div class="dpad-btn dpad-down" data-key="s">▼</div>
+            <div class="dpad-btn dpad-left" data-key="a">◀</div>
+            <div class="dpad-btn dpad-right" data-key="d">▶</div>
+        </div>
+        <div class="btn-sprint" id="btn-sprint" data-key="ctrl">🏃</div>
+        <div class="action-btns">
+            <div class="action-btn btn-jump" id="btn-mobile-jump">⬆</div>
+            <div class="action-btn btn-break" id="btn-mobile-break">⛏</div>
+            <div class="action-btn btn-place" id="btn-mobile-place">🧱</div>
+            <div class="action-btn btn-inv" id="btn-mobile-inv">🎒</div>
+        </div>
+    </div>
+
     <script type="module">
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
         import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
         import { SoundManager } from './systems/SoundManager.js';
-        import { Ovelha } from './mobs/Ovelha.js';
-        import { Vaca } from './mobs/Vaca.js';
-        import { Porco } from './mobs/Porco.js';
-        import { Cavaleiro } from './mobs/Cavaleiro.js';
-        import { MonstroVazio } from './mobs/MonstroVazio.js';
-        import { CavaleiroTrevas } from './mobs/CavaleiroTrevas.js';
+        import { Ovelha } from './scripts/mobs/Ovelha.js';
+        import { Vaca } from './scripts/mobs/Vaca.js';
+        import { Porco } from './scripts/mobs/Porco.js';
+        import { Cavaleiro } from './scripts/mobs/Cavaleiro.js';
+        import { MonstroVazio } from './scripts/mobs/MonstroVazio.js';
+        import { CavaleiroTrevas } from './scripts/mobs/CavaleiroTrevas.js';
         import { criarPicaretaElite } from './items/PicaretaElite.js';
+        import { UIBuilder } from './ui/UIBuilder.js';
+        import { WorldGenerator } from './world/WorldGenerator.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -334,6 +517,7 @@
         renderizador.setSize(window.innerWidth, window.innerHeight);
         renderizador.shadowMap.enabled = true;
         renderizador.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderizador.autoClear = false; // Multi-pass para HUD
         document.body.appendChild(renderizador.domElement);
 
         const controles = new PointerLockControls(camera, document.body);
@@ -346,119 +530,61 @@
         // 🎒 SISTEMA DE INVENTÁRIO
         const STACK_MAX = 64;
 
-        // SVGs texturizados como strings (estilo isométrico ou chapado voxel)
-        const svgGrama = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23795548%22/><rect width=%2216%22 height=%225%22 fill=%22%234CAF50%22/><rect x=%222%22 y=%225%22 width=%222%22 height=%222%22 fill=%22%234CAF50%22/><rect x=%226%22 y=%225%22 width=%223%22 height=%222%22 fill=%22%234CAF50%22/></svg>')";
-        const svgTerra = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23795548%22/><rect x=%223%22 y=%223%22 width=%222%22 height=%222%22 fill=%22%235D4037%22/><rect x=%2210%22 y=%228%22 width=%223%22 height=%222%22 fill=%22%235D4037%22/></svg>')";
-        const svgPedra = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%239E9E9E%22/><rect x=%222%22 y=%222%22 width=%224%22 height=%222%22 fill=%22%23757575%22/><rect x=%2210%22 y=%2211%22 width=%223%22 height=%222%22 fill=%22%23BDBDBD%22/></svg>')";
-        const svgMadeira = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%238D6E63%22/><rect x=%223%22 y=%220%22 width=%222%22 height=%2216%22 fill=%22%235D4037%22/><rect x=%2211%22 y=%220%22 width=%222%22 height=%2216%22 fill=%22%235D4037%22/></svg>')";
-        const svgFolhas = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%232E7D32%22/><rect x=%224%22 y=%224%22 width=%223%22 height=%223%22 fill=%22%231B5E20%22/><rect x=%2210%22 y=%2210%22 width=%224%22 height=%222%22 fill=%22%2343A047%22/></svg>')";
+        // SVGs das Ferramentas UI
+        let urlTransparente = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=')";
 
         const svgPicareta = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M15 1 L9 1 L1 9 L3 11 L11 3 L15 3 Z%22 fill=%22%23BDBDBD%22 stroke=%22%23000%22/><path d=%22M10 6 L2 14 L4 16 L12 8 Z%22 fill=%22%23795548%22 stroke=%22%23000%22/></svg>')";
         const svgMachado = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M14 2 L8 2 L6 6 L12 8 Z%22 fill=%22%23BDBDBD%22 stroke=%22%23000%22/><path d=%22M10 6 L2 14 L4 16 L12 8 Z%22 fill=%22%23795548%22 stroke=%22%23000%22/></svg>')";
 
         const itemDefs = {
-            1: { id: 1, nome: "Grama", svgBase: svgGrama, type: "block" },
-            2: { id: 2, nome: "Terra", svgBase: svgTerra, type: "block" },
-            3: { id: 3, nome: "Pedra", svgBase: svgPedra, type: "block" },
-            4: { id: 4, nome: "Mad.", svgBase: svgMadeira, type: "block" },
-            5: { id: 5, nome: "Folha", svgBase: svgFolhas, type: "block" }
+            1: { id: 1, nome: "Grama", svgBase: urlTransparente, type: "block" },
+            2: { id: 2, nome: "Terra", svgBase: urlTransparente, type: "block" },
+            3: { id: 3, nome: "Pedra", svgBase: urlTransparente, type: "block" },
+            4: { id: 4, nome: "Mad.", svgBase: urlTransparente, type: "block" },
+            5: { id: 5, nome: "Folha", svgBase: urlTransparente, type: "block" }
         };
 
-        let inventory = new Map(); // key: itemId, value: amount
+        // Instanciação movida para o topo.
 
-        function addItem(itemId, amount = 1) {
-            let current = inventory.get(itemId) || 0;
-            if (current >= STACK_MAX) return false;
-            inventory.set(itemId, Math.min(STACK_MAX, current + amount));
-            renderUI();
-            return true;
+        const uiBuilder = new UIBuilder();
+        const world = new WorldGenerator(cena, uiBuilder, getAnimalFactory);
+
+        let itemSegurado = null;
+
+        function callRenderUI() {
+            uiBuilder.renderUI(playerHP, atualizarMao);
         }
 
-        function removeItem(itemId, amount = 1) {
-            let current = inventory.get(itemId) || 0;
-            if (current < amount) return false;
-            inventory.set(itemId, current - amount);
-            renderUI();
-            return true;
-        }
+        // Callback para o construtor World instanciar entidades dentro de laço C++
+        function getAnimalFactory() {
+            return (ax, y, az, cx, cz) => {
+                const arr = [];
+                const tipos = ['porco', 'vaca', 'ovelha'];
+                const sumChunks = Math.abs(cx) + Math.abs(cz);
 
-        function getItemCount(itemId) { return inventory.get(itemId) || 0; }
+                const isDarkKnight = sumChunks > 0 && sumChunks % 15 === 0;
+                const isKnight = sumChunks % 20 === 0 && Math.random() < 0.5;
+                const isMob1 = sumChunks > 0 && sumChunks % 25 === 0;
 
-        // 🎒 HOTBAR
-        const HOTBAR_SIZE = 7;
-        let hotbar = [
-            { kind: "block", itemId: 1 },
-            { kind: "block", itemId: 2 },
-            { kind: "block", itemId: 3 },
-            { kind: "block", itemId: 4 },
-            { kind: "block", itemId: 5 },
-            { kind: "tool", toolId: "picareta", unlocked: false },
-            { kind: "tool", toolId: "machado", unlocked: false }
-        ];
-        let selectedHotbarIndex = 0;
-
-        function renderUI() {
-            // Atualiza Hotbar
-            hotbar.forEach((slot, i) => {
-                const el = document.getElementById(`slot-${i}`);
-                el.classList.toggle('active', i === selectedHotbarIndex);
-                const qtyEl = el.querySelector('.qty');
-
-                if (slot.kind === "block") {
-                    const count = getItemCount(slot.itemId);
-                    qtyEl.innerText = count > 0 ? count : "";
-                    el.classList.toggle('empty', count === 0);
-                    // Aplica SVG correspondente do bloco como background
-                    el.style.backgroundImage = itemDefs[slot.itemId].svgBase;
+                if (isDarkKnight) {
+                    arr.push(new CavaleiroTrevas(cena, ax, y, az, `${cx},${cz}`));
+                } else if (isMob1) {
+                    arr.push(new MonstroVazio(cena, ax, y, az, `${cx},${cz}`));
+                    arr.push(new MonstroVazio(cena, ax + 1.2, y, az + 1.2, `${cx},${cz}`));
+                } else if (isKnight) {
+                    arr.push(new Cavaleiro(cena, ax, y, az, `${cx},${cz}`));
                 } else {
-                    el.classList.toggle('empty', !slot.unlocked);
-                    qtyEl.innerText = "";
-                    // Visual das ferramentas
-                    if (slot.toolId === "picareta") el.style.backgroundImage = slot.unlocked ? svgPicareta : "none";
-                    if (slot.toolId === "machado") el.style.backgroundImage = slot.unlocked ? svgMachado : "none";
+                    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+                    if (tipo === 'ovelha') arr.push(new Ovelha(cena, ax, y, az, `${cx},${cz}`));
+                    else if (tipo === 'vaca') arr.push(new Vaca(cena, ax, y, az, `${cx},${cz}`));
+                    else arr.push(new Porco(cena, ax, y, az, `${cx},${cz}`));
                 }
-            });
-
-            // Atualiza Menu Inventário
-            const grid = document.getElementById('inv-grid');
-            grid.innerHTML = "";
-            Object.values(itemDefs).forEach(item => {
-                const count = getItemCount(item.id);
-                const div = document.createElement('div');
-                div.className = "inv-item";
-                div.innerHTML = `<span class="icon" style="background-image: ${item.svgBase};"></span><span class="name">${item.nome}</span><span class="qty">${count}</span>`;
-                grid.appendChild(div);
-            });
-
-            // Atualiza Vida (10 Corações)
-            const hpContainer = document.getElementById('vida-player');
-            hpContainer.innerHTML = '';
-            for (let i = 0; i < 10; i++) {
-                const h = document.createElement('div');
-                h.className = 'heart';
-                // Lógica de meio coração e coração vazio
-                const hpRelativo = playerHP - (i * 2);
-                if (hpRelativo >= 2) {
-                    // Coração cheio
-                    h.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 Q6 0 8 1 Q10 3 9 5 Z%22 fill=%22red%22 stroke=%22black%22 stroke-width=%221%22/></svg>')";
-                } else if (hpRelativo === 1) {
-                    // Meio Coração
-                    h.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 Q6 0 8 1 Q10 3 9 5 Z%22 fill=%22none%22 stroke=%22black%22 stroke-width=%221%22/><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 V9 Z%22 fill=%22red%22/></svg>')";
-                } else {
-                    // Vazio
-                    h.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 9 L1 5 Q0 3 2 1 Q4 0 5 2 Q6 0 8 1 Q10 3 9 5 Z%22 fill=%22none%22 stroke=%22black%22 stroke-width=%221.5%22/></svg>')";
-                }
-                hpContainer.appendChild(h);
-            }
-            document.getElementById('btn-craft-picareta').disabled = getItemCount(4) < 5 || hotbar[5].unlocked;
-            document.getElementById('btn-craft-machado').disabled = getItemCount(4) < 5 || hotbar[6].unlocked;
-
-            atualizarMao();
+                return arr;
+            };
         }
-
         window.addEventListener('playerDamage', (e) => {
             playerHP -= e.detail.amount;
-            renderUI();
+            callRenderUI();
             const flash = document.getElementById('damage-flash');
             if (flash) {
                 flash.style.background = 'rgba(255, 0, 0, 0.4)';
@@ -487,10 +613,10 @@
         });
 
         document.getElementById('btn-craft-picareta').addEventListener('click', () => {
-            if (removeItem(4, 5)) { hotbar[5].unlocked = true; renderUI(); }
+            if (uiBuilder.removeItem(4, 5)) { uiBuilder.hotbar[5].unlocked = true; callRenderUI(); }
         });
         document.getElementById('btn-craft-machado').addEventListener('click', () => {
-            if (removeItem(4, 5)) { hotbar[6].unlocked = true; renderUI(); }
+            if (uiBuilder.removeItem(4, 5)) { uiBuilder.hotbar[6].unlocked = true; callRenderUI(); }
         });
 
         // 💡 ILUMINAÇÃO
@@ -502,7 +628,7 @@
         cena.add(luzSol); cena.add(luzSol.target);
 
         // 🎨 TEXTURAS DOS BLOCOS & UI
-        function gerarTextura(tipo, uiSlot) {
+        function gerarTextura(tipo) {
             const canvas = document.createElement('canvas'); canvas.width = 16; canvas.height = 16; const ctx = canvas.getContext('2d');
             for (let x = 0; x < 16; x++) {
                 for (let y = 0; y < 16; y++) {
@@ -516,10 +642,11 @@
                     ctx.fillStyle = cor; ctx.fillRect(x, y, 1, 1);
                 }
             }
-            if (uiSlot !== undefined) document.getElementById(`slot-${uiSlot}`).style.backgroundImage = `url(${canvas.toDataURL()})`;
+            const dataUrl = canvas.toDataURL();
 
             const textura = new THREE.CanvasTexture(canvas);
-            textura.magFilter = THREE.NearestFilter; textura.minFilter = THREE.NearestFilter; textura.colorSpace = THREE.SRGBColorSpace; return textura;
+            textura.magFilter = THREE.NearestFilter; textura.minFilter = THREE.NearestFilter; textura.colorSpace = THREE.SRGBColorSpace;
+            return { obj: textura, dataUrl: dataUrl };
         }
 
         function gerarTexturaQuebra(progresso) {
@@ -553,22 +680,50 @@
         const meshQuebra = new THREE.Mesh(new THREE.BoxGeometry(1.01, 1.01, 1.01), matQuebra);
         meshQuebra.visible = false; cena.add(meshQuebra);
 
-        const matTerra = new THREE.MeshLambertMaterial({ map: gerarTextura('terra', 2) });
-        const matGramaTopo = new THREE.MeshLambertMaterial({ map: gerarTextura('grama_topo') });
-        const matGramaLado = new THREE.MeshLambertMaterial({ map: gerarTextura('grama_lado', 1) });
+        const texTerra = gerarTextura('terra');
+        const texGramaTopo = gerarTextura('grama_topo');
+        const texGramaLado = gerarTextura('grama_lado');
+        const texPedra = gerarTextura('pedra');
+        const texMadeira = gerarTextura('madeira');
+        const texFolhas = gerarTextura('folhas');
+
+        const matTerra = new THREE.MeshLambertMaterial({ map: texTerra.obj });
+        const matGramaTopo = new THREE.MeshLambertMaterial({ map: texGramaTopo.obj });
+        const matGramaLado = new THREE.MeshLambertMaterial({ map: texGramaLado.obj });
 
         const materiais = {
             1: [matGramaLado, matGramaLado, matGramaTopo, matTerra, matGramaLado, matGramaLado],
             2: matTerra,
-            3: new THREE.MeshLambertMaterial({ map: gerarTextura('pedra', 3) }),
-            4: new THREE.MeshLambertMaterial({ map: gerarTextura('madeira', 4) }),
-            5: new THREE.MeshLambertMaterial({ map: gerarTextura('folhas', 5), transparent: true, alphaTest: 0.5 })
+            3: new THREE.MeshLambertMaterial({ map: texPedra.obj }),
+            4: new THREE.MeshLambertMaterial({ map: texMadeira.obj }),
+            5: new THREE.MeshLambertMaterial({ map: texFolhas.obj, transparent: true, alphaTest: 0.5 })
         };
 
+        // Define texturas
+        world.setMateriais(materiais);
+        uiBuilder.setupTextures({
+            GramaLado: `url(${texGramaLado.dataUrl})`,
+            Terra: `url(${texTerra.dataUrl})`,
+            Pedra: `url(${texPedra.dataUrl})`,
+            Madeira: `url(${texMadeira.dataUrl})`,
+            Folhas: `url(${texFolhas.dataUrl})`
+        });
+        callRenderUI();
+
         // ✋ SISTEMA DA MÃO
+        const cenaMao = new THREE.Scene();
+        const cameraMao = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+
+        const luzDirecionalMao = new THREE.DirectionalLight(0xffa873, 0.3); // Luz quente parecida com o Sol 
+        luzDirecionalMao.position.set(1, 1, 1);
+        cenaMao.add(luzDirecionalMao);
+        cenaMao.add(new THREE.AmbientLight(0xcce0ff, 0.8)); // Luz ambiente
+
         const grupoMao = new THREE.Group();
         grupoMao.position.set(0.6, -0.4, -0.7);
-        camera.add(grupoMao); cena.add(camera);
+        cameraMao.add(grupoMao); // Coloca em uma viewport fixa no centro
+        cenaMao.add(cameraMao);
+        cena.add(camera);
 
         const matMao = new THREE.MeshLambertMaterial({ color: 0xffccaa });
         const braco = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.15), matMao);
@@ -576,14 +731,12 @@
         braco.rotation.x = -Math.PI / 12; // Leve inclinação para frente
         grupoMao.add(braco);
 
-        let itemSegurado;
-
         function atualizarMao() {
             if (itemSegurado) grupoMao.remove(itemSegurado);
-            const slot = hotbar[selectedHotbarIndex];
+            const slot = uiBuilder.hotbar[uiBuilder.selectedHotbarIndex];
 
             if (slot.kind === "block") {
-                if (getItemCount(slot.itemId) > 0) {
+                if (uiBuilder.getItemCount(slot.itemId) > 0) {
                     itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), materiais[slot.itemId]);
                     itemSegurado.position.set(0, 0.1, -0.3);
                 } else itemSegurado = null;
@@ -603,9 +756,36 @@
                 }
             } else itemSegurado = null;
 
-            if (itemSegurado) grupoMao.add(itemSegurado);
+            if (itemSegurado) {
+                itemSegurado.traverse(c => {
+                    if (c.isMesh) {
+                        if (Array.isArray(c.material)) {
+                            c.material = c.material.map(m => {
+                                if (!m.isClonedForHand) {
+                                    m = m.clone();
+                                    m.depthTest = false;
+                                    m.isClonedForHand = true;
+                                }
+                                return m;
+                            });
+                        } else {
+                            if (!c.material.isClonedForHand) {
+                                c.material = c.material.clone();
+                                c.material.depthTest = false;
+                                c.material.isClonedForHand = true;
+                            }
+                        }
+                        c.renderOrder = 999;
+                    }
+                });
+                grupoMao.add(itemSegurado);
+            }
         }
-        renderUI();
+
+        // Aplica o mesmo pro braço vazio (sempre por cima)
+        braco.material = braco.material.clone();
+        braco.material.depthTest = false;
+        braco.renderOrder = 999;
 
         let animandoMao = false; let progressoMao = 0; let bobTimer = 0; // Para animar andando
 
@@ -613,6 +793,17 @@
 
         let animais = [];
         const geometriaBloco = new THREE.BoxGeometry(1, 1, 1);
+
+        // 🐄 Listener para quando animais comem grama (bloco muda de tipo)
+        window.addEventListener('blockChanged', (e) => {
+            const { x, y, z } = e.detail;
+            recriarChunkVisual(x, z);
+            // Vizinhos
+            if (x % TAMANHO_CHUNK === 0) recriarChunkVisual(x - 1, z);
+            if (x % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(x + 1, z);
+            if (z % TAMANHO_CHUNK === 0) recriarChunkVisual(x, z - 1);
+            if (z % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(x, z + 1);
+        });
 
         // 🔲 CONTORNO DO BLOCO MIRADO (Fino e sutil)
         const geoContorno = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002));
@@ -697,7 +888,15 @@
             if (Math.random() < 0.4) {
                 const ax = cx * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
                 const az = cz * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
-                for (let y = 25; y >= -15; y--) { if (mundo.has(`${ax},${y},${az}`)) { criarAnimal(ax, y + 1.62, az, cx, cz); break; } }
+                for (let y = 25; y >= -15; y--) {
+                    const tipo = mundo.get(`${ax},${y},${az}`);
+                    if (tipo) {
+                        if (tipo !== 5) { // Não nasce na Folha
+                            criarAnimal(ax, y + 1.62, az, cx, cz);
+                        }
+                        break;
+                    }
+                }
             }
         }
 
@@ -740,6 +939,17 @@
                     }
                 }
                 document.getElementById('loading').innerText = `Chunks ativos: ${chunksVisuais.size}`;
+
+                if (!window.playerSpawned && chunksVisuais.size > 0) {
+                    for (let y = 25; y >= -15; y--) {
+                        if (mundo.has(`0,${y},0`)) {
+                            camera.position.set(0, y + 2.12, 0); // y+0.5 da superficie + 1.62 do player
+                            window.playerSpawned = true;
+                            velocidadeY = 0;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -749,16 +959,29 @@
         }
 
         // 🏃‍♂️ CONTROLES
-        camera.position.set(0, 20, 0);
-        const teclas = { w: false, a: false, s: false, d: false, space: false };
+        camera.position.set(0, 60, 0); // Começa alto e depois teleporta no spawn
+        const teclas = { w: false, a: false, s: false, d: false, space: false, ctrl: false };
         let velocidadeY = 0; let noChao = false;
+        let sprintAtivo = false;
+        let ultimoW = 0; // Para detectar double-tap do W
 
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyW') teclas.w = true; if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'Space') teclas.space = true;
+            if (e.code === 'KeyW') {
+                if (!teclas.w) { // Só conta double-tap se W não estava pressionado
+                    const agora = performance.now();
+                    if (agora - ultimoW < 300) { // 300ms = janela de double-tap
+                        sprintAtivo = true;
+                        teclas.ctrl = true;
+                    }
+                    ultimoW = agora;
+                }
+                teclas.w = true;
+            }
+            if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'Space') teclas.space = true; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = true;
 
             if (e.key >= '1' && e.key <= '7') {
-                selectedHotbarIndex = parseInt(e.key) - 1;
-                renderUI();
+                uiBuilder.selectedHotbarIndex = parseInt(e.key) - 1;
+                callRenderUI();
             }
             if (e.key.toLowerCase() === 'e') {
                 if (inventoryMenu.style.display === 'flex') {
@@ -773,24 +996,25 @@
         });
 
         document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') teclas.w = false; if (e.code === 'KeyS') teclas.s = false; if (e.code === 'KeyA') teclas.a = false; if (e.code === 'KeyD') teclas.d = false; if (e.code === 'Space') teclas.space = false;
+            if (e.code === 'KeyW') { teclas.w = false; if (sprintAtivo) { sprintAtivo = false; teclas.ctrl = false; } }
+            if (e.code === 'KeyS') teclas.s = false; if (e.code === 'KeyA') teclas.a = false; if (e.code === 'KeyD') teclas.d = false; if (e.code === 'Space') teclas.space = false; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = false;
         });
 
         document.addEventListener('wheel', (e) => {
-            if (!controles.isLocked) return;
-            if (e.deltaY > 0) selectedHotbarIndex = (selectedHotbarIndex + 1) % HOTBAR_SIZE;
-            else selectedHotbarIndex = (selectedHotbarIndex - 1 + HOTBAR_SIZE) % HOTBAR_SIZE;
-            renderUI();
+            if (!(controles.isLocked || window._mobileMode)) return;
+            if (e.deltaY > 0) uiBuilder.selectedHotbarIndex = (uiBuilder.selectedHotbarIndex + 1) % 7;
+            else uiBuilder.selectedHotbarIndex = (uiBuilder.selectedHotbarIndex - 1 + 7) % 7;
+            callRenderUI();
         });
 
         function checarColisao(x, y, z) {
-            const w = 0.3; // Um pouco mais largo para no atravessar cantos
+            const w = 0.15; // Menor para passar em buracos de 1 bloco com facilidade
             const pos = [
                 [x - w, y - 1.62, z - w], [x + w, y - 1.62, z - w], [x - w, y - 1.62, z + w], [x + w, y - 1.62, z + w], // Pés
                 [x - w, y - 0.8, z - w], [x + w, y - 0.8, z - w], [x - w, y - 0.8, z + w], [x + w, y - 0.8, z + w],    // Cintura
                 [x - w, y + 0.1, z - w], [x + w, y + 0.1, z - w], [x - w, y + 0.1, z + w], [x + w, y + 0.1, z + w]      // Cabeça
             ];
-            return pos.some(p => mundo.has(`${Math.floor(p[0])},${Math.floor(p[1])},${Math.floor(p[2])}`));
+            return pos.some(p => mundo.has(`${Math.round(p[0])},${Math.round(p[1])},${Math.round(p[2])}`));
         }
 
         // 📦 SISTEMA DE DROPS (ITENS NO CHÃO)
@@ -830,6 +1054,7 @@
         const raycaster = new THREE.Raycaster(); const centroTela = new THREE.Vector2(0, 0);
         let quebrandoBloco = null;
         let tempoQuebrando = 0;
+        let tempoAtualParaQuebrar = 1.3;
         const TEMPO_PARA_QUEBRAR = 1.3;
 
         function balancarMao() {
@@ -838,7 +1063,7 @@
         }
 
         document.addEventListener('mousedown', (e) => {
-            if (!controles.isLocked) return;
+            if (!(controles.isLocked || window._mobileMode)) return;
 
             balancarMao(); // Toda vez que clica, balança a mão
 
@@ -870,8 +1095,8 @@
                     }
                 }
             } else if (e.button === 2) { // Colocar
-                const slot = hotbar[selectedHotbarIndex];
-                if (slot.kind !== "block" || getItemCount(slot.itemId) === 0) return;
+                const slot = uiBuilder.hotbar[uiBuilder.selectedHotbarIndex];
+                if (slot.kind !== "block" || uiBuilder.getItemCount(slot.itemId) === 0) return;
 
                 raycaster.setFromCamera(centroTela, camera);
                 const objetos = Array.from(chunksVisuais.values()).flatMap(g => g.children);
@@ -882,14 +1107,24 @@
                     const hitX = Math.round(pt.x - nx * 0.5); const hitY = Math.round(pt.y - ny * 0.5); const hitZ = Math.round(pt.z - nz * 0.5);
                     const placeX = hitX + nx; const placeY = hitY + ny; const placeZ = hitZ + nz;
 
-                    // Bloqueia se colocar no jogador (dist < 1.0)
-                    const distToPlayer = camera.position.distanceTo(new THREE.Vector3(placeX + 0.5, placeY + 0.5, placeZ + 0.5));
-                    if (distToPlayer < 1.0) return;
+                    // Bloqueia se o bloco colidir com a hitbox do jogador (pés, corpo, cabeça)
+                    const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
+                    const playerMinX = px - 0.3, playerMaxX = px + 0.3;
+                    const playerMinZ = pz - 0.3, playerMaxZ = pz + 0.3;
+                    const playerMinY = py - 1.62, playerMaxY = py + 0.18;
+                    const blockMinX = placeX - 0.5, blockMaxX = placeX + 0.5;
+                    const blockMinY = placeY - 0.5, blockMaxY = placeY + 0.5;
+                    const blockMinZ = placeZ - 0.5, blockMaxZ = placeZ + 0.5;
+                    const overlaps = playerMinX < blockMaxX && playerMaxX > blockMinX &&
+                        playerMinY < blockMaxY && playerMaxY > blockMinY &&
+                        playerMinZ < blockMaxZ && playerMaxZ > blockMinZ;
+                    if (overlaps) return;
 
                     if (!mundo.has(`${placeX},${placeY},${placeZ}`)) {
                         mundo.set(`${placeX},${placeY},${placeZ}`, slot.itemId);
                         soundManager.playSound('place');
-                        removeItem(slot.itemId, 1);
+                        uiBuilder.removeItem(slot.itemId, 1);
+                        callRenderUI();
                         recriarChunkVisual(placeX, placeZ);
                         // Vizinhos
                         if (placeX % TAMANHO_CHUNK === 0) recriarChunkVisual(placeX - 1, placeZ);
@@ -912,7 +1147,7 @@
         const relogio = new THREE.Clock();
         function animar() {
             requestAnimationFrame(animar);
-            if (controles.isLocked) {
+            if ((controles.isLocked || window._mobileMode)) {
                 atualizarChunks(); const delta = relogio.getDelta();
 
                 luzSol.position.set(camera.position.x + 20, camera.position.y + 40, camera.position.z + 20); luzSol.target.position.copy(camera.position);
@@ -926,7 +1161,11 @@
                     contornoBloco.visible = true;
                 } else contornoBloco.visible = false;
 
-                const velocidadeAndar = 5 * delta; const posAntiga = camera.position.clone();
+                let velocidadeAndar = (teclas.ctrl ? 10 : 5); // x2 speed for sprint
+                if (!noChao) velocidadeAndar = 5; // Aceleração menor no ar, mas manteve limitação basi.
+                velocidadeAndar *= delta;
+
+                const posAntiga = camera.position.clone();
                 let moveZ = Number(teclas.w) - Number(teclas.s); let moveX = Number(teclas.a) - Number(teclas.d);
                 let movendo = moveX !== 0 || moveZ !== 0;
 
@@ -960,16 +1199,23 @@
                     item.mesh.position.y += item.vy;
                     item.mesh.rotation.y += delta;
 
-                    const blockY = Math.floor(item.mesh.position.y - 0.125);
-                    if (mundo.has(`${Math.floor(item.mesh.position.x)},${blockY},${Math.floor(item.mesh.position.z)}`)) {
-                        item.mesh.position.y = blockY + 1.125; item.vy = 0;
+                    const xDir = Math.round(item.mesh.position.x);
+                    const zDir = Math.round(item.mesh.position.z);
+                    const bot = item.mesh.position.y - 0.125;
+                    const blockY = Math.round(bot - 0.1);
+                    if (item.vy <= 0 && mundo.has(`${xDir},${blockY},${zDir}`)) {
+                        if (bot <= blockY + 0.5) {
+                            item.mesh.position.y = blockY + 0.625;
+                            item.vy = 0;
+                        }
                     }
 
                     // Coleta universal com ímã de 2 blocos
                     const distToPlayer = camera.position.distanceTo(item.mesh.position);
                     if (distToPlayer < 2.0) {
-                        if (addItem(item.tipo, 1)) {
+                        if (uiBuilder.addItem(item.tipo, 1)) {
                             soundManager.playSound('collect');
+                            callRenderUI();
                             cena.remove(item.mesh); item.mesh.geometry.dispose();
                             itensDropados.splice(i, 1);
                         }
@@ -995,11 +1241,31 @@
 
                 // ⛏️ LÓGICA DE QUEBRA GRADUAL
                 if (quebrandoBloco) {
+                    // Verifica se o bloco que estamos quebrando ainda existe
+                    const chaveBloco = `${quebrandoBloco.x},${quebrandoBloco.y},${quebrandoBloco.z}`;
+                    const tipoBlocoQuebrando = mundo.get(chaveBloco);
+                    if (!tipoBlocoQuebrando) {
+                        // Bloco já foi removido, cancela
+                        quebrandoBloco = null; tempoQuebrando = 0;
+                        contornoBloco.scale.set(1, 1, 1); meshQuebra.visible = false;
+                    }
+                }
+                if (quebrandoBloco) {
                     tempoQuebrando += delta;
                     animandoMao = true;
                     progressoMao += delta * 5;
-                    const prog = tempoQuebrando / TEMPO_PARA_QUEBRAR;
+
                     const tipoBlocoQuebrando = mundo.get(`${quebrandoBloco.x},${quebrandoBloco.y},${quebrandoBloco.z}`);
+                    tempoAtualParaQuebrar = TEMPO_PARA_QUEBRAR;
+                    const slotAtivo = uiBuilder.hotbar[uiBuilder.selectedHotbarIndex];
+                    if (tipoBlocoQuebrando === 3 && slotAtivo.kind === "tool" && slotAtivo.toolId === "picareta" && slotAtivo.unlocked) {
+                        tempoAtualParaQuebrar = 0.3;
+                    }
+                    if (tipoBlocoQuebrando === 4 && slotAtivo.kind === "tool" && slotAtivo.toolId === "machado" && slotAtivo.unlocked) {
+                        tempoAtualParaQuebrar = 0.3;
+                    }
+
+                    const prog = tempoQuebrando / tempoAtualParaQuebrar;
 
                     // Mostra as rachaduras com efeito de Shake e Redução visual (ilusão óptica nas texturas adjacentes)
                     meshQuebra.visible = true;
@@ -1024,23 +1290,32 @@
                         criarParticulas(quebrandoBloco.x, quebrandoBloco.y, quebrandoBloco.z, tipoBlocoQuebrando, 1);
                     }
 
-                    if (tempoQuebrando >= TEMPO_PARA_QUEBRAR) {
+                    if (tempoQuebrando >= tempoAtualParaQuebrar) {
                         const { x, y, z } = quebrandoBloco;
-                        if (tipoBlocoQuebrando) {
-                            criarParticulas(x, y, z, tipoBlocoQuebrando, 20); // BOOM de detritos!
-                            droparItem(x, y, z, tipoBlocoQuebrando);
-                            soundManager.playSound('pop');
-                            mundo.delete(`${x},${y},${z}`);
-                            recriarChunkVisual(x, z);
-                            if (x % TAMANHO_CHUNK === 0) recriarChunkVisual(x - 1, z); if (x % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(x + 1, z);
-                            if (z % TAMANHO_CHUNK === 0) recriarChunkVisual(x, z - 1); if (z % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(x, z + 1);
-                        }
-                        quebrandoBloco = null;
+
+                        // RESET IMEDIATO para não acumular frames
                         tempoQuebrando = 0;
+                        quebrandoBloco = null;
                         contornoBloco.scale.set(1, 1, 1);
                         meshQuebra.visible = false;
+
+                        if (tipoBlocoQuebrando) {
+                            criarParticulas(x, y, z, tipoBlocoQuebrando, 20);
+
+                            // Drop único garantido: deleta do mundo ANTES
+                            mundo.delete(`${x},${y},${z}`);
+                            droparItem(x, y, z, tipoBlocoQuebrando);
+                            soundManager.playSound('pop');
+
+                            recriarChunkVisual(x, z);
+                            if (x % TAMANHO_CHUNK === 0) recriarChunkVisual(x - 1, z);
+                            if (x % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(x + 1, z);
+                            if (z % TAMANHO_CHUNK === 0) recriarChunkVisual(x, z - 1);
+                            if (z % TAMANHO_CHUNK === TAMANHO_CHUNK - 1) recriarChunkVisual(x, z + 1);
+                        }
                     }
                 } else {
+                    tempoQuebrando = 0;
                     meshQuebra.visible = false;
                 }
 
@@ -1075,11 +1350,119 @@
                 if (camera.position.y < -30) { camera.position.set(camera.position.x, 20, camera.position.z); velocidadeY = 0; }
             } else relogio.getDelta();
 
+            renderizador.clear();
             renderizador.render(cena, camera);
+            renderizador.clearDepth();
+            renderizador.render(cenaMao, cameraMao);
         }
 
-        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderizador.setSize(window.innerWidth, window.innerHeight); });
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            cameraMao.aspect = window.innerWidth / window.innerHeight;
+            cameraMao.updateProjectionMatrix();
+            renderizador.setSize(window.innerWidth, window.innerHeight);
+        });
         atualizarChunks(); animar();
+
+        // 📱 CONTROLES MOBILE
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (isMobile) {
+            const mc = document.getElementById('mobile-controls');
+            mc.classList.add('active');
+
+            // D-PAD: pressionar/soltar mapeia para teclas virtuais
+            document.querySelectorAll('.dpad-btn').forEach(btn => {
+                const key = btn.dataset.key;
+                btn.addEventListener('touchstart', (e) => { e.preventDefault(); teclas[key] = true; btn.classList.add('pressed'); }, { passive: false });
+                btn.addEventListener('touchend', (e) => { e.preventDefault(); teclas[key] = false; btn.classList.remove('pressed'); }, { passive: false });
+                btn.addEventListener('touchcancel', (e) => { teclas[key] = false; btn.classList.remove('pressed'); });
+            });
+
+            // SPRINT
+            const sprintBtn = document.getElementById('btn-sprint');
+            let sprintAtivo = false;
+            sprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); sprintAtivo = !sprintAtivo; teclas.ctrl = sprintAtivo; sprintBtn.classList.toggle('pressed', sprintAtivo); }, { passive: false });
+
+            // PULAR
+            document.getElementById('btn-mobile-jump').addEventListener('touchstart', (e) => { e.preventDefault(); teclas.space = true; }, { passive: false });
+            document.getElementById('btn-mobile-jump').addEventListener('touchend', (e) => { e.preventDefault(); teclas.space = false; }, { passive: false });
+
+            // QUEBRAR (simula mousedown esquerdo)
+            const btnBreak = document.getElementById('btn-mobile-break');
+            btnBreak.addEventListener('touchstart', (e) => {
+                e.preventDefault(); btnBreak.classList.add('pressed');
+                document.dispatchEvent(new MouseEvent('mousedown', { button: 0 }));
+            }, { passive: false });
+            btnBreak.addEventListener('touchend', (e) => {
+                e.preventDefault(); btnBreak.classList.remove('pressed');
+                document.dispatchEvent(new MouseEvent('mouseup', { button: 0 }));
+            }, { passive: false });
+
+            // COLOCAR (simula mousedown direito) 
+            const btnPlace = document.getElementById('btn-mobile-place');
+            btnPlace.addEventListener('touchstart', (e) => {
+                e.preventDefault(); btnPlace.classList.add('pressed');
+                document.dispatchEvent(new MouseEvent('mousedown', { button: 2 }));
+            }, { passive: false });
+            btnPlace.addEventListener('touchend', (e) => { e.preventDefault(); btnPlace.classList.remove('pressed'); }, { passive: false });
+
+            // INVENTÁRIO
+            document.getElementById('btn-mobile-inv').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const inv = document.getElementById('inventory-menu');
+                if (inv.style.display === 'flex') {
+                    inv.style.display = 'none';
+                } else {
+                    inv.style.display = 'flex';
+                    document.getElementById('menu').style.display = 'none';
+                }
+            }, { passive: false });
+
+            // CÂMERA (arrastar para olhar ao redor)
+            const cameraZone = document.getElementById('camera-zone');
+            let lastTouchX = 0, lastTouchY = 0;
+            let cameraTouch = null;
+
+            cameraZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const t = e.changedTouches[0];
+                cameraTouch = t.identifier;
+                lastTouchX = t.clientX;
+                lastTouchY = t.clientY;
+            }, { passive: false });
+
+            cameraZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.identifier === cameraTouch) {
+                        const dx = t.clientX - lastTouchX;
+                        const dy = t.clientY - lastTouchY;
+                        // Rotaciona câmera
+                        camera.rotation.order = 'YXZ';
+                        camera.rotation.y -= dx * 0.004;
+                        camera.rotation.x -= dy * 0.004;
+                        camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+                        lastTouchX = t.clientX;
+                        lastTouchY = t.clientY;
+                    }
+                }
+            }, { passive: false });
+
+            cameraZone.addEventListener('touchend', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === cameraTouch) cameraTouch = null;
+                }
+            });
+
+            // No mobile, inicia sem PointerLock — usa touch para olhar
+            document.getElementById('btn-play').addEventListener('click', () => {
+                menu.style.display = 'none';
+                // Simula que os controles estão ativos sem PointerLock
+                window._mobileMode = true;
+            });
+        }
     </script>
 </body>
 
