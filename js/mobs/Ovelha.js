@@ -8,7 +8,6 @@ export class Ovelha extends Mob {
     }
 
     construirModelo() {
-        // Funo Geradora de Texturas (Pxeis)
         const criarTextura = (gerarPixels) => {
             const canvas = document.createElement('canvas');
             canvas.width = 16; canvas.height = 16;
@@ -51,74 +50,100 @@ export class Ovelha extends Mob {
 
         this.materials.push(matLa, matPele, matCasco, matFocinho, matOlhoB, matOlhoP);
 
+        const s = 0.4;
+
         // Corpo
         const corpo = new THREE.Group();
-        corpo.position.set(0, 0.4, 0);
-        const s = 0.4; // Escala para combinar com o jogo antigo
+        corpo.position.set(0, 2.0 * s, 0);
 
         const corpoBase = new THREE.Mesh(new THREE.BoxGeometry(1.6 * s, 1.6 * s, 2.4 * s), matLa);
         corpoBase.castShadow = true;
         corpo.add(corpoBase);
 
         const laExtra1 = new THREE.Mesh(new THREE.BoxGeometry(1.8 * s, 1.2 * s, 2.0 * s), matLa);
+        laExtra1.castShadow = true;
         corpo.add(laExtra1);
+
+        const laExtra2 = new THREE.Mesh(new THREE.BoxGeometry(1.4 * s, 1.8 * s, 2.0 * s), matLa);
+        laExtra2.castShadow = true;
+        corpo.add(laExtra2);
 
         const rabo = new THREE.Mesh(new THREE.BoxGeometry(0.6 * s, 0.6 * s, 0.4 * s), matLa);
         rabo.position.set(0, 0.2 * s, -1.3 * s);
+        rabo.rotation.x = -Math.PI / 8;
+        rabo.castShadow = true;
         corpo.add(rabo);
+
         this.mesh.add(corpo);
         this.corpoMesh = corpo;
 
-        // Cabea
+        // Cabeça
         const cabecaGrupo = new THREE.Group();
-        cabecaGrupo.position.set(0, 0.6, 0.5);
+        cabecaGrupo.position.set(0, 2.4 * s, 1.2 * s);
 
         const cabeca = new THREE.Mesh(new THREE.BoxGeometry(1.0 * s, 1.0 * s, 1.2 * s), matPele);
-        cabeca.position.set(0, 0.1, 0.2);
+        cabeca.position.set(0, 0.3 * s, 0.6 * s);
         cabeca.castShadow = true;
         cabecaGrupo.add(cabeca);
 
         const laCabeca = new THREE.Mesh(new THREE.BoxGeometry(1.2 * s, 0.6 * s, 1.0 * s), matLa);
-        laCabeca.position.set(0, 0.4 * s, 0.2 * s);
+        laCabeca.position.set(0, 1.0 * s, 0.6 * s);
+        laCabeca.castShadow = true;
         cabecaGrupo.add(laCabeca);
 
+        const bochechaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.6 * s, 0.6 * s), matLa);
+        bochechaEsq.position.set(0.6 * s, 0.5 * s, 0.6 * s);
+        cabecaGrupo.add(bochechaEsq);
+
+        const bochechaDir = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.6 * s, 0.6 * s), matLa);
+        bochechaDir.position.set(-0.6 * s, 0.5 * s, 0.6 * s);
+        cabecaGrupo.add(bochechaDir);
+
         const orelhaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.6 * s, 0.2 * s, 0.2 * s), matPele);
-        orelhaEsq.position.set(0.3, 0.2, 0.1);
+        orelhaEsq.position.set(0.8 * s, 0.5 * s, 0.4 * s);
+        orelhaEsq.rotation.z = -Math.PI / 8;
         cabecaGrupo.add(orelhaEsq);
 
         const orelhaDir = new THREE.Mesh(new THREE.BoxGeometry(0.6 * s, 0.2 * s, 0.2 * s), matPele);
-        orelhaDir.position.set(-0.3, 0.2, 0.1);
+        orelhaDir.position.set(-0.8 * s, 0.5 * s, 0.4 * s);
+        orelhaDir.rotation.z = Math.PI / 8;
         cabecaGrupo.add(orelhaDir);
 
         const focinho = new THREE.Mesh(new THREE.BoxGeometry(0.6 * s, 0.4 * s, 0.2 * s), matFocinho);
-        focinho.position.set(0, 0.05, 0.45 * s);
+        focinho.position.set(0, 0.1 * s, 1.3 * s);
         cabecaGrupo.add(focinho);
 
-        // Olhos
+        const olhoZ = 1.21 * s;
         const olhoEsqB = new THREE.Mesh(new THREE.BoxGeometry(0.15 * s, 0.2 * s, 0.05 * s), matOlhoB);
-        olhoEsqB.position.set(0.15, 0.2, 0.4 * s);
+        olhoEsqB.position.set(0.35 * s, 0.5 * s, olhoZ);
         cabecaGrupo.add(olhoEsqB);
+
+        const olhoEsqP = new THREE.Mesh(new THREE.BoxGeometry(0.1 * s, 0.2 * s, 0.06 * s), matOlhoP);
+        olhoEsqP.position.set(0.32 * s, 0.5 * s, olhoZ);
+        cabecaGrupo.add(olhoEsqP);
+
         const olhoDirB = new THREE.Mesh(new THREE.BoxGeometry(0.15 * s, 0.2 * s, 0.05 * s), matOlhoB);
-        olhoDirB.position.set(-0.15, 0.2, 0.4 * s);
+        olhoDirB.position.set(-0.35 * s, 0.5 * s, olhoZ);
         cabecaGrupo.add(olhoDirB);
+
+        const olhoDirP = new THREE.Mesh(new THREE.BoxGeometry(0.1 * s, 0.2 * s, 0.06 * s), matOlhoP);
+        olhoDirP.position.set(-0.32 * s, 0.5 * s, olhoZ);
+        cabecaGrupo.add(olhoDirP);
 
         this.mesh.add(cabecaGrupo);
         this.cabecaGrupo = cabecaGrupo;
 
-        // Pernas
         const criarPerna = (x, z) => {
             const pernaG = new THREE.Group();
-            pernaG.position.set(x * s, 0.3, z * s);
-
+            pernaG.position.set(x * s, 1.2 * s, z * s);
             const perna = new THREE.Mesh(new THREE.BoxGeometry(0.4 * s, 1.0 * s, 0.4 * s), matPele);
-            perna.position.set(0, -0.2, 0);
+            perna.position.set(0, -0.5 * s, 0);
             perna.castShadow = true;
             pernaG.add(perna);
-
             const casco = new THREE.Mesh(new THREE.BoxGeometry(0.45 * s, 0.2 * s, 0.45 * s), matCasco);
-            casco.position.set(0, -0.4, 0);
+            casco.position.set(0, -1.1 * s, 0);
+            casco.castShadow = true;
             pernaG.add(casco);
-
             return pernaG;
         };
 
@@ -127,18 +152,6 @@ export class Ovelha extends Mob {
         this.pernaTE = criarPerna(0.4, -0.8);
         this.pernaTD = criarPerna(-0.4, -0.8);
         this.pernas = [this.pernaFE, this.pernaFD, this.pernaTE, this.pernaTD];
-
         this.mesh.add(...this.pernas);
-    }
-
-    update(delta, world) {
-        super.update(delta, world);
-
-        // Respirao suave se parado
-        if (this.estado === 'parado') {
-            const tempo = Date.now() * 0.002;
-            this.corpoMesh.scale.y = 1 + Math.sin(tempo) * 0.02;
-            this.cabecaGrupo.rotation.x = Math.sin(tempo * 0.5) * 0.05;
-        }
     }
 }

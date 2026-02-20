@@ -42,17 +42,23 @@ export class Mob {
         }
     }
 
-    update(delta, world) {
+    update(delta, world, camera) {
         this.tempoAcao -= delta;
 
         if (this.estado === 'morrer') {
             this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, Math.PI / 2, 0.05);
             this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, -0.6, 0.05);
+            if (this.lifeBar) this.lifeBar.visible = false;
             return;
         }
 
+        // Rotacionar barra de vida para a câmara
+        if (this.lifeBar && this.lifeBar.visible && camera) {
+            this.lifeBar.quaternion.copy(camera.quaternion);
+        }
+
         if (this.estado === 'dano') {
-            if (this.tempoAcao > -1.0) { // Dura cerca de 1s
+            if (this.tempoAcao > -0.5) {
                 const t = Math.abs(this.tempoAcao);
                 if (Math.floor(t * 15) % 2 === 0) {
                     this.materials.forEach(m => m.emissive && m.emissive.setHex(0xff0000));
@@ -69,11 +75,31 @@ export class Mob {
             this.direcao = Math.random() * Math.PI * 2;
             this.andando = Math.random() > 0.3;
             this.tempoAcao = 1 + Math.random() * 3;
-            this.estado = this.andando ? 'andar' : 'parado';
+
+            // IA Agressiva do Cavaleiro
+            if (this.type === 'cavaleiro' && camera) {
+                const dist = this.mesh.position.distanceTo(camera.position);
+                if (dist < 8) {
+                    this.direcao = Math.atan2(camera.position.x - this.mesh.position.x, camera.position.z - this.mesh.position.z);
+                    this.andando = true;
+                    if (dist < 2.5) {
+                        this.estado = 'atacar';
+                        this.tempoAcao = 1.0;
+                        this.andando = false;
+                        window.dispatchEvent(new CustomEvent('playerDamage', { detail: { amount: 1 } }));
+                    } else {
+                        this.estado = 'andar';
+                    }
+                } else {
+                    this.estado = this.andando ? 'andar' : 'parado';
+                }
+            } else {
+                this.estado = this.andando ? 'andar' : 'parado';
+            }
         }
 
-        if (this.andando && this.estado !== 'dano') {
-            const vel = 1.0 * delta;
+        if (this.andando && this.estado !== 'dano' && this.estado !== 'atacar') {
+            const vel = (this.type === 'cavaleiro' ? 2.0 : 1.0) * delta;
             const nextX = this.mesh.position.x + Math.sin(this.direcao) * vel;
             const nextZ = this.mesh.position.z + Math.cos(this.direcao) * vel;
 
@@ -82,14 +108,12 @@ export class Mob {
             this.mesh.rotation.y = THREE.MathUtils.lerp(this.mesh.rotation.y, this.direcao, 0.1);
 
             this.animTimer += delta * 10;
-            if (this.pernas.length >= 4) {
-                this.pernas[0].rotation.x = Math.sin(this.animTimer) * 0.5;
-                this.pernas[3].rotation.x = Math.sin(this.animTimer) * 0.5;
-                this.pernas[1].rotation.x = -Math.sin(this.animTimer) * 0.5;
-                this.pernas[2].rotation.x = -Math.sin(this.animTimer) * 0.5;
+            if (this.pernas.length >= 2) {
+                this.pernas.forEach((p, i) => {
+                    p.rotation.x = Math.sin(this.animTimer) * (i % 2 === 0 ? 0.5 : -0.5);
+                });
             }
 
-            // Colisão com o mundo (simples)
             if (world.has(`${Math.floor(this.mesh.position.x)},${Math.floor(this.mesh.position.y)},${Math.floor(this.mesh.position.z)}`)) {
                 this.direcao += Math.PI;
                 this.mesh.position.x -= Math.sin(this.direcao) * vel * 2;
@@ -99,14 +123,13 @@ export class Mob {
             this.pernas.forEach(p => p.rotation.x = 0);
         }
 
-        // Gravidade
         this.vy -= 0.5 * delta;
         this.mesh.position.y += this.vy;
         const blocoBaixo = Math.floor(this.mesh.position.y - 0.4);
         if (world.has(`${Math.floor(this.mesh.position.x)},${blocoBaixo},${Math.floor(this.mesh.position.z)}`)) {
             this.mesh.position.y = blocoBaixo + 1.4;
             this.vy = 0;
-            if (this.andando && Math.random() < 0.05) this.vy = 0.15; // Pulinho aleatório
+            if (this.andando && Math.random() < 0.05) this.vy = 0.15;
         }
     }
 
