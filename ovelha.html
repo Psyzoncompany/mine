@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ovelha Minecraft 3D - Animações</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #6bc2e8; /* Céu limpo */
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+    #instrucoes {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-shadow: 2px 2px 0 #333;
+      pointer-events: none;
+    }
+    #painel {
+      position: absolute;
+      bottom: 30px;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 0 10px;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 0 #2E7D32;
+      pointer-events: auto;
+      transition: 0.1s;
+    }
+    button:hover { background: #66BB6A; }
+    button:active { transform: translateY(4px); box-shadow: none; }
+    #btn-dano { background: #FF5252; box-shadow: 0 4px 0 #D32F2F; }
+    #btn-dano:hover { background: #FF8A80; }
+    #btn-morte { background: #555; box-shadow: 0 4px 0 #222; }
+    #btn-morte:hover { background: #777; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="instrucoes">👆 Clica e arrasta para ver a Ovelha! 🔄🐑</div>
+
+  <div id="painel">
+    <button onclick="mudarEstado('andar')">🚶 Andar</button>
+    <button id="btn-dano" onclick="mudarEstado('dano')">💥 Dano</button>
+    <button id="btn-morte" onclick="mudarEstado('morrer')">💀 Morrer</button>
+    <button onclick="mudarEstado('parado')">🛑 Reviver / Parar</button>
+  </div>
+
+  <script>
+    window.estadoAcao = 'parado';
+    window.mudarEstado = function(acao) {
+        if(window.estadoAcao === 'morrer' && acao !== 'parado') return; 
+        window.estadoAcao = acao;
+        window.tempoAcao = 0;
+        resetarCores(); // Limpa o efeito vermelho de dano
+    };
+    window.tempoAcao = 0;
+
+    // Array para guardar materiais que piscam no dano
+    const materiaisOvelha = [];
+
+    function resetarCores() {
+        materiaisOvelha.forEach(mat => mat.emissive.setHex(0x000000));
+    }
+
+    window.onload = function() {
+      // 🎬 Cena e Câmara
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color('#87CEEB');
+
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(8, 5, 10);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 + 0.1;
+
+      // 💡 Luzes
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const luzSol = new THREE.DirectionalLight(0xffffff, 0.8);
+      luzSol.position.set(10, 15, 10);
+      luzSol.castShadow = true;
+      scene.add(luzSol);
+
+      // 🎨 Função Geradora de Texturas Complexas (Píxeis)
+      function criarTextura(gerarPixels) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 16;
+          canvas.height = 16;
+          const ctx = canvas.getContext('2d');
+          gerarPixels(ctx);
+          const textura = new THREE.CanvasTexture(canvas);
+          textura.magFilter = THREE.NearestFilter;
+          textura.minFilter = THREE.NearestFilter;
+          return textura;
+      }
+
+      // 🧶 Textura da Lã (Variação de brancos e cinzas)
+      const texLa = criarTextura(ctx => {
+          for(let x=0; x<16; x++) {
+              for(let y=0; y<16; y++) {
+                  let v = 200 + Math.random() * 55;
+                  ctx.fillStyle = `rgb(${v},${v},${v})`;
+                  ctx.fillRect(x,y,1,1);
+              }
+          }
+      });
+
+      // 🐷 Textura da Pele (Apenas ruído de pele, sem olhos desenhados)
+      const texPele = criarTextura(ctx => {
+          for(let x=0; x<16; x++) {
+              for(let y=0; y<16; y++) {
+                  let r = 210 + Math.random() * 30;
+                  let g = 170 + Math.random() * 30;
+                  let b = 150 + Math.random() * 30;
+                  ctx.fillStyle = `rgb(${r},${g},${b})`;
+                  ctx.fillRect(x,y,1,1);
+              }
+          }
+      });
+
+      // 🧱 Materiais Atualizados
+      const matLa = new THREE.MeshStandardMaterial({ map: texLa });
+      const matPele = new THREE.MeshStandardMaterial({ map: texPele });
+      const matPerna = new THREE.MeshStandardMaterial({ map: texPele });
+      const matCasco = new THREE.MeshStandardMaterial({ color: 0x222222 });
+      const matFocinho = new THREE.MeshStandardMaterial({ color: 0xe57b89 });
+      const matOlhoB = new THREE.MeshStandardMaterial({ color: 0xffffff });
+      const matOlhoP = new THREE.MeshStandardMaterial({ color: 0x0f0f0f });
+
+      // Garante que todos piscam vermelho ao levar dano
+      materiaisOvelha.push(matLa, matPele, matPerna, matCasco, matFocinho, matOlhoB, matOlhoP);
+
+      // 🐑 CONSTRUÇÃO DA OVELHA COMPLEXA
+      const ovelha = new THREE.Group();
+
+      // 🧊 Corpo Principal (Várias camadas para parecer lã volumosa)
+      const corpo = new THREE.Group(); // Mantido o nome "corpo" para a animação de respiração funcionar
+      corpo.position.set(0, 2.0, 0);
+
+      const corpoBase = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 2.4), matLa);
+      corpoBase.castShadow = true;
+      corpo.add(corpoBase);
+
+      const laExtra1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 2.0), matLa);
+      laExtra1.castShadow = true;
+      corpo.add(laExtra1);
+
+      const laExtra2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 2.0), matLa);
+      laExtra2.castShadow = true;
+      corpo.add(laExtra2);
+
+      // 🧶 Rabinho
+      const rabo = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.4), matLa);
+      rabo.position.set(0, 0.2, -1.3);
+      rabo.rotation.x = -Math.PI / 8;
+      rabo.castShadow = true;
+      corpo.add(rabo);
+
+      ovelha.add(corpo);
+
+      // 🧊 Cabeça e Detalhes (Pivô no pescoço)
+      const cabecaGrupo = new THREE.Group();
+      cabecaGrupo.position.set(0, 2.4, 1.2);
+
+      // Rosto Base
+      const cabeca = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 1.2), matPele);
+      cabeca.position.set(0, 0.3, 0.6);
+      cabeca.castShadow = true;
+      cabecaGrupo.add(cabeca);
+
+      // Lã do Topo e Bochechas
+      const laCabeca = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 1.0), matLa);
+      laCabeca.position.set(0, 1.0, 0.6);
+      laCabeca.castShadow = true;
+      cabecaGrupo.add(laCabeca);
+
+      const bochechaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.6), matLa);
+      bochechaEsq.position.set(0.6, 0.5, 0.6);
+      cabecaGrupo.add(bochechaEsq);
+
+      const bochechaDir = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.6), matLa);
+      bochechaDir.position.set(-0.6, 0.5, 0.6);
+      cabecaGrupo.add(bochechaDir);
+
+      // 👂 Orelhas 3D
+      const orelhaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.2), matPele);
+      orelhaEsq.position.set(0.8, 0.5, 0.4);
+      orelhaEsq.rotation.z = -Math.PI / 8;
+      cabecaGrupo.add(orelhaEsq);
+
+      const orelhaDir = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.2), matPele);
+      orelhaDir.position.set(-0.8, 0.5, 0.4);
+      orelhaDir.rotation.z = Math.PI / 8;
+      cabecaGrupo.add(orelhaDir);
+
+      // 🐽 Focinho 3D
+      const focinho = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.2), matFocinho);
+      focinho.position.set(0, 0.1, 1.3);
+      cabecaGrupo.add(focinho);
+
+      // 👀 Olhos 3D
+      const olhoZ = 1.21;
+      const olhoEsqB = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 0.05), matOlhoB);
+      olhoEsqB.position.set(0.35, 0.5, olhoZ);
+      cabecaGrupo.add(olhoEsqB);
+      
+      const olhoEsqP = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.06), matOlhoP);
+      olhoEsqP.position.set(0.32, 0.5, olhoZ);
+      cabecaGrupo.add(olhoEsqP);
+
+      const olhoDirB = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 0.05), matOlhoB);
+      olhoDirB.position.set(-0.35, 0.5, olhoZ);
+      cabecaGrupo.add(olhoDirB);
+      
+      const olhoDirP = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.06), matOlhoP);
+      olhoDirP.position.set(-0.32, 0.5, olhoZ);
+      cabecaGrupo.add(olhoDirP);
+
+      ovelha.add(cabecaGrupo);
+
+      // 🐾 Pernas (Mais fininhas para destacar a lã)
+      const criarPerna = (x, z) => {
+          const pernaG = new THREE.Group();
+          pernaG.position.set(x, 1.2, z); 
+
+          const perna = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 0.4), matPerna);
+          perna.position.set(0, -0.5, 0);
+          perna.castShadow = true;
+          pernaG.add(perna);
+
+          const casco = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.2, 0.45), matCasco);
+          casco.position.set(0, -1.1, 0);
+          casco.castShadow = true;
+          pernaG.add(casco);
+
+          return pernaG;
+      };
+
+      const pernaFE = criarPerna(0.4, 0.8);
+      const pernaFD = criarPerna(-0.4, 0.8);
+      const pernaTE = criarPerna(0.4, -0.8);
+      const pernaTD = criarPerna(-0.4, -0.8);
+
+      ovelha.add(pernaFE, pernaFD, pernaTE, pernaTD);
+      scene.add(ovelha);
+
+      // 🌱 Chão (Relva Texturizada)
+      const texGrama = criarTextura(ctx => {
+          for(let i=0; i<256; i++) {
+              let x = i % 16; let y = Math.floor(i / 16);
+              let g = 150 + Math.random() * 80;
+              ctx.fillStyle = `rgb(50, ${g}, 30)`;
+              ctx.fillRect(x,y,1,1);
+          }
+      });
+      const matChao = new THREE.MeshStandardMaterial({ map: texGrama });
+      const chao = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 0.5, 64), matChao);
+      chao.position.y = -0.25;
+      chao.receiveShadow = true;
+      scene.add(chao);
+
+      // 📐 Resize
+      window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // 🔁 Loop de Animação
+      let tempoGlobal = 0;
+      function animar() {
+          requestAnimationFrame(animar);
+          controls.update();
+
+          tempoGlobal += 0.05;
+          window.tempoAcao += 0.05;
+          const t = window.tempoAcao;
+
+          // 🔄 Suavização (Lerp) de todas as partes de volta ao normal
+          ovelha.rotation.z = THREE.MathUtils.lerp(ovelha.rotation.z, 0, 0.1);
+          ovelha.rotation.x = THREE.MathUtils.lerp(ovelha.rotation.x, 0, 0.1);
+          ovelha.position.y = THREE.MathUtils.lerp(ovelha.position.y, 0, 0.1);
+          ovelha.position.z = THREE.MathUtils.lerp(ovelha.position.z, 0, 0.1);
+          cabecaGrupo.rotation.x = THREE.MathUtils.lerp(cabecaGrupo.rotation.x, 0, 0.1);
+          cabecaGrupo.rotation.z = THREE.MathUtils.lerp(cabecaGrupo.rotation.z, 0, 0.1);
+          
+          pernaFE.rotation.x = THREE.MathUtils.lerp(pernaFE.rotation.x, 0, 0.1);
+          pernaFD.rotation.x = THREE.MathUtils.lerp(pernaFD.rotation.x, 0, 0.1);
+          pernaTE.rotation.x = THREE.MathUtils.lerp(pernaTE.rotation.x, 0, 0.1);
+          pernaTD.rotation.x = THREE.MathUtils.lerp(pernaTD.rotation.x, 0, 0.1);
+
+          // 🎮 ESTADOS DE ANIMAÇÃO
+          if (window.estadoAcao === 'andar') {
+              // 🚶 Andar: Pernas alternam e corpo saltita
+              const velAndar = t * 4.0;
+              pernaFE.rotation.x = Math.sin(velAndar) * 0.6;
+              pernaTE.rotation.x = -Math.sin(velAndar) * 0.6;
+              pernaFD.rotation.x = -Math.sin(velAndar) * 0.6;
+              pernaTD.rotation.x = Math.sin(velAndar) * 0.6;
+              
+              ovelha.position.y = Math.abs(Math.sin(velAndar * 2)) * 0.2;
+              cabecaGrupo.rotation.x = Math.sin(velAndar * 2) * 0.1; // Cabeça balança
+          } 
+          else if (window.estadoAcao === 'dano') {
+              // 💥 Dano: Recuo forte, cabeça abana e pisca vermelho
+              if (t < 1.0) {
+                  ovelha.position.z = Math.sin(t * Math.PI) * -0.8; // Knockback para trás
+                  ovelha.rotation.x = Math.sin(t * Math.PI) * -0.3; // Empina
+                  cabecaGrupo.rotation.z = Math.sin(t * 20) * 0.2; // Treme a cabeça
+
+                  // Piscar vermelho (Flash)
+                  if (Math.floor(t * 15) % 2 === 0) {
+                      materiaisOvelha.forEach(m => m.emissive.setHex(0xff0000));
+                  } else {
+                      resetarCores();
+                  }
+              } else {
+                  mudarEstado('parado'); // Volta ao normal sozinho após o dano
+              }
+          } 
+          else if (window.estadoAcao === 'morrer') {
+              // 💀 Morrer: Tomba para o lado (90 graus)
+              ovelha.rotation.z = THREE.MathUtils.lerp(ovelha.rotation.z, Math.PI / 2, 0.05);
+              ovelha.position.y = THREE.MathUtils.lerp(ovelha.position.y, -0.6, 0.05); // Afunda um bocado
+              cabecaGrupo.rotation.x = THREE.MathUtils.lerp(cabecaGrupo.rotation.x, Math.PI / 6, 0.05); // Cabeça descai
+          } 
+          else {
+              // 🛑 Parado: Respiração suave
+              corpo.scale.y = 1 + Math.sin(tempoGlobal * 2) * 0.02;
+              corpo.scale.x = 1 + Math.sin(tempoGlobal * 2) * 0.02;
+              cabecaGrupo.rotation.x = Math.sin(tempoGlobal) * 0.05;
+          }
+
+          renderer.render(scene, camera);
+      }
+      animar();
+    };
+  </script>
+</body>
+</html>
