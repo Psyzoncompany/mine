@@ -464,16 +464,28 @@
         }
 
         function gerarTexturaQuebra(progresso) {
-            const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 2;
-            const linhas = Math.floor(progresso * 25);
-            ctx.clearRect(0, 0, 32, 32);
-            for (let i = 0; i < linhas; i++) {
-                ctx.beginPath();
-                ctx.moveTo(Math.random() * 32, Math.random() * 32);
-                ctx.lineTo(Math.random() * 32, Math.random() * 32);
-                ctx.stroke();
+            const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 100, 100);
+            ctx.strokeStyle = 'rgba(20, 20, 20, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Rachaduras profundas padrão Hytale
+            const crackPaths = [
+                "M52 18 L48 32 L56 48 L44 65 M15 45 L32 42 L48 55",
+                "M25 25 L38 42 L18 68 M78 20 L62 42 L88 58 M40 80 L55 72",
+                "M5 12 L28 22 M92 92 L68 78 M12 88 L45 72 M75 45 L95 40",
+                "M50 2 L50 98 M2 50 L98 50 M18 18 L82 82 M82 18 L18 82",
+                "M35 35 m-15 0 a 15 15 0 1 0 30 0 a 15 15 0 1 0 -30 0 M65 65 m-10 0 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0"
+            ];
+
+            const maxStage = Math.min(5, Math.floor(progresso * 6));
+
+            for (let i = 0; i < maxStage; i++) {
+                ctx.stroke(new Path2D(crackPaths[i]));
             }
+
             const tex = new THREE.CanvasTexture(canvas);
             tex.magFilter = tex.minFilter = THREE.NearestFilter; return tex;
         }
@@ -724,6 +736,29 @@
             itensDropados.push({ mesh, tipo, vy: 0.2 }); // Dá um pulinho ao nascer
         }
 
+        // 🌫️ PARTÍCULAS (DEBRIS)
+        let particulasQuebra = [];
+        const geoParticula = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        function criarParticulas(x, y, z, tipoBloco, qtde = 15) {
+            let matBase = materiais[tipoBloco];
+            const mat = Array.isArray(matBase) ? matBase[2] : (matBase || materiais[2]);
+
+            for (let i = 0; i < qtde; i++) {
+                const p = new THREE.Mesh(geoParticula, mat);
+                p.position.set(x + Math.random(), y + Math.random(), z + Math.random());
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.0 + Math.random() * 2;
+                p.userData = {
+                    vx: Math.cos(angle) * speed,
+                    vy: 2 + Math.random() * 3,
+                    vz: Math.sin(angle) * speed,
+                    life: 0.6 + Math.random() * 0.6
+                };
+                cena.add(p);
+                particulasQuebra.push(p);
+            }
+        }
+
         // ⛏️ INTERAÇÃO
         const raycaster = new THREE.Raycaster(); const centroTela = new THREE.Vector2(0, 0);
         let quebrandoBloco = null;
@@ -864,29 +899,59 @@
                     }
                 }
 
+                // 🌫️ ATUALIZA PARTÍCULAS
+                for (let i = particulasQuebra.length - 1; i >= 0; i--) {
+                    let p = particulasQuebra[i];
+                    p.position.x += p.userData.vx * delta;
+                    p.position.y += p.userData.vy * delta;
+                    p.position.z += p.userData.vz * delta;
+                    p.userData.vy -= 15 * delta; // Gravidade partículas
+                    p.rotation.x += delta * 15;
+                    p.rotation.y += delta * 15;
+                    p.userData.life -= delta * 2;
+                    p.scale.setScalar(Math.max(0, p.userData.life));
+                    if (p.userData.life <= 0) {
+                        cena.remove(p);
+                        particulasQuebra.splice(i, 1);
+                    }
+                }
+
                 // ⛏️ LÓGICA DE QUEBRA GRADUAL
                 if (quebrandoBloco) {
                     tempoQuebrando += delta;
                     animandoMao = true;
                     progressoMao += delta * 5;
                     const prog = tempoQuebrando / TEMPO_PARA_QUEBRAR;
+                    const tipoBlocoQuebrando = mundo.get(`${quebrandoBloco.x},${quebrandoBloco.y},${quebrandoBloco.z}`);
 
-                    // Mostra as rachaduras
+                    // Mostra as rachaduras com efeito de Shake e Redução visual (ilusão óptica nas texturas adjacentes)
                     meshQuebra.visible = true;
-                    meshQuebra.position.set(quebrandoBloco.x, quebrandoBloco.y, quebrandoBloco.z);
+                    const shakeInt = prog * 0.05;
+                    meshQuebra.position.set(
+                        quebrandoBloco.x + (Math.random() - 0.5) * shakeInt,
+                        quebrandoBloco.y + (Math.random() - 0.5) * shakeInt,
+                        quebrandoBloco.z + (Math.random() - 0.5) * shakeInt
+                    );
+
                     if (Math.floor(tempoQuebrando * 10) % 2 === 0) {
                         matQuebra.map = gerarTexturaQuebra(prog);
                         matQuebra.needsUpdate = true;
                     }
 
-                    const scale = 1.0 + Math.sin(tempoQuebrando * 20) * 0.05;
+                    // Tweak orgânico na "hitbox" selecionada
+                    const scale = 1.0 + Math.sin(tempoQuebrando * 20) * 0.03;
                     contornoBloco.scale.set(scale, scale, scale);
+
+                    // Solta pequenas partículas durante a escavação
+                    if (Math.random() < 0.2 && tipoBlocoQuebrando) {
+                        criarParticulas(quebrandoBloco.x, quebrandoBloco.y, quebrandoBloco.z, tipoBlocoQuebrando, 1);
+                    }
 
                     if (tempoQuebrando >= TEMPO_PARA_QUEBRAR) {
                         const { x, y, z } = quebrandoBloco;
-                        const tipo = mundo.get(`${x},${y},${z}`);
-                        if (tipo) {
-                            droparItem(x, y, z, tipo);
+                        if (tipoBlocoQuebrando) {
+                            criarParticulas(x, y, z, tipoBlocoQuebrando, 20); // BOOM de detritos!
+                            droparItem(x, y, z, tipoBlocoQuebrando);
                             soundManager.playSound('pop');
                             mundo.delete(`${x},${y},${z}`);
                             recriarChunkVisual(x, z);
