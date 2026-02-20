@@ -19,6 +19,15 @@ export class Mob {
         this.vida = 10;
 
         this.materials = [];
+
+        // 🎯 HITBOX (Invisível mas detectável por clique)
+        this.hitbox = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 2.5, 1.5),
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        this.hitbox.position.y = 0.5;
+        this.mesh.add(this.hitbox);
+
         this.scene.add(this.mesh);
     }
 
