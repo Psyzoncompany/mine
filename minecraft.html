@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Meu Craft 🌍 - Vaca 3D, Drops & Animação</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,20 +17,89 @@
             font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
         }
 
-        #vida-player {
+        /* ── HUD Bottom (acima da hotbar, estilo Minecraft) ── */
+        #hud-bottom {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            bottom: 74px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 2px;
+            pointer-events: none;
             z-index: 100;
+            width: 460px;
         }
 
-        .heart {
-            width: 24px;
-            height: 24px;
+        #health-hunger-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        #vida-player {
+            display: flex;
+            gap: 2px;
+        }
+
+        #hunger-bar {
+            display: flex;
+            flex-direction: row-reverse;
+            gap: 2px;
+        }
+
+        #oxygen-row {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        #bubbles-player {
+            display: flex;
+            gap: 2px;
+        }
+
+        .heart, .bubble-icon {
+            width: 20px;
+            height: 20px;
             background-size: cover;
             display: inline-block;
+            image-rendering: pixelated;
+        }
+
+        .food-icon {
+            width: 20px;
+            height: 20px;
+            background-size: cover;
+            display: inline-block;
+            image-rendering: pixelated;
+        }
+
+        #xp-bar-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #222;
+            overflow: hidden;
+        }
+
+        #xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1ffc20, #80ff40);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        #xp-level-display {
+            font-size: 8px;
+            color: #80ff20;
+            text-shadow: 1px 1px 0 #000, -1px 0 0 #000;
+            text-align: center;
+            font-family: 'Press Start 2P', monospace;
+            line-height: 1;
+            display: none;
         }
 
         #damage-flash {
@@ -59,6 +129,32 @@
             content: '';
             position: absolute;
             background: rgba(255, 255, 255, 0.8);
+        }
+
+        #water-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            display: none;
+            background: rgba(63, 118, 228, 0.4);
+        }
+
+        #water-overlay.active {
+            display: block;
+            animation: waterPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes waterPulse {
+            0%, 100% {
+                background: rgba(63, 118, 228, 0.4);
+            }
+            50% {
+                background: rgba(33, 88, 198, 0.5);
+            }
         }
 
         #crosshair::before {
@@ -125,98 +221,92 @@
             z-index: 2;
         }
 
-        #menu,
-        #inventory-menu {
+        #menu {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #menu-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url('java/textures/gui/menu_background.png');
+            background-size: 32px;
+            image-rendering: pixelated;
+            filter: brightness(0.25);
+        }
+
+        #menu-content {
+            position: relative;
+            z-index: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .mc-button {
+            width: 100%;
+            height: 40px;
+            margin: 5px 0;
+            background-image: url('java/textures/gui/sprites/widget/button.png');
+            background-size: 100% 100%;
+            background-color: transparent;
+            border: none;
+            color: #E0E0E0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
             justify-content: center;
-            color: white;
-            z-index: 10;
-        }
-
-        #inventory-menu {
-            display: none;
-            background: rgba(60, 60, 60, 0.95);
-            border: 4px solid #1e1e1e;
-            width: 500px;
-            height: 450px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px;
-            border-radius: 4px;
-        }
-
-        .inv-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+            text-shadow: 2px 2px #3F3F3F;
             image-rendering: pixelated;
-            /* Pra interface retro */
         }
 
-        .inv-item {
-            background: rgba(0, 0, 0, 0.4);
-            border: 2px solid #555;
-            padding: 10px;
-            text-align: center;
-            border-radius: 4px;
-            position: relative;
+        .mc-button:hover {
+            background-image: url('java/textures/gui/sprites/widget/button_highlighted.png');
+            color: #FFFFA0;
         }
 
-        .inv-item .qty {
-            position: absolute;
-            bottom: 4px;
-            right: 6px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 1px 1px 0 #000;
-        }
-
-        .inv-item .icon {
-            width: 32px;
-            height: 32px;
-            margin: 0 auto 5px;
-            display: block;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        .inv-item .name {
-            font-size: 10px;
-            color: #aaa;
-            text-transform: uppercase;
-        }
+        /* (Overridden by Minecraft-style inventory below) */
 
         button {
             padding: 15px 30px;
-            font-size: 20px;
+            font-size: 16px;
             cursor: pointer;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            border-bottom: 4px solid #388E3C;
+            background: #6b4d31;
+            color: #ffda75;
+            border: 2px solid #3b2816;
+            border-radius: 4px;
+            border-bottom: 6px solid #3b2816;
             margin: 10px;
+            text-shadow: 2px 2px 0 #000;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            font-family: inherit;
+            transition: all 0.1s;
         }
 
         button:active {
             transform: translateY(4px);
-            border-bottom: 0;
+            border-bottom: 2px solid #3b2816;
+            background: #5a3f27;
         }
 
         button:disabled {
-            background: #888;
-            border-bottom: 4px solid #555;
+            background: #4a4a4a;
+            border: 2px solid #222;
+            border-bottom: 6px solid #222;
+            color: #888;
+            text-shadow: 1px 1px 0 #000;
             cursor: not-allowed;
         }
 
@@ -243,6 +333,141 @@
             font-weight: bold;
             text-shadow: 1px 1px 0 #000;
             font-size: 18px;
+        }
+
+        /* Novas Classes de Inventário Estilo Minecraft - definidas abaixo */
+
+        #inventory-menu {
+            display: none;
+            background: #c6c6c6;
+            border-top: 3px solid #fff;
+            border-left: 3px solid #fff;
+            border-bottom: 3px solid #555;
+            border-right: 3px solid #555;
+            padding: 7px;
+            font-family: 'Press Start 2P', monospace;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55);
+            z-index: 100;
+        }
+
+        /* Overlay escuro ao abrir inventário (via box-shadow acima) */
+
+        #inventory-menu h2,
+        #craft-title {
+            font-size: 11px !important;
+            color: #404040 !important;
+            text-shadow: none !important;
+            margin: 4px 0 6px 2px !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+
+        .crafting-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+            background: #c6c6c6;
+            padding: 4px 0;
+        }
+
+        .crafting-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            padding: 0;
+        }
+
+        .crafting-arrow {
+            font-size: 22px;
+            color: #373737;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        .inv-slot {
+            width: 36px;
+            height: 36px;
+            background: #8b8b8b;
+            border-top: 2px solid #373737;
+            border-left: 2px solid #373737;
+            border-bottom: 2px solid #fff;
+            border-right: 2px solid #fff;
+            position: relative;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            image-rendering: pixelated;
+        }
+
+        .inv-slot:hover {
+            background-color: rgba(255,255,255,0.35);
+            cursor: pointer;
+        }
+
+        .inv-slot .qty {
+            position: absolute;
+            bottom: 1px;
+            right: 2px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            color: white;
+            text-shadow: 1px 1px 0 #3f3f3f;
+            pointer-events: none;
+        }
+
+        .result-slot {
+            width: 42px;
+            height: 42px;
+            background-color: #8b8b8b;
+            border-top: 2px solid #373737;
+            border-left: 2px solid #373737;
+            border-bottom: 2px solid #fff;
+            border-right: 2px solid #fff;
+        }
+
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 1px;
+            padding: 1px 0;
+        }
+
+        /* Separador entre inventário principal e hotbar */
+        #inv-hotbar {
+            margin-top: 6px !important;
+            padding-top: 4px;
+            border-top: 1px solid #999;
+        }
+
+        #mouse-drag-icon {
+            display: none;
+            position: fixed;
+            width: 32px;
+            height: 32px;
+            pointer-events: none;
+            z-index: 9999;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            image-rendering: pixelated;
+            filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+
+        #mouse-drag-icon .qty {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: white;
+            text-shadow: 1px 1px 0 #000;
+            margin-right: -4px;
+            margin-bottom: -4px;
         }
 
         /* 📱 CONTROLES MOBILE (estilo Minecraft PE) */
@@ -412,6 +637,107 @@
                 display: none !important;
             }
         }
+
+        @media (max-width: 768px) {
+            #inventory-menu {
+                width: 95%;
+                height: 85%;
+                max-width: 500px;
+                max-height: 500px;
+                padding: 10px;
+            }
+
+            .inv-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 5px;
+                margin: 10px 0;
+            }
+
+            .inv-item {
+                padding: 5px;
+            }
+
+            .inv-item .icon {
+                width: 24px;
+                height: 24px;
+                margin: 0 auto 2px;
+            }
+
+            .inv-item .name {
+                font-size: 8px;
+            }
+
+            .slot {
+                width: 36px;
+                height: 36px;
+            }
+
+            .dpad {
+                bottom: 50px;
+                left: 10px;
+                width: 120px;
+                height: 120px;
+            }
+
+            .dpad-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .dpad-up {
+                left: 40px;
+            }
+
+            .dpad-down {
+                left: 40px;
+            }
+
+            .dpad-left {
+                top: 40px;
+            }
+
+            .dpad-right {
+                top: 40px;
+            }
+
+            .action-btns {
+                bottom: 60px;
+                right: 10px;
+                width: 110px;
+                height: 140px;
+            }
+
+            .action-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+
+            .btn-sprint {
+                bottom: 180px;
+                left: 40px;
+                width: 36px;
+                height: 36px;
+                font-size: 12px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px 20px;
+                margin: 5px;
+            }
+
+            #hud-bottom {
+                width: 95vw;
+                bottom: 68px;
+            }
+
+            .heart, .bubble-icon, .food-icon {
+                width: 16px;
+                height: 16px;
+            }
+        }
     </style>
 
     <script type="importmap">
@@ -433,44 +759,194 @@
 
     <div id="loading">🌍 Carregando mundo...</div>
     <div id="recursos" style="display:none;"></div> <!-- Ocultando pq agora temos inventário real -->
-    <div id="vida-player"></div>
+    <!-- HUD bottom: saúde + fome + oxigênio + barra de XP (estilo Minecraft) -->
+    <div id="hud-bottom">
+        <div id="health-hunger-row">
+            <div id="vida-player"></div>
+            <div id="hunger-bar"></div>
+        </div>
+        <div id="oxygen-row">
+            <div id="bubbles-player"></div>
+        </div>
+        <div id="xp-bar-container">
+            <div id="xp-bar-fill"></div>
+        </div>
+        <div id="xp-level-display">0</div>
+    </div>
     <div id="damage-flash"></div>
+    <div id="water-overlay"></div>
     <div id="crosshair"></div>
 
     <div id="hotbar">
-        <div class="slot active" id="slot-0"><span class="qty"></span></div>
-        <div class="slot" id="slot-1"><span class="qty"></span></div>
-        <div class="slot" id="slot-2"><span class="qty"></span></div>
-        <div class="slot" id="slot-3"><span class="qty"></span></div>
-        <div class="slot" id="slot-4"><span class="qty"></span></div>
-        <div class="slot" id="slot-5"><span class="qty"></span></div>
-        <div class="slot" id="slot-6"><span class="qty"></span></div>
+        <div class="slot active" id="hotbar-slot-0"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-1"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-2"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-3"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-4"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-5"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-6"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-7"><span class="qty"></span></div>
+        <div class="slot" id="hotbar-slot-8"><span class="qty"></span></div>
     </div>
 
     <div id="menu">
-        <h1>🌍 Meu Craft Infinito</h1>
-        <button id="btn-play">▶️ Jogar</button>
-        <div class="instructions">
-            🏃‍♂️ <b>WASD</b>: Andar | <b>Espaço</b>: Pular | <b>Mouse</b>: Olhar<br>
-            ⛏️ <b>Clique Esq</b>: Quebrar | 🧱 <b>Clique Dir</b>: Colocar<br>
-            🎒 <b>1 a 7 / Scroll</b>: Hotbar | 🎒 <b>E</b>: Inventário / Crafting<br>
+        <div id="menu-background"></div>
+        <div id="menu-content">
+            <h1 style="color:white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 20px;">Menu de Pausa</h1>
+            <button class="mc-button" id="btn-play">Retomar Jogo</button>
+            <button class="mc-button" id="btn-save-world">Salvar Mundo</button>
+            <button class="mc-button" id="btn-load-world">Carregar Mundo</button>
+            <button class="mc-button" onclick="location.reload()">Sair do Jogo</button>
+            
+            <div class="instructions" style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 4px; margin-top: 20px; font-size: 10px; line-height: 1.6;">
+                🏃‍♂️ <b>WASD</b>: Andar | <b>Espaço</b>: Pular | <b>Mouse</b>: Olhar<br>
+                ⛏️ <b>Clique Esq</b>: Quebrar | 🧱 <b>Clique Dir</b>: Colocar<br>
+                🎒 <b>1 a 9 / Scroll</b>: Hotbar | 🎒 <b>E</b>: Inventário / Crafting<br>
+                ✨ <b>Y</b>: Modo Criativo
+            </div>
+        </div>
+    </div>
+
+    <div id="mouse-drag-icon"></div>
+    
+    <!-- Menu Criativo -->
+    <div id="creative-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#c6c6c6; border-top:3px solid #fff; border-left:3px solid #fff; border-bottom:3px solid #555; border-right:3px solid #555; padding:15px; z-index:100; width:90%; max-width:600px; max-height:80vh;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="font-size:14px; margin:0; color:#404040; font-family:'Press Start 2P',monospace;">Modo Criativo</h2>
+            <button onclick="document.getElementById('creative-menu').style.display='none'; controles.lock();" style="padding:5px 10px; font-size:12px; cursor:pointer; background:#8b8b8b; border-top:2px solid #fff; border-left:2px solid #fff; border-bottom:2px solid #555; border-right:2px solid #555;">X</button>
+        </div>
+        <p style="font-size:10px; color:#666; margin:5px 0 10px; font-family:sans-serif;">Clique em um item para adicionar 64 ao inventário</p>
+        <div id="creative-grid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
+    </div>
+    
+    <style>
+        .creative-slot {
+            width:60px; height:60px;
+            background:#8b8b8b;
+            border-top:2px solid #d4d4d4;
+            border-left:2px solid #d4d4d4;
+            border-bottom:2px solid #373737;
+            border-right:2px solid #373737;
+            display:flex;
+            align-items:flex-end;
+            justify-content:center;
+            cursor:pointer;
+            background-size:70%;
+            background-repeat:no-repeat;
+            background-position:center;
+            image-rendering:pixelated;
+            position:relative;
+        }
+        .creative-slot:hover {
+            background-color:#aaa;
+            transform:scale(1.05);
+        }
+        .creative-label {
+            font-size:7px;
+            color:#fff;
+            text-shadow:1px 1px 0 #000;
+            font-family:'Press Start 2P',monospace;
+            padding:2px;
+            text-align:center;
+            width:100%;
+            background:rgba(0,0,0,0.5);
+        }
+    </style>
+
+    <!-- Fornalha Menú -->
+    <div id="furnace-menu" style="display: none; background: #c6c6c6; border-top: 3px solid #fff; border-left: 3px solid #fff; border-bottom: 3px solid #555; border-right: 3px solid #555; padding: 7px; font-family: 'Press Start 2P', monospace; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55); z-index: 100;">
+        <h2 style="font-size: 16px; margin: 0 0 10px 0; color: #404040; text-shadow: none;">Fornalha</h2>
+        <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="inv-slot" id="furnace-in"><span class="qty"></span></div>
+                <div style="font-size:16px; text-align:center; height:16px;" id="furnace-fire-icon">🔥</div>
+                <div class="inv-slot" id="furnace-fuel"><span class="qty"></span></div>
+            </div>
+            <div style="width: 30px; height: 15px; background: #999; position: relative;">
+                <div id="furnace-arrow-progress" style="width: 0%; height: 100%; background: #0f0;"></div>
+            </div>
+            <div class="inv-slot" id="furnace-out"><span class="qty"></span></div>
+        </div>
+        <h2 style="font-size: 11px; margin: 4px 0; color: #404040; text-shadow: none;">Inventário</h2>
+        <div class="inv-grid" id="furnace-inv-grid">
+            <script>
+                for (let i = 9; i < 36; i++) document.write(`<div class="inv-slot" id="furnace-inv-slot-${i}"><span class="qty"></span></div>`);
+            </script>
+        </div>
+        <div style="height: 10px;"></div>
+        <div class="inv-grid" id="furnace-hotbar-grid">
+            <script>
+                for (let i = 0; i < 9; i++) document.write(`<div class="inv-slot" id="furnace-inv-slot-${i}"><span class="qty"></span></div>`);
+            </script>
         </div>
     </div>
 
     <div id="inventory-menu">
-        <h2>🎒 Inventário & Crafting</h2>
-        <div class="inv-grid" id="inv-grid">
-            <!-- Items via JS -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 id="craft-title" style="font-size: 16px; margin: 0; color: #404040; text-shadow: none;">Crafting</h2>
+            <button id="btn-recipe-book"
+                style="margin:0; padding:4px 8px; font-size:10px; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">📖
+                Livro de Receitas</button>
         </div>
-        <hr style="width:100%; border:1px solid #444;">
-        <div style="margin-top: 15px; display:flex; gap: 20px; align-items:center;">
-            <div>
-                <p>🛠️ <b>Crafting:</b> Aproveite sua madeira!</p>
-                <button id="btn-craft-picareta">Criar Picareta (5 Madeira)</button>
-                <button id="btn-craft-machado">Criar Machado (5 Madeira)</button>
+
+        <div class="crafting-area">
+            <div class="crafting-grid" id="crafting-grid">
+                <div class="inv-slot" id="craft-in-0"><span class="qty"></span></div>
+                <div class="inv-slot" id="craft-in-1"><span class="qty"></span></div>
+                <div class="inv-slot craft-3x3" id="craft-in-2" style="display:none;"><span class="qty"></span></div>
+
+                <div class="inv-slot" id="craft-in-3"><span class="qty"></span></div>
+                <div class="inv-slot" id="craft-in-4"><span class="qty"></span></div>
+                <div class="inv-slot craft-3x3" id="craft-in-5" style="display:none;"><span class="qty"></span></div>
+
+                <div class="inv-slot craft-3x3" id="craft-in-6" style="display:none;"><span class="qty"></span></div>
+                <div class="inv-slot craft-3x3" id="craft-in-7" style="display:none;"><span class="qty"></span></div>
+                <div class="inv-slot craft-3x3" id="craft-in-8" style="display:none;"><span class="qty"></span></div>
             </div>
-            <button id="btn-fechar-inv" style="background:#555; box-shadow: 0 4px 0 #333;">Fechar (E)</button>
+            <div class="crafting-arrow">➔</div>
+            <div class="inv-slot result-slot" id="craft-out"><span class="qty"></span></div>
         </div>
+
+        <h2 style="font-size: 16px; margin: 15px 0 10px 0; color: #404040; text-shadow: none;">Inventory</h2>
+        <div class="inv-grid" id="inv-grid">
+            <!-- 9 a 35 -->
+            <script>
+                // Generate 27 main inventory slots (9x3)
+                for (let i = 9; i < 36; i++) {
+                    document.write(`<div class="inv-slot" id="inv-slot-${i}"><span class="qty"></span></div>`);
+                }
+            </script>
+        </div>
+
+        <div class="inv-grid" id="inv-hotbar" style="margin-top: 10px;">
+            <!-- 0 a 8 -->
+            <script>
+                for (let i = 0; i < 9; i++) {
+                    document.write(`<div class="inv-slot hotbar-slot" id="inv-slot-${i}"><span class="qty"></span></div>`);
+                }
+            </script>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal do Livro de Receitas -->
+    <div id="recipe-book-modal"
+        style="display:none; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#e0d0b0; border:4px solid #404040; padding:20px; z-index:100; color:#404040; font-family:'Press Start 2P', monospace; width:90%; max-width:400px; box-shadow:0 0 0 100vw rgba(0,0,0,0.5);">
+        <h3 style="margin-top:0;">📖 Receitas</h3>
+        <div style="max-height:300px; overflow-y:auto; font-size:10px; line-height:2;">
+            <p><b>🪵 Tábua de Madeira:</b> 1 Mad.</p>
+            <p><b>🪓 Graveto:</b> 2 Tábuas (verticais)</p>
+            <p><b>🗜️ Bancada:</b> 4 Tábuas (2x2 na Grade ou 4 em linha)</p>
+            <p><b>⛏️ Picareta Mad.:</b> 3 Tábuas no topo, 2 Gravetos no meio</p>
+            <p><b>⛏️ Machado Mad.:</b> 3 Tábuas no canto superior esq, 2 Gravetos no meio</p>
+            <p><b>⛏️ Picareta/Machado de Pedra:</b> Igual a Mad. mas usando <b>Pedra</b> invés de Tábua!</p>
+            <p><b>🪓 Picareta/Machado de Ferro:</b> Igual mas com <b>Min. Ferro</b> (3x3 na Bancada)</p>
+            <p><b>💎 Picareta/Machado de Diamante:</b> Igual mas com <b>Min. Diamante</b></p>
+            <p><b>🪣 Pá (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
+            <p><b>Dica:</b> Interaja (Clique Dir) com a Bancada para grades 3x3!</p>
+        </div>
+        <button id="btn-close-recipe"
+            style="margin-top:10px; padding:10px; width:100%; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">Fechar</button>
     </div>
 
     <!-- 📱 CONTROLES MOBILE -->
@@ -499,9 +975,12 @@
         import { Ovelha } from './scripts/mobs/Ovelha.js';
         import { Vaca } from './scripts/mobs/Vaca.js';
         import { Porco } from './scripts/mobs/Porco.js';
+        import { Galinha } from './scripts/mobs/Galinha.js';
+        import { Leopardo } from './scripts/mobs/Leopardo.js';
         import { Cavaleiro } from './scripts/mobs/Cavaleiro.js';
         import { MonstroVazio } from './scripts/mobs/MonstroVazio.js';
         import { CavaleiroTrevas } from './scripts/mobs/CavaleiroTrevas.js';
+        import { Lobo } from './scripts/mobs/Lobo.js';
         import { criarPicaretaElite } from './items/PicaretaElite.js';
         import { UIBuilder } from './ui/UIBuilder.js';
         import { WorldGenerator } from './world/WorldGenerator.js';
@@ -523,9 +1002,56 @@
         const controles = new PointerLockControls(camera, document.body);
         const menu = document.getElementById('menu');
         const inventoryMenu = document.getElementById('inventory-menu');
+        const furnaceMenu = document.getElementById('furnace-menu');
+
+        window.openFurnace = function () {
+            furnaceMenu.style.display = 'block';
+            menu.style.display = 'none';
+            inventoryMenu.style.display = 'none';
+            document.getElementById('creative-menu').style.display = 'none';
+            controles.unlock();
+            callRenderUI();
+        };
+
+        window.closeFurnace = function () {
+            furnaceMenu.style.display = 'none';
+            // Devolve itens apenas se quiser (no Minecraft fica na fornalha, mas aqui será simples)
+            // se a fornalha não for blocos independentes, podemos deixar no estado global mesmo!
+            controles.lock();
+        };
+
+        // Adicionar eventos de bloqueio/desbloqueio para o menu de pausa
+        controles.addEventListener('lock', () => {
+            menu.style.display = 'none';
+        });
+
+        controles.addEventListener('unlock', () => {
+            // Se o inventário ou o menu criativo não estiverem abertos, mostra o menu de pausa
+            const inventoryOpen = inventoryMenu.style.display === 'flex';
+            const creativeOpen = document.getElementById('creative-menu').style.display === 'flex';
+            const furnaceOpen = furnaceMenu.style.display === 'block';
+
+            if (!inventoryOpen && !creativeOpen && !furnaceOpen) {
+                menu.style.display = 'flex';
+            }
+        });
 
         const soundManager = new SoundManager();
+        soundManager.preload(); // Pré-carrega sons críticos
+        window._soundManager = soundManager; // Expõe para os mobs usarem sons ambientes
         let playerHP = 20;
+        let gameMode = 'survival'; // 'survival' ou 'creative'
+        let playerOxygen = 15; // 15s de fôlego máximo
+        let lastDrownDamage = 0;
+        let timeInWater = 0;
+
+        // 🍗 FOME & ⭐ EXPERIÊNCIA
+        let playerFood = 20;        // 0-20, como Minecraft
+        let playerXP = 0;           // XP acumulado no nível atual
+        let playerXPLevel = 0;      // Nível de XP
+        let lastFoodDrain = 0;      // Timestamp último dreno de fome
+        let lastFoodHeal = 0;       // Timestamp última cura por fome
+        let lastHungerDamage = 0;   // Timestamp último dano de fome
 
         // 🎒 SISTEMA DE INVENTÁRIO
         const STACK_MAX = 64;
@@ -533,15 +1059,21 @@
         // SVGs das Ferramentas UI
         let urlTransparente = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=')";
 
-        const svgPicareta = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M15 1 L9 1 L1 9 L3 11 L11 3 L15 3 Z%22 fill=%22%23BDBDBD%22 stroke=%22%23000%22/><path d=%22M10 6 L2 14 L4 16 L12 8 Z%22 fill=%22%23795548%22 stroke=%22%23000%22/></svg>')";
-        const svgMachado = "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M14 2 L8 2 L6 6 L12 8 Z%22 fill=%22%23BDBDBD%22 stroke=%22%23000%22/><path d=%22M10 6 L2 14 L4 16 L12 8 Z%22 fill=%22%23795548%22 stroke=%22%23000%22/></svg>')";
+        const svgPicareta = "url('java/textures/item/wooden_pickaxe.png')";
+        const svgMachado = "url('java/textures/item/wooden_axe.png')";
+        const svgPa = "url('java/textures/item/wooden_shovel.png')";
 
         const itemDefs = {
             1: { id: 1, nome: "Grama", svgBase: urlTransparente, type: "block" },
             2: { id: 2, nome: "Terra", svgBase: urlTransparente, type: "block" },
             3: { id: 3, nome: "Pedra", svgBase: urlTransparente, type: "block" },
             4: { id: 4, nome: "Mad.", svgBase: urlTransparente, type: "block" },
-            5: { id: 5, nome: "Folha", svgBase: urlTransparente, type: "block" }
+            5: { id: 5, nome: "Folha", svgBase: urlTransparente, type: "block" },
+            7: { id: 7, nome: "Areia", svgBase: urlTransparente, type: "block" },
+            "pa": { id: "pa", nome: "Pá", svgBase: svgPa, type: "tool" },
+            "pa_pedra": { id: "pa_pedra", nome: "Pá Pd", svgBase: "url('java/textures/item/stone_shovel.png')", type: "tool" },
+            "pa_ferro": { id: "pa_ferro", nome: "Pá Fe", svgBase: "url('java/textures/item/iron_shovel.png')", type: "tool" },
+            "pa_diamante": { id: "pa_diamante", nome: "Pá Di", svgBase: "url('java/textures/item/diamond_shovel.png')", type: "tool" }
         };
 
         // Instanciação movida para o topo.
@@ -552,14 +1084,28 @@
         let itemSegurado = null;
 
         function callRenderUI() {
-            uiBuilder.renderUI(playerHP, atualizarMao);
+            uiBuilder.renderUI(playerHP, atualizarMao, playerOxygen, playerFood, playerXP, playerXPLevel);
+        }
+
+        // Ganha XP e sobe de nível quando preencher a barra
+        function ganharXP(amount) {
+            playerXP += amount;
+            const xpParaNivel = playerXPLevel <= 15 ? 7 : playerXPLevel <= 30 ? (3 * playerXPLevel + 37) : (5 * playerXPLevel + 7);
+            if (playerXP >= xpParaNivel) {
+                playerXP -= xpParaNivel;
+                playerXPLevel++;
+                soundManager.playSound('levelup');
+            } else {
+                soundManager.playSound('orb');
+            }
+            callRenderUI();
         }
 
         // Callback para o construtor World instanciar entidades dentro de laço C++
         function getAnimalFactory() {
             return (ax, y, az, cx, cz) => {
                 const arr = [];
-                const tipos = ['porco', 'vaca', 'ovelha'];
+                const tipos = ['porco', 'vaca', 'ovelha', 'galinha', 'leopardo', 'lobo'];
                 const sumChunks = Math.abs(cx) + Math.abs(cz);
 
                 const isDarkKnight = sumChunks > 0 && sumChunks % 15 === 0;
@@ -577,6 +1123,9 @@
                     const tipo = tipos[Math.floor(Math.random() * tipos.length)];
                     if (tipo === 'ovelha') arr.push(new Ovelha(cena, ax, y, az, `${cx},${cz}`));
                     else if (tipo === 'vaca') arr.push(new Vaca(cena, ax, y, az, `${cx},${cz}`));
+                    else if (tipo === 'galinha') arr.push(new Galinha(cena, ax, y, az, `${cx},${cz}`));
+                    else if (tipo === 'leopardo') arr.push(new Leopardo(cena, ax, y, az, `${cx},${cz}`));
+                    else if (tipo === 'lobo') arr.push(new Lobo(cena, ax, y, az, `${cx},${cz}`));
                     else arr.push(new Porco(cena, ax, y, az, `${cx},${cz}`));
                 }
                 return arr;
@@ -590,7 +1139,7 @@
                 flash.style.background = 'rgba(255, 0, 0, 0.4)';
                 setTimeout(() => flash.style.background = 'rgba(255, 0, 0, 0)', 200);
             }
-            soundManager.playSound('hit');
+            soundManager.playSound('hurt');
             if (playerHP <= 0) {
                 alert("Game Over! Você foi derrotado.");
                 location.reload();
@@ -603,20 +1152,528 @@
             if (soundManager.ctx.state === 'suspended') soundManager.ctx.resume();
         });
 
-        document.getElementById('btn-fechar-inv').addEventListener('click', () => {
-            inventoryMenu.style.display = 'none';
-            controles.lock();
+        // ====== SISTEMA DE SALVAR / CARREGAR MUNDO ======
+        const SAVE_KEY = 'meucraft_mundo_save';
+
+        function salvarMundo() {
+            try {
+                // Serializa o mundo (Map -> Array)
+                const blocos = [];
+                mundo.forEach((tipo, chave) => {
+                    blocos.push([chave, tipo]);
+                });
+
+                // Serializa inventário
+                const inv = uiBuilder.inventory.map(s => s ? { id: s.id, count: s.count } : null);
+
+                // Serializa posição do player
+                const saveData = {
+                    version: 2,
+                    timestamp: Date.now(),
+                    blocos: blocos,
+                    chunksGerados: Array.from(chunksGerados),
+                    seedX: seedX,
+                    seedZ: seedZ,
+                    playerPos: {
+                        x: camera.position.x,
+                        y: camera.position.y,
+                        z: camera.position.z
+                    },
+                    playerHP: playerHP,
+                    playerFood: playerFood,
+                    playerXP: playerXP,
+                    playerXPLevel: playerXPLevel,
+                    gameMode: gameMode,
+                    inventory: inv,
+                    selectedSlot: uiBuilder.selectedHotbarIndex
+                };
+
+                const json = JSON.stringify(saveData);
+                localStorage.setItem(SAVE_KEY, json);
+
+                // Feedback visual
+                const toast = document.createElement('div');
+                toast.textContent = '✅ Mundo salvo!';
+                toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#7dff7d;padding:12px 24px;font-family:"Press Start 2P",monospace;font-size:12px;z-index:9999;border:2px solid #7dff7d;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+
+                console.log(`Mundo salvo: ${blocos.length} blocos, ${(json.length / 1024).toFixed(1)} KB`);
+            } catch (e) {
+                console.error('Erro ao salvar:', e);
+                alert('Erro ao salvar mundo! O mundo pode ser grande demais para o localStorage.');
+            }
+        }
+
+        function carregarMundo() {
+            try {
+                const json = localStorage.getItem(SAVE_KEY);
+                if (!json) {
+                    alert('Nenhum mundo salvo encontrado!');
+                    return false;
+                }
+
+                const saveData = JSON.parse(json);
+
+                // Limpa mundo atual
+                mundo.clear();
+                chunksGerados.clear();
+
+                // Remove todos os chunks visuais
+                chunksVisuais.forEach((grupo) => {
+                    grupo.traverse(child => {
+                        if (child.isMesh) {
+                            if (child.geometry) child.geometry.dispose();
+                        }
+                    });
+                    cena.remove(grupo);
+                });
+                chunksVisuais.clear();
+
+                // Remove drops
+                itensDropados.forEach(item => {
+                    cena.remove(item.mesh);
+                    item.mesh.geometry.dispose();
+                });
+                itensDropados.length = 0;
+
+                // Restaura blocos
+                for (const [chave, tipo] of saveData.blocos) {
+                    mundo.set(chave, tipo);
+                }
+
+                // Restaura seeds do mundo
+                if (saveData.seedX !== undefined) {
+                    seedX = saveData.seedX;
+                    seedZ = saveData.seedZ;
+                }
+
+                // Restaura chunks gerados
+                if (saveData.chunksGerados) {
+                    for (const c of saveData.chunksGerados) {
+                        chunksGerados.add(c);
+                    }
+                }
+
+                // Restaura player
+                camera.position.set(saveData.playerPos.x, saveData.playerPos.y, saveData.playerPos.z);
+                playerHP = saveData.playerHP || 20;
+                playerFood = saveData.playerFood || 20;
+                playerXP = saveData.playerXP || 0;
+                playerXPLevel = saveData.playerXPLevel || 0;
+                gameMode = saveData.gameMode || 'survival';
+
+                // Restaura inventário
+                if (saveData.inventory) {
+                    for (let i = 0; i < uiBuilder.inventory.length; i++) {
+                        uiBuilder.inventory[i] = saveData.inventory[i] || null;
+                    }
+                }
+                if (saveData.selectedSlot !== undefined) {
+                    uiBuilder.selectedHotbarIndex = saveData.selectedSlot;
+                }
+
+                // Força reconstrução de chunks visuais
+                chunkAtualX = -999;
+                chunkAtualZ = -999;
+
+                callRenderUI();
+
+                // Feedback
+                const toast = document.createElement('div');
+                const dataStr = new Date(saveData.timestamp).toLocaleDateString('pt-BR') + ' ' + new Date(saveData.timestamp).toLocaleTimeString('pt-BR');
+                toast.textContent = '📂 Mundo carregado! (' + dataStr + ')';
+                toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#7dacff;padding:12px 24px;font-family:"Press Start 2P",monospace;font-size:11px;z-index:9999;border:2px solid #7dacff;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+
+                console.log(`Mundo carregado: ${saveData.blocos.length} blocos`);
+                return true;
+            } catch (e) {
+                console.error('Erro ao carregar:', e);
+                alert('Erro ao carregar mundo! Save pode estar corrompido.');
+                return false;
+            }
+        }
+
+        document.getElementById('btn-save-world').addEventListener('click', () => {
+            salvarMundo();
         });
 
-        controles.addEventListener('unlock', () => {
-            if (inventoryMenu.style.display !== 'flex') menu.style.display = 'flex';
+        document.getElementById('btn-load-world').addEventListener('click', () => {
+            if (confirm('Carregar mundo salvo? O progresso atual será substituído.')) {
+                carregarMundo();
+            }
         });
 
-        document.getElementById('btn-craft-picareta').addEventListener('click', () => {
-            if (uiBuilder.removeItem(4, 5)) { uiBuilder.hotbar[5].unlocked = true; callRenderUI(); }
+        // PREVENIR MENU CONTEXTO NO INVENTÁRIO (USADO PARA DIVIDIR ITEMS)
+        document.addEventListener('contextmenu', e => {
+            if (inventoryMenu.style.display === 'flex') e.preventDefault();
         });
-        document.getElementById('btn-craft-machado').addEventListener('click', () => {
-            if (uiBuilder.removeItem(4, 5)) { uiBuilder.hotbar[6].unlocked = true; callRenderUI(); }
+
+        // Lógica de Drag & Drop do Inventário
+        const updateMouseIcon = () => {
+            const icon = document.getElementById('mouse-drag-icon');
+            if (icon) {
+                if (uiBuilder.mouseSlot) {
+                    icon.style.display = 'flex';
+                    icon.style.backgroundImage = uiBuilder.itemDefs[uiBuilder.mouseSlot.id]?.svgBase || "none";
+                    icon.innerHTML = `<span class="qty">${uiBuilder.mouseSlot.count > 1 ? uiBuilder.mouseSlot.count : ""}</span>`;
+                } else {
+                    icon.style.display = 'none';
+                    icon.innerHTML = '';
+                }
+            }
+        };
+
+        window.addEventListener('mousemove', (e) => {
+            if (inventoryMenu.style.display === 'flex') {
+                const icon = document.getElementById('mouse-drag-icon');
+                if (icon) {
+                    icon.style.left = (e.clientX - 16) + 'px';
+                    icon.style.top = (e.clientY - 16) + 'px';
+                }
+            }
+        });
+
+        function getSlotInfo(elementId) {
+            if (!elementId) return null;
+            if (elementId.startsWith('furnace-inv-slot-')) {
+                return { array: uiBuilder.inventory, index: parseInt(elementId.replace('furnace-inv-slot-', '')) };
+            } else if (elementId === 'furnace-in') {
+                return { array: uiBuilder.furnaceInput, index: 0 };
+            } else if (elementId === 'furnace-fuel') {
+                return { array: uiBuilder.furnaceFuel, index: 0 };
+            } else if (elementId === 'furnace-out') {
+                return { array: uiBuilder.furnaceOutput, index: 0, isOutput: true, isFurnaceOut: true };
+            } else if (elementId.startsWith('inv-slot-')) {
+                return { array: uiBuilder.inventory, index: parseInt(elementId.replace('inv-slot-', '')) };
+            } else if (elementId.startsWith('hotbar-slot-') || elementId.startsWith('slot-')) {
+                return { array: uiBuilder.inventory, index: parseInt(elementId.replace('hotbar-slot-', '').replace('slot-', '')) };
+            } else if (elementId.startsWith('craft-in-')) {
+                return { array: uiBuilder.craftInput, index: parseInt(elementId.replace('craft-in-', '')) };
+            } else if (elementId === 'craft-out') {
+                return { array: [uiBuilder.craftOutput], index: 0, isOutput: true };
+            }
+            return null;
+        }
+
+        function getCraftMatrix() {
+            // Retorna a grade 3x3 normalizada usando IDs (0 para vazio)
+            let result = [];
+            for (let y = 0; y < 3; y++) {
+                let row = [];
+                for (let x = 0; x < 3; x++) {
+                    const idx = y * 3 + x;
+                    const slot = uiBuilder.craftInput[idx];
+                    row.push(slot ? slot.id : 0);
+                }
+                result.push(row);
+            }
+            return result;
+        }
+
+        function checkPattern(matrix, patternWidth, patternHeight, expectedPattern) {
+            // Tenta encontrar o 'expectedPattern' na matrix 3x3 em qualquer posição
+            for (let startY = 0; startY <= 3 - patternHeight; startY++) {
+                for (let startX = 0; startX <= 3 - patternWidth; startX++) {
+                    let match = true;
+                    // Verifica se fora do pattern está vazio (0)
+                    for (let my = 0; my < 3; my++) {
+                        for (let mx = 0; mx < 3; mx++) {
+                            const isDentroRow = my >= startY && my < startY + patternHeight;
+                            const isDentroCol = mx >= startX && mx < startX + patternWidth;
+                            const expectedVal = (isDentroRow && isDentroCol) ? expectedPattern[my - startY][mx - startX] : 0;
+
+                            // 0 significa vazio no expectedPattern OU "qualquer vazio"
+                            if (matrix[my][mx] !== expectedVal) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (!match) break;
+                    }
+                    if (match) return true;
+                }
+            }
+            return false;
+        }
+
+        function checkCrafting() {
+            uiBuilder.craftOutput = null; // Limpa output
+            const matrix = getCraftMatrix();
+            const T = 8; // Tábua
+            const G = 15; // Graveto
+            const P = 3; // Pedra
+
+            // Verifica receitas
+
+            // Tábua (1 Mad)
+            if (checkPattern(matrix, 1, 1, [[4]])) {
+                uiBuilder.craftOutput = { id: 8, count: 4 }; return;
+            }
+
+            // Graveto (2 Tábuas vertical)
+            if (checkPattern(matrix, 1, 2, [[T], [T]])) {
+                uiBuilder.craftOutput = { id: 15, count: 4 }; return;
+            }
+
+            // Bancada (2x2 Tábuas)
+            if (checkPattern(matrix, 2, 2, [[T, T], [T, T]])) {
+                uiBuilder.craftOutput = { id: 9, count: 1 }; return;
+            }
+
+            // Fornalha (8 Pedras/Pedregulhos, vamos usar Pedra 3 ou 14)
+            if (checkPattern(matrix, 3, 3, [[3, 3, 3], [3, 0, 3], [3, 3, 3]]) || checkPattern(matrix, 3, 3, [[14, 14, 14], [14, 0, 14], [14, 14, 14]])) {
+                uiBuilder.craftOutput = { id: 22, count: 1 }; return;
+            }
+
+            // Bloco de Carvão (3x3 Carvão)
+            if (checkPattern(matrix, 3, 3, [["carvao", "carvao", "carvao"], ["carvao", "carvao", "carvao"], ["carvao", "carvao", "carvao"]])) {
+                uiBuilder.craftOutput = { id: 23, count: 1 }; return;
+            }
+
+            // Desfazer Bloco de Carvão (1 Bloco para 9 Carvões)
+            if (checkPattern(matrix, 1, 1, [[23]])) {
+                uiBuilder.craftOutput = { id: "carvao", count: 9 }; return;
+            }
+
+            // --- FERRAMENTAS ---
+
+            // Picareta de Madeira (3 Tábuas topo, 2 gravetos vertical baixo)
+            if (checkPattern(matrix, 3, 3, [[T, T, T], [0, G, 0], [0, G, 0]])) {
+                uiBuilder.craftOutput = { id: "picareta", count: 1 }; return;
+            }
+
+            // Machado de Madeira (3 Tábuas canto + 2 gravetos vertical)
+            if (checkPattern(matrix, 2, 3, [[T, T], [T, G], [0, G]]) || checkPattern(matrix, 2, 3, [[T, T], [G, T], [G, 0]])) {
+                uiBuilder.craftOutput = { id: "machado", count: 1 }; return;
+            }
+
+            // Picareta de Pedra (3 Pedras topo, 2 gravetos vertical baixo)
+            if (checkPattern(matrix, 3, 3, [[P, P, P], [0, G, 0], [0, G, 0]])) {
+                uiBuilder.craftOutput = { id: "picareta_pedra", count: 1 }; return;
+            }
+
+            // Machado de Pedra (3 Pedras canto + 2 gravetos vertical)
+            if (checkPattern(matrix, 2, 3, [[P, P], [P, G], [0, G]]) || checkPattern(matrix, 2, 3, [[P, P], [G, P], [G, 0]])) {
+                uiBuilder.craftOutput = { id: "machado_pedra", count: 1 }; return;
+            }
+
+            // --- PÁS ---
+
+            // Pá de Madeira (1 Tábua topo, 2 gravetos vertical)
+            if (checkPattern(matrix, 1, 3, [[T], [G], [G]])) {
+                uiBuilder.craftOutput = { id: "pa", count: 1 }; return;
+            }
+
+            // Pá de Pedra (1 Pedra topo, 2 gravetos vertical)
+            if (checkPattern(matrix, 1, 3, [[P], [G], [G]])) {
+                uiBuilder.craftOutput = { id: "pa_pedra", count: 1 }; return;
+            }
+
+            // Pá de Ferro (1 Ferro topo, 2 gravetos vertical)
+            if (checkPattern(matrix, 1, 3, [["barra_ferro"], [G], [G]])) {
+                uiBuilder.craftOutput = { id: "pa_ferro", count: 1 }; return;
+            }
+
+            // Pá de Diamante (1 Diamante topo, 2 gravetos vertical)
+            if (checkPattern(matrix, 1, 3, [[13], [G], [G]])) {
+                uiBuilder.craftOutput = { id: "pa_diamante", count: 1 }; return;
+            }
+
+            // Picareta de Ferro
+            if (checkPattern(matrix, 3, 3, [["barra_ferro", "barra_ferro", "barra_ferro"], [0, G, 0], [0, G, 0]])) {
+                uiBuilder.craftOutput = { id: "picareta_ferro", count: 1 }; return;
+            }
+
+            // Machado de Ferro
+            if (checkPattern(matrix, 2, 3, [["barra_ferro", "barra_ferro"], ["barra_ferro", G], [0, G]]) || checkPattern(matrix, 2, 3, [["barra_ferro", "barra_ferro"], [G, "barra_ferro"], [G, 0]])) {
+                uiBuilder.craftOutput = { id: "machado_ferro", count: 1 }; return;
+            }
+
+            // Picareta de Diamante
+            if (checkPattern(matrix, 3, 3, [[13, 13, 13], [0, G, 0], [0, G, 0]])) {
+                uiBuilder.craftOutput = { id: "picareta_diamante", count: 1 }; return;
+            }
+
+            // Machado de Diamante
+            if (checkPattern(matrix, 2, 3, [[13, 13], [13, G], [0, G]]) || checkPattern(matrix, 2, 3, [[13, 13], [G, 13], [G, 0]])) {
+                uiBuilder.craftOutput = { id: "machado_diamante", count: 1 }; return;
+            }
+
+            // --- RECEITAS DE SISTEMA NOVO ---
+            // Fornalha (22) - 8 Pedregulhos ou Pedras (3 ou 14) num quadrado com centro vazio
+            if (checkPattern(matrix, 3, 3, [[P, P, P], [P, 0, P], [P, P, P]]) || checkPattern(matrix, 3, 3, [[14, 14, 14], [14, 0, 14], [14, 14, 14]])) {
+                uiBuilder.craftOutput = { id: 22, count: 1 }; return;
+            }
+
+            // Bloco de Carvão (23) - 9 Carvões (10 se refere ao minério original, mas na versão melhor usamos "carvao" pro item)
+            if (checkPattern(matrix, 3, 3, [["carvao", "carvao", "carvao"], ["carvao", "carvao", "carvao"], ["carvao", "carvao", "carvao"]])) {
+                uiBuilder.craftOutput = { id: 23, count: 1 }; return;
+            }
+
+            // Desfazer Bloco de Carvão (23 -> 9 Carvão)
+            if (checkPattern(matrix, 1, 1, [[23]])) {
+                uiBuilder.craftOutput = { id: "carvao", count: 9 }; return;
+            }
+        }
+
+        document.addEventListener('mousedown', (e) => {
+            const uiAberto = inventoryMenu.style.display === 'flex' || document.getElementById('furnace-menu').style.display === 'block';
+            if (!uiAberto) return;
+
+            const slotEl = e.target.closest('.inv-slot, .slot');
+            if (!slotEl) return;
+
+            const info = getSlotInfo(slotEl.id);
+            if (!info) return;
+
+            const isRightClick = e.button === 2;
+            const targetSlot = info.array[info.index];
+
+            // 🔀 SHIFT+CLICK: Move stack inteiro entre hotbar ↔ inventário
+            if (e.shiftKey && targetSlot && !info.isOutput) {
+                const slotIndex = info.array === uiBuilder.inventory ? info.index : -1;
+                if (slotIndex >= 0 && slotIndex <= 8) {
+                    // Da hotbar (0-8) → inventário principal (9-35)
+                    for (let dest = 9; dest < 36; dest++) {
+                        if (!uiBuilder.inventory[dest]) {
+                            uiBuilder.inventory[dest] = { ...targetSlot };
+                            uiBuilder.inventory[slotIndex] = null;
+                            break;
+                        } else if (uiBuilder.inventory[dest].id === targetSlot.id && uiBuilder.inventory[dest].count < uiBuilder.STACK_MAX) {
+                            const space = uiBuilder.STACK_MAX - uiBuilder.inventory[dest].count;
+                            const transfer = Math.min(space, targetSlot.count);
+                            uiBuilder.inventory[dest].count += transfer;
+                            targetSlot.count -= transfer;
+                            if (targetSlot.count <= 0) { uiBuilder.inventory[slotIndex] = null; break; }
+                        }
+                    }
+                } else if (slotIndex >= 9 && slotIndex <= 35) {
+                    // Do inventário principal (9-35) → hotbar (0-8)
+                    for (let dest = 0; dest < 9; dest++) {
+                        if (!uiBuilder.inventory[dest]) {
+                            uiBuilder.inventory[dest] = { ...targetSlot };
+                            uiBuilder.inventory[slotIndex] = null;
+                            break;
+                        } else if (uiBuilder.inventory[dest].id === targetSlot.id && uiBuilder.inventory[dest].count < uiBuilder.STACK_MAX) {
+                            const space = uiBuilder.STACK_MAX - uiBuilder.inventory[dest].count;
+                            const transfer = Math.min(space, targetSlot.count);
+                            uiBuilder.inventory[dest].count += transfer;
+                            targetSlot.count -= transfer;
+                            if (targetSlot.count <= 0) { uiBuilder.inventory[slotIndex] = null; break; }
+                        }
+                    }
+                } else if (info.array === uiBuilder.craftInput) {
+                    // Do craft → inventário (tenta hotbar primeiro, depois principal)
+                    let moved = false;
+                    for (let dest = 0; dest < 36; dest++) {
+                        if (!uiBuilder.inventory[dest]) {
+                            uiBuilder.inventory[dest] = { ...targetSlot };
+                            info.array[info.index] = null;
+                            moved = true; break;
+                        } else if (uiBuilder.inventory[dest].id === targetSlot.id && uiBuilder.inventory[dest].count < uiBuilder.STACK_MAX) {
+                            const space = uiBuilder.STACK_MAX - uiBuilder.inventory[dest].count;
+                            const transfer = Math.min(space, targetSlot.count);
+                            uiBuilder.inventory[dest].count += transfer;
+                            targetSlot.count -= transfer;
+                            if (targetSlot.count <= 0) { info.array[info.index] = null; moved = true; break; }
+                        }
+                    }
+                }
+                checkCrafting();
+                updateMouseIcon();
+                callRenderUI();
+                return;
+            }
+
+            if (info.isOutput) {
+                if (info.array === uiBuilder.furnaceOutput) {
+                    if (targetSlot && !uiBuilder.mouseSlot) {
+                        uiBuilder.mouseSlot = { ...targetSlot };
+                        info.array[info.index] = null;
+                    } else if (targetSlot && uiBuilder.mouseSlot && uiBuilder.mouseSlot.id === targetSlot.id) {
+                        const space = uiBuilder.STACK_MAX - uiBuilder.mouseSlot.count;
+                        if (space >= targetSlot.count) {
+                            uiBuilder.mouseSlot.count += targetSlot.count;
+                            info.array[info.index] = null;
+                        }
+                    }
+                } else {
+                    // Crafting output
+                    if (targetSlot && !uiBuilder.mouseSlot) { // Pega do Output (Craftou)
+                        uiBuilder.mouseSlot = { ...targetSlot };
+                        // Consome 1 ingrediente de todos inputs do craftInput
+                        for (let i = 0; i < 9; i++) {
+                            if (uiBuilder.craftInput[i]) {
+                                uiBuilder.craftInput[i].count--;
+                                if (uiBuilder.craftInput[i].count <= 0) uiBuilder.craftInput[i] = null;
+                            }
+                        }
+                        uiBuilder.craftOutput = null;
+                        checkCrafting();
+                    } else if (targetSlot && uiBuilder.mouseSlot && uiBuilder.mouseSlot.id === targetSlot.id) {
+                        // Se pegar com o mesmo item na mâo, empilha se der
+                        const space = uiBuilder.STACK_MAX - uiBuilder.mouseSlot.count;
+                        if (space >= targetSlot.count) {
+                            uiBuilder.mouseSlot.count += targetSlot.count;
+                            for (let i = 0; i < 9; i++) {
+                                if (uiBuilder.craftInput[i]) {
+                                    uiBuilder.craftInput[i].count--;
+                                    if (uiBuilder.craftInput[i].count <= 0) uiBuilder.craftInput[i] = null;
+                                }
+                            }
+                            uiBuilder.craftOutput = null;
+                            checkCrafting();
+                        }
+                    }
+                }
+            } else {
+                if (uiBuilder.mouseSlot) {
+                    if (!targetSlot) { // Colocando em slot vazio
+                        if (isRightClick) {
+                            info.array[info.index] = { id: uiBuilder.mouseSlot.id, count: 1 };
+                            uiBuilder.mouseSlot.count--;
+                        } else {
+                            info.array[info.index] = { ...uiBuilder.mouseSlot };
+                            uiBuilder.mouseSlot = null;
+                        }
+                    } else if (targetSlot.id === uiBuilder.mouseSlot.id) { // Somar stack
+                        const space = uiBuilder.STACK_MAX - targetSlot.count;
+                        if (isRightClick) {
+                            if (space >= 1) {
+                                targetSlot.count++;
+                                uiBuilder.mouseSlot.count--;
+                            }
+                        } else {
+                            const transfer = Math.min(space, uiBuilder.mouseSlot.count);
+                            targetSlot.count += transfer;
+                            uiBuilder.mouseSlot.count -= transfer;
+                        }
+                    } else { // Trocar item no mouse com slot
+                        const temp = { ...targetSlot };
+                        info.array[info.index] = { ...uiBuilder.mouseSlot };
+                        uiBuilder.mouseSlot = temp;
+                    }
+                } else if (targetSlot) { // Pegando do inventario / hotbar
+                    if (isRightClick && targetSlot.count > 1) { // Pega Metade
+                        const half = Math.floor(targetSlot.count / 2);
+                        uiBuilder.mouseSlot = { id: targetSlot.id, count: half };
+                        targetSlot.count -= half;
+                    } else { // Pega Tudo
+                        uiBuilder.mouseSlot = { ...targetSlot };
+                        info.array[info.index] = null;
+                    }
+                }
+
+                // Zera se count 0
+                if (uiBuilder.mouseSlot && uiBuilder.mouseSlot.count <= 0) uiBuilder.mouseSlot = null;
+            }
+
+            if (!info.isOutput) checkCrafting(); // Atualiza UI de crafting apenas se os inputs ou obj modificado for os inputs
+            updateMouseIcon();
+            callRenderUI();
         });
 
         // 💡 ILUMINAÇÃO
@@ -627,86 +1684,145 @@
         luzSol.shadow.camera.near = 0.5; luzSol.shadow.camera.far = 100; luzSol.shadow.mapSize.width = 1024; luzSol.shadow.mapSize.height = 1024; luzSol.shadow.bias = -0.001;
         cena.add(luzSol); cena.add(luzSol.target);
 
-        // 🎨 TEXTURAS DOS BLOCOS & UI
-        function gerarTextura(tipo) {
-            const canvas = document.createElement('canvas'); canvas.width = 16; canvas.height = 16; const ctx = canvas.getContext('2d');
-            for (let x = 0; x < 16; x++) {
-                for (let y = 0; y < 16; y++) {
-                    let cor = ''; const ruido = Math.random() * 30 - 15;
-                    if (tipo === 'grama_topo') cor = `rgb(${40 + ruido}, ${150 + ruido}, ${40 + ruido})`;
-                    else if (tipo === 'grama_lado') cor = y < 4 ? `rgb(${40 + ruido}, ${150 + ruido}, ${40 + ruido})` : `rgb(${100 + ruido}, ${70 + ruido}, ${40 + ruido})`;
-                    else if (tipo === 'terra') cor = `rgb(${100 + ruido}, ${70 + ruido}, ${40 + ruido})`;
-                    else if (tipo === 'pedra') cor = `rgb(${120 + ruido}, ${120 + ruido}, ${120 + ruido})`;
-                    else if (tipo === 'madeira') { const c = (x % 4 === 0 || x % 5 === 0) ? 60 : 90; cor = `rgb(${c + ruido}, ${c / 1.5 + ruido}, ${c / 3 + ruido})`; }
-                    else if (tipo === 'folhas') { if (Math.random() > 0.3) cor = `rgb(${20 + ruido}, ${100 + ruido}, ${20 + ruido})`; else { ctx.clearRect(x, y, 1, 1); continue; } }
-                    ctx.fillStyle = cor; ctx.fillRect(x, y, 1, 1);
-                }
-            }
-            const dataUrl = canvas.toDataURL();
+        // 🎨 TEXTURAS DOS BLOCOS & UI — carregadas do resource pack java/
+        const texLoader = new THREE.TextureLoader();
+        function carregarTextura(caminho) {
+            const tex = texLoader.load(caminho);
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
 
-            const textura = new THREE.CanvasTexture(canvas);
-            textura.magFilter = THREE.NearestFilter; textura.minFilter = THREE.NearestFilter; textura.colorSpace = THREE.SRGBColorSpace;
-            return { obj: textura, dataUrl: dataUrl };
+        const texturasQuebraCache = [];
+        for (let i = 0; i <= 9; i++) {
+            let tex = texLoader.load(`java/textures/block/destroy_stage_${i}.png`);
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+            texturasQuebraCache.push(tex);
         }
 
         function gerarTexturaQuebra(progresso) {
-            const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100; const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 100, 100);
-            ctx.strokeStyle = 'rgba(20, 20, 20, 0.9)';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            // Rachaduras profundas padrão Hytale
-            const crackPaths = [
-                "M52 18 L48 32 L56 48 L44 65 M15 45 L32 42 L48 55",
-                "M25 25 L38 42 L18 68 M78 20 L62 42 L88 58 M40 80 L55 72",
-                "M5 12 L28 22 M92 92 L68 78 M12 88 L45 72 M75 45 L95 40",
-                "M50 2 L50 98 M2 50 L98 50 M18 18 L82 82 M82 18 L18 82",
-                "M35 35 m-15 0 a 15 15 0 1 0 30 0 a 15 15 0 1 0 -30 0 M65 65 m-10 0 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0"
-            ];
-
-            const maxStage = Math.min(5, Math.floor(progresso * 6));
-
-            for (let i = 0; i < maxStage; i++) {
-                ctx.stroke(new Path2D(crackPaths[i]));
-            }
-
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.magFilter = tex.minFilter = THREE.NearestFilter; return tex;
+            let indice = Math.floor(progresso * 9);
+            if (indice < 0) indice = 0;
+            if (indice > 9) indice = 9;
+            return texturasQuebraCache[indice];
         }
 
         const matQuebra = new THREE.MeshBasicMaterial({ transparent: true, polygonOffset: true, polygonOffsetFactor: -1 });
         const meshQuebra = new THREE.Mesh(new THREE.BoxGeometry(1.01, 1.01, 1.01), matQuebra);
         meshQuebra.visible = false; cena.add(meshQuebra);
 
-        const texTerra = gerarTextura('terra');
-        const texGramaTopo = gerarTextura('grama_topo');
-        const texGramaLado = gerarTextura('grama_lado');
-        const texPedra = gerarTextura('pedra');
-        const texMadeira = gerarTextura('madeira');
-        const texFolhas = gerarTextura('folhas');
+        const texTerra = carregarTextura('java/textures/block/dirt.png');
+        const texGramaTopo = carregarTextura('java/textures/block/grass_block_top.png');
+        const texGramaLado = carregarTextura('java/textures/block/grass_block_side.png');
+        const texPedra = carregarTextura('java/textures/block/stone.png');
+        const texMadeira = carregarTextura('java/textures/block/oak_log.png');
+        const texMadeiraTopo = carregarTextura('java/textures/block/oak_log_top.png');
+        const texFolhas = carregarTextura('java/textures/block/oak_leaves.png');
+        const texAreia = carregarTextura('java/textures/block/sand.png');
+        const texTabua = carregarTextura('java/textures/block/oak_planks.png');
+        const texBancadaLado = carregarTextura('java/textures/block/crafting_table_side.png');
+        const texBancadaTopo = carregarTextura('java/textures/block/crafting_table_top.png');
+        const texBancadaFrente = carregarTextura('java/textures/block/crafting_table_front.png');
+        const texAgua = carregarTextura('java/textures/block/water_still.png');
+        
+        // Novos blocos
+        const texCoalOre = carregarTextura('java/textures/block/coal_ore.png');
+        const texIronOre = carregarTextura('java/textures/block/iron_ore.png');
+        const texGoldOre = carregarTextura('java/textures/block/gold_ore.png');
+        const texDiamondOre = carregarTextura('java/textures/block/diamond_ore.png');
+        const texCobblestone = carregarTextura('java/textures/block/cobblestone.png');
 
-        const matTerra = new THREE.MeshLambertMaterial({ map: texTerra.obj });
-        const matGramaTopo = new THREE.MeshLambertMaterial({ map: texGramaTopo.obj });
-        const matGramaLado = new THREE.MeshLambertMaterial({ map: texGramaLado.obj });
+        const texFurnaceFront = carregarTextura('java/textures/block/furnace_front.png');
+        const texFurnaceSide = carregarTextura('java/textures/block/furnace_side.png');
+        const texFurnaceTop = carregarTextura('java/textures/block/furnace_top.png');
+        const texCoalBlock = carregarTextura('java/textures/block/coal_block.png');
+
+        const matTerra = new THREE.MeshLambertMaterial({ map: texTerra });
+        const matGramaTopo = new THREE.MeshLambertMaterial({ map: texGramaTopo, color: 0x7cbd6b });
+        const matGramaLado = new THREE.MeshLambertMaterial({ map: texGramaLado });
+        const matMadeira = new THREE.MeshLambertMaterial({ map: texMadeira });
+        const matMadeiraTopo = new THREE.MeshLambertMaterial({ map: texMadeiraTopo });
+        // Textura de madeira rotacionada 90° para logs horizontais
+        const texMadeiraRot = carregarTextura('java/textures/block/oak_log.png');
+        texMadeiraRot.center.set(0.5, 0.5);
+        texMadeiraRot.rotation = Math.PI / 2;
+        const matMadeiraRot = new THREE.MeshLambertMaterial({ map: texMadeiraRot });
+        const matBancadaLado = new THREE.MeshLambertMaterial({ map: texBancadaLado });
+        const matBancadaTopo = new THREE.MeshLambertMaterial({ map: texBancadaTopo });
+        const matBancadaFrente = new THREE.MeshLambertMaterial({ map: texBancadaFrente });
+        const matTabua = new THREE.MeshLambertMaterial({ map: texTabua });
+
+        const matFurnaceFront = new THREE.MeshLambertMaterial({ map: texFurnaceFront });
+        const matFurnaceSide = new THREE.MeshLambertMaterial({ map: texFurnaceSide });
+        const matFurnaceTop = new THREE.MeshLambertMaterial({ map: texFurnaceTop });
+        const matCoalBlock = new THREE.MeshLambertMaterial({ map: texCoalBlock });
+
+        // 🌿 Texturas de plantas
+        const texShortGrass = carregarTextura('java/textures/block/short_grass.png');
+        const texPoppy = carregarTextura('java/textures/block/poppy.png');
+        const texDandelion = carregarTextura('java/textures/block/dandelion.png');
+        const texCornflower = carregarTextura('java/textures/block/cornflower.png');
+
+        // Set de blocos que são plantas (transparentes, sem colisão, formato X)
+        const PLANT_IDS = new Set([18, 19, 20, 21]);
 
         const materiais = {
             1: [matGramaLado, matGramaLado, matGramaTopo, matTerra, matGramaLado, matGramaLado],
             2: matTerra,
-            3: new THREE.MeshLambertMaterial({ map: texPedra.obj }),
-            4: new THREE.MeshLambertMaterial({ map: texMadeira.obj }),
-            5: new THREE.MeshLambertMaterial({ map: texFolhas.obj, transparent: true, alphaTest: 0.5 })
+            3: new THREE.MeshLambertMaterial({ map: texPedra }),
+            4: [matMadeira, matMadeira, matMadeiraTopo, matMadeiraTopo, matMadeira, matMadeira],
+            5: new THREE.MeshLambertMaterial({ map: texFolhas, transparent: true, alphaTest: 0.5, color: 0x48b518 }),
+            6: new THREE.MeshLambertMaterial({ map: texAgua, color: 0x3f76e4, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }),
+            7: new THREE.MeshLambertMaterial({ map: texAreia }),
+            8: new THREE.MeshLambertMaterial({ map: texTabua }),
+            9: [matBancadaLado, matBancadaLado, matBancadaTopo, matTabua, matBancadaFrente, matBancadaFrente],
+            10: new THREE.MeshLambertMaterial({ map: texCoalOre }),
+            11: new THREE.MeshLambertMaterial({ map: texIronOre }),
+            12: new THREE.MeshLambertMaterial({ map: texGoldOre }),
+            13: new THREE.MeshLambertMaterial({ map: texDiamondOre }),
+            14: new THREE.MeshLambertMaterial({ map: texCobblestone }),
+            22: [matFurnaceSide, matFurnaceSide, matFurnaceTop, matFurnaceTop, matFurnaceFront, matFurnaceFront],
+            23: new THREE.MeshLambertMaterial({ map: texCoalBlock }),
+            16: [matMadeiraTopo, matMadeiraTopo, matMadeiraRot, matMadeiraRot, matMadeira, matMadeira], // Log eixo X
+            17: [matMadeira, matMadeira, matMadeiraRot, matMadeiraRot, matMadeiraTopo, matMadeiraTopo],  // Log eixo Z
+            18: new THREE.MeshLambertMaterial({ map: texShortGrass, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, color: 0x48b518 }), // Grama Curta
+            19: new THREE.MeshLambertMaterial({ map: texPoppy, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), // Papoula
+            20: new THREE.MeshLambertMaterial({ map: texDandelion, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), // Dente-de-leão
+            21: new THREE.MeshLambertMaterial({ map: texCornflower, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }) // Centaurea
         };
+
+        // Geometria especial para água
+        // Sem bordas laterais pra não bugar a visão ao sobrepor InstancedMesh
+        // Ajustado para 1.001 para evitar grid lines (Texture Bleeding / vazamento no MSAA)
+        const geometriaBlocoAgua = new THREE.BoxGeometry(1.001, 1.001, 1.001);
+
+        // Correção de UV para a água
+        const uvWater = geometriaBlocoAgua.attributes.uv;
+        for (let i = 0; i < uvWater.count; i++) {
+            let u = uvWater.getX(i); let v = uvWater.getY(i);
+            u = u <= 0.01 ? 0.005 : (u >= 0.99 ? 0.995 : u);
+            v = v <= 0.01 ? 0.005 : (v >= 0.99 ? 0.995 : v);
+            uvWater.setXY(i, u, v);
+        }
 
         // Define texturas
         world.setMateriais(materiais);
         uiBuilder.setupTextures({
-            GramaLado: `url(${texGramaLado.dataUrl})`,
-            Terra: `url(${texTerra.dataUrl})`,
-            Pedra: `url(${texPedra.dataUrl})`,
-            Madeira: `url(${texMadeira.dataUrl})`,
-            Folhas: `url(${texFolhas.dataUrl})`
+            GramaLado: `url('java/textures/block/grass_block_side.png')`,
+            Terra: `url('java/textures/block/dirt.png')`,
+            Pedra: `url('java/textures/block/stone.png')`,
+            Madeira: `url('java/textures/block/oak_log.png')`,
+            Folhas: `url('java/textures/block/oak_leaves.png')`,
+            Areia: `url('java/textures/block/sand.png')`,
+            Tabua: `url('java/textures/block/oak_planks.png')`,
+            Bancada: `url('java/textures/block/crafting_table_side.png')`,
+            Carvao: `url('java/textures/block/coal_ore.png')`,
+            Ferro: `url('java/textures/block/iron_ore.png')`,
+            Ouro: `url('java/textures/block/gold_ore.png')`,
+            Diamante: `url('java/textures/block/diamond_ore.png')`,
+            Pedregulho: `url('java/textures/block/cobblestone.png')`
         });
         callRenderUI();
 
@@ -731,30 +1847,61 @@
         braco.rotation.x = -Math.PI / 12; // Leve inclinação para frente
         grupoMao.add(braco);
 
+        // Mapa de texturas de ferramentas para o modelo 2D na mão
+        const texturasFerramentasMao = {
+            "picareta": carregarTextura('java/textures/item/wooden_pickaxe.png'),
+            "picareta_pedra": carregarTextura('java/textures/item/stone_pickaxe.png'),
+            "picareta_ferro": carregarTextura('java/textures/item/iron_pickaxe.png'),
+            "picareta_diamante": carregarTextura('java/textures/item/diamond_pickaxe.png'),
+            "machado": carregarTextura('java/textures/item/wooden_axe.png'),
+            "machado_pedra": carregarTextura('java/textures/item/stone_axe.png'),
+            "machado_ferro": carregarTextura('java/textures/item/iron_axe.png'),
+            "machado_diamante": carregarTextura('java/textures/item/diamond_axe.png'),
+            "pa": carregarTextura('java/textures/item/wooden_shovel.png'),
+            "pa_pedra": carregarTextura('java/textures/item/stone_shovel.png'),
+            "pa_ferro": carregarTextura('java/textures/item/iron_shovel.png'),
+            "pa_diamante": carregarTextura('java/textures/item/diamond_shovel.png'),
+            15: carregarTextura('java/textures/item/stick.png'),
+            18: carregarTextura('java/textures/block/short_grass.png'),
+            19: carregarTextura('java/textures/block/poppy.png'),
+            20: carregarTextura('java/textures/block/dandelion.png'),
+            21: carregarTextura('java/textures/block/cornflower.png')
+        };
+
         function atualizarMao() {
             if (itemSegurado) grupoMao.remove(itemSegurado);
-            const slot = uiBuilder.hotbar[uiBuilder.selectedHotbarIndex];
+            const slot = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
 
-            if (slot.kind === "block") {
-                if (uiBuilder.getItemCount(slot.itemId) > 0) {
-                    itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), materiais[slot.itemId]);
+            if (slot) {
+                const def = uiBuilder.itemDefs[slot.id] || { type: "unknown" };
+
+                if (def.type === "block") {
+                    itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), materiais[slot.id]);
                     itemSegurado.position.set(0, 0.1, -0.3);
-                } else itemSegurado = null;
-            } else if (slot.kind === "tool" && slot.unlocked) {
-                if (slot.toolId === "picareta") {
-                    itemSegurado = criarPicaretaElite();
-                    // 🔄 TWEAK: Picareta na vertical estilo Minecraft, girada em 90 graus
-                    // O braço invisível central do jogador segura a base
-                    itemSegurado.rotation.x = -Math.PI / 4; // Bico ligeiramente pra frente
-                    itemSegurado.rotation.y = Math.PI / 2;  // Rotação de 90 graus no eixo Y (direita/esquerda)
-                    itemSegurado.position.set(0, 0.1, -0.2);
+                } else if (def.type === "tool" || def.type === "item") {
+                    // Renderiza ferramenta como sprite 2D (mesma textura do inventário)
+                    const texFerramenta = texturasFerramentasMao[slot.id];
+                    if (texFerramenta) {
+                        const matSprite = new THREE.MeshBasicMaterial({
+                            map: texFerramenta,
+                            transparent: true,
+                            alphaTest: 0.1,
+                            side: THREE.DoubleSide
+                        });
+                        const plano = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), matSprite);
+                        plano.rotation.x = -Math.PI / 6;
+                        plano.rotation.z = Math.PI / 4;
+                        plano.position.set(0.05, 0.15, -0.25);
+                        itemSegurado = plano;
+                    } else {
+                        itemSegurado = null;
+                    }
                 } else {
-                    // Machado genérico
-                    itemSegurado = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.3), new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
-                    itemSegurado.rotation.x = -Math.PI / 4;
-                    itemSegurado.position.set(0, 0.3, -0.2);
+                    itemSegurado = null;
                 }
-            } else itemSegurado = null;
+            } else {
+                itemSegurado = null;
+            }
 
             if (itemSegurado) {
                 itemSegurado.traverse(c => {
@@ -794,6 +1941,17 @@
         let animais = [];
         const geometriaBloco = new THREE.BoxGeometry(1, 1, 1);
 
+        // Correção de UV para evitar Texture Bleeding (vazamento de borda)
+        const uvAttr = geometriaBloco.attributes.uv;
+        for (let i = 0; i < uvAttr.count; i++) {
+            let u = uvAttr.getX(i);
+            let v = uvAttr.getY(i);
+            // Encolher minimamente (Meio Pixel) para evitar vazamento
+            u = u <= 0.01 ? 0.005 : (u >= 0.99 ? 0.995 : u);
+            v = v <= 0.01 ? 0.005 : (v >= 0.99 ? 0.995 : v);
+            uvAttr.setXY(i, u, v);
+        }
+
         // 🐄 Listener para quando animais comem grama (bloco muda de tipo)
         window.addEventListener('blockChanged', (e) => {
             const { x, y, z } = e.detail;
@@ -816,9 +1974,42 @@
         const chunksGerados = new Set();
         const chunksVisuais = new Map();
         const TAMANHO_CHUNK = 16;
-        const DISTANCIA_RENDER = 2;
+        const DISTANCIA_RENDER = 2;  // 2 chunks = 25 chunks (5x5), como antes
+        const DISTANCIA_DETALHE = 2;  // Todos com textura HD nesse range
+        const DISTANCIA_MOB = 2;      // Mobs dentro de 2 chunks
         let chunkAtualX = -999, chunkAtualZ = -999;
         const noise = new ImprovedNoise();
+        let seedX = Math.random() * 10000;
+        let seedZ = Math.random() * 10000;
+
+        // 🎨 Materiais LOD (cor sólida, sem textura, ultra leve)
+        const materiaisLOD = {
+            1: new THREE.MeshLambertMaterial({ color: 0x4a8c2a }), // Grama
+            2: new THREE.MeshLambertMaterial({ color: 0x8B6914 }), // Terra
+            3: new THREE.MeshLambertMaterial({ color: 0x888888 }), // Pedra
+            4: new THREE.MeshLambertMaterial({ color: 0x6B3A1F }), // Madeira
+            5: new THREE.MeshLambertMaterial({ color: 0x2d7a2d }), // Folha
+            6: new THREE.MeshBasicMaterial({ color: 0x2244aa, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }), // Água
+            7: new THREE.MeshLambertMaterial({ color: 0xd2c896 }), // Areia
+            8: new THREE.MeshLambertMaterial({ color: 0x8B6914 }), // Tabua
+            9: new THREE.MeshLambertMaterial({ color: 0x5c4033 }), // Bancada
+            10: new THREE.MeshLambertMaterial({ color: 0x333333 }), // Coal
+            11: new THREE.MeshLambertMaterial({ color: 0xcca183 }), // Iron
+            12: new THREE.MeshLambertMaterial({ color: 0xfcee4c }), // Gold
+            13: new THREE.MeshLambertMaterial({ color: 0x5df2df }), // Diamond
+            14: new THREE.MeshLambertMaterial({ color: 0x666666 }), // Cobblestone
+            22: new THREE.MeshLambertMaterial({ color: 0x888888 }), // Fornalha
+            23: new THREE.MeshLambertMaterial({ color: 0x111111 }), // Bloco de Carvão
+            16: new THREE.MeshLambertMaterial({ color: 0x6B3A1F }), // Log X
+            17: new THREE.MeshLambertMaterial({ color: 0x6B3A1F }),  // Log Z
+            18: new THREE.MeshLambertMaterial({ color: 0x48b518 }), // Grama Curta
+            19: new THREE.MeshLambertMaterial({ color: 0xff3333 }), // Papoula
+            20: new THREE.MeshLambertMaterial({ color: 0xffee00 }), // Dente-de-leão
+            21: new THREE.MeshLambertMaterial({ color: 0x6495ED })  // Centaurea
+        };
+
+        // Fila de chunks para gerar progressivamente (evita travar)
+        let filaChunks = [];
 
         function obterIdChunk(cx, cz) { return `${cx},${cz}`; }
 
@@ -836,7 +2027,7 @@
         }
 
         function criarAnimal(x, y, z, cx, cz) {
-            const tipos = ['porco', 'vaca', 'ovelha'];
+            const tipos = ['porco', 'vaca', 'ovelha', 'galinha', 'leopardo', 'lobo'];
             const sumChunks = Math.abs(cx) + Math.abs(cz);
 
             // Cavaleiro das Trevas a cada 15 chunks
@@ -864,6 +2055,9 @@
                 const tipo = tipos[Math.floor(Math.random() * tipos.length)];
                 if (tipo === 'ovelha') animal = new Ovelha(cena, x, y, z, `${cx},${cz}`);
                 else if (tipo === 'vaca') animal = new Vaca(cena, x, y, z, `${cx},${cz}`);
+                else if (tipo === 'galinha') animal = new Galinha(cena, x, y, z, `${cx},${cz}`);
+                else if (tipo === 'leopardo') animal = new Leopardo(cena, x, y, z, `${cx},${cz}`);
+                else if (tipo === 'lobo') animal = new Lobo(cena, x, y, z, `${cx},${cz}`);
                 else animal = new Porco(cena, x, y, z, `${cx},${cz}`);
             }
 
@@ -875,52 +2069,209 @@
             for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
                 for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
                     const x = cx * TAMANHO_CHUNK + lx; const z = cz * TAMANHO_CHUNK + lz;
-                    let alt = Math.floor(noise.noise(x / 30, 0, z / 30) * 8);
+
+                    // 🏔️ TERRENO: múltiplas oitavas de noise para montanhas
+                    let alt = 0;
+                    alt += noise.noise(x / 100 + seedX, 0, z / 100 + seedZ) * 20;   // Colinas amplas
+                    alt += noise.noise(x / 40 + seedX, 0, z / 40 + seedZ) * 8;      // Detalhe médio
+                    alt += noise.noise(x / 15 + seedX, 0, z / 15 + seedZ) * 3;      // Micro-detalhe
+                    alt = Math.floor(alt);
+
+                    // 🌊 RIOS: noise separado cria vales/rios
+                    const rioNoise = noise.noise(x / 60 + seedX, 0.5, z / 60 + seedZ);
+                    const rioNoise2 = noise.noise(x / 30 + seedX, 1.5, z / 30 + seedZ) * 0.3;
+                    const rioVal = Math.abs(rioNoise + rioNoise2);
+                    const isRio = rioVal < 0.06;  // Faixa estreita = rio
+                    const isMargemRio = rioVal < 0.12;
+
+                    if (isRio) {
+                        alt = Math.min(alt, -1); // Rio sempre abaixo do nível 0
+                    } else if (isMargemRio) {
+                        alt = Math.min(alt, 1); // Margem baixa
+                    }
+
                     for (let y = -15; y <= alt; y++) {
-                        let buraco = noise.noise(x / 12, y / 12, z / 12);
-                        if (y < alt - 2 && buraco > 0.4) continue;
-                        let tipo = 3; if (y === alt) tipo = 1; else if (y > alt - 3) tipo = 2;
+                        let buraco = noise.noise(x / 12 + seedX, y / 12, z / 12 + seedZ);
+                        if (y < alt - 2 && buraco > 0.4) continue; // Cavernas
+                        let tipo = 3; // Pedra
+
+                        const isPraia = (alt >= -1 && alt <= 2);
+
+                        if (y === alt) {
+                            if (isRio || isPraia) tipo = 7; // Areia no nível do rio ou na praia
+                            else tipo = 1; // Grama
+                        } else if (y > alt - 3) {
+                            if (isRio || isPraia) tipo = 7; // Profundidade de areia
+                            else tipo = 2; // Terra
+                        }
+
                         if (!mundo.has(`${x},${y},${z}`)) mundo.set(`${x},${y},${z}`, tipo);
                     }
-                    if (Math.random() < 0.02 && mundo.get(`${x},${alt},${z}`) === 1) gerarArvore(x, alt + 1, z);
+
+                    // 💧 Água nos rios (preenche até y=0)
+                    if (isRio || alt < 0) {
+                        for (let wy = alt + 1; wy <= 0; wy++) {
+                            if (!mundo.has(`${x},${wy},${z}`)) mundo.set(`${x},${wy},${z}`, 6);
+                        }
+                    }
+
+                    // 🌲 Árvores (não em rios nem montanhas altas)
+                    if (!isRio && !isMargemRio && alt > 0 && alt < 15 && Math.random() < 0.02 && mundo.get(`${x},${alt},${z}`) === 1) {
+                        gerarArvore(x, alt + 1, z);
+                    }
+
+                    // 🌿 Grama e flores (sobre grama, sem árvore)
+                    if (!isRio && !isMargemRio && alt > 0 && mundo.get(`${x},${alt},${z}`) === 1 && !mundo.has(`${x},${alt + 1},${z}`)) {
+                        const rng = Math.random();
+                        if (rng < 0.15) {
+                            mundo.set(`${x},${alt + 1},${z}`, 18); // Grama curta (15%)
+                        } else if (rng < 0.17) {
+                            mundo.set(`${x},${alt + 1},${z}`, 20); // Dente-de-leão (2%)
+                        } else if (rng < 0.19) {
+                            mundo.set(`${x},${alt + 1},${z}`, 19); // Papoula (2%)
+                        } else if (rng < 0.205) {
+                            mundo.set(`${x},${alt + 1},${z}`, 21); // Centaurea (1.5%)
+                        }
+                    }
                 }
             }
-            if (Math.random() < 0.4) {
+
+            // Mobs só em chunks próximos
+            const distChunk = Math.abs(cx - chunkAtualX) + Math.abs(cz - chunkAtualZ);
+            if (distChunk <= DISTANCIA_MOB && Math.random() < 0.4) {
                 const ax = cx * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
                 const az = cz * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
-                for (let y = 25; y >= -15; y--) {
+                for (let y = 40; y >= -15; y--) {
                     const tipo = mundo.get(`${ax},${y},${az}`);
-                    if (tipo) {
-                        if (tipo !== 5) { // Não nasce na Folha
-                            criarAnimal(ax, y + 1.62, az, cx, cz);
-                        }
+                    if (tipo && tipo !== 5 && tipo !== 6) {
+                        // Verifica se acima do bloco sólido tem água - não spawnar em rio/lago
+                        const tipoAcima1 = mundo.get(`${ax},${y+1},${az}`);
+                        const tipoAcima2 = mundo.get(`${ax},${y+2},${az}`);
+                        if (tipoAcima1 === 6 || tipoAcima2 === 6) break; // Bloco coberto por água
+                        // Verifica blocos adjacentes para não spawnar na beira da água
+                        const vizAgua = [
+                            mundo.get(`${ax+1},${y+1},${az}`), mundo.get(`${ax-1},${y+1},${az}`),
+                            mundo.get(`${ax},${y+1},${az+1}`), mundo.get(`${ax},${y+1},${az-1}`)
+                        ];
+                        if (vizAgua.some(v => v === 6)) break; // Muito perto da água
+                        criarAnimal(ax, y + 1.62, az, cx, cz);
                         break;
                     }
                 }
             }
         }
 
-        function construirChunkVisual(cx, cz) {
+        // Checa se bloco é "exposto" considerando que água é transparente
+        function blocoExposto(x, y, z, tipoAtual) {
+            // Plantas são sempre visíveis (rendered as cross)
+            if (PLANT_IDS.has(tipoAtual)) return true;
+            const dirs = [
+                [x + 1, y, z], [x - 1, y, z], [x, y + 1, z], [x, y - 1, z], [x, y, z + 1], [x, y, z - 1]
+            ];
+            for (const [nx, ny, nz] of dirs) {
+                const vizinho = mundo.get(`${nx},${ny},${nz}`);
+                if (!vizinho) return true; // Sem bloco = exposto
+                if (PLANT_IDS.has(vizinho)) return true; // Planta adjacente = exposto
+                if (tipoAtual !== 5 && vizinho === 5) return true; // Folhas são transparentes, revelar blocos atrás delas
+                // Bloco sólido adjacente a água = exposto (água é transparente)
+                if (tipoAtual !== 6 && vizinho === 6) return true;
+                // Água adjacente a não-água = exposto
+                if (tipoAtual === 6 && vizinho !== 6) return true;
+            }
+            return false;
+        }
+
+        // Geometria em X para plantas (dois planos cruzados a 90°)
+        function criarGeometriaPlantaX() {
+            const geo = new THREE.BufferGeometry();
+            const s = 0.5; // meia largura
+            const vertices = new Float32Array([
+                // Plano 1 (diagonal /)
+                -s, -0.5, -s,   s, -0.5,  s,   s,  0.5,  s,
+                -s, -0.5, -s,   s,  0.5,  s,  -s,  0.5, -s,
+                // Plano 1 reverso
+                 s, -0.5,  s,  -s, -0.5, -s,  -s,  0.5, -s,
+                 s, -0.5,  s,  -s,  0.5, -s,   s,  0.5,  s,
+                // Plano 2 (diagonal \)
+                -s, -0.5,  s,   s, -0.5, -s,   s,  0.5, -s,
+                -s, -0.5,  s,   s,  0.5, -s,  -s,  0.5,  s,
+                // Plano 2 reverso
+                 s, -0.5, -s,  -s, -0.5,  s,  -s,  0.5,  s,
+                 s, -0.5, -s,  -s,  0.5,  s,   s,  0.5, -s,
+            ]);
+            const uvs = new Float32Array([
+                0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+                0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+                0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+                0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+            ]);
+            geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            geo.computeVertexNormals();
+            return geo;
+        }
+        const geometriaPlanta = criarGeometriaPlantaX();
+
+        function construirChunkVisual(cx, cz, isLOD) {
             const id = obterIdChunk(cx, cz); if (chunksVisuais.has(id)) return;
-            const grupo = new THREE.Group(); const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+            const grupo = new THREE.Group();
+            grupo.userData.isLOD = !!isLOD;
+            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [] };
+            const blocosAgua = [];
+            const blocosPlantas = { 18: [], 19: [], 20: [], 21: [] };
+            const yMax = 45;
             for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
                 for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
                     const x = cx * TAMANHO_CHUNK + lx; const z = cz * TAMANHO_CHUNK + lz;
-                    for (let y = -15; y < 25; y++) {
+                    for (let y = -15; y < yMax; y++) {
                         const tipo = mundo.get(`${x},${y},${z}`);
                         if (tipo) {
-                            const exposto = !mundo.has(`${x + 1},${y},${z}`) || !mundo.has(`${x - 1},${y},${z}`) || !mundo.has(`${x},${y + 1},${z}`) || !mundo.has(`${x},${y - 1},${z}`) || !mundo.has(`${x},${y},${z + 1}`) || !mundo.has(`${x},${y},${z - 1}`);
-                            if (exposto) blocosChunk[tipo].push(new THREE.Vector3(x, y, z));
+                            if (!blocoExposto(x, y, z, tipo)) continue;
+                            if (tipo === 6) {
+                                blocosAgua.push(new THREE.Vector3(x, y, z));
+                            } else if (PLANT_IDS.has(tipo)) {
+                                if (blocosPlantas[tipo]) blocosPlantas[tipo].push(new THREE.Vector3(x, y, z));
+                            } else {
+                                if (blocosChunk[tipo]) blocosChunk[tipo].push(new THREE.Vector3(x, y, z));
+                            }
                         }
                     }
                 }
             }
+            const useMats = isLOD ? materiaisLOD : materiais;
+            // Blocos sólidos primeiro
             for (let tipo in blocosChunk) {
                 const pos = blocosChunk[tipo]; if (pos.length === 0) continue;
-                const instancedMesh = new THREE.InstancedMesh(geometriaBloco, materiais[tipo], pos.length);
+                const mat = useMats[tipo] || materiaisLOD[tipo] || materiaisLOD[3];
+                const instancedMesh = new THREE.InstancedMesh(geometriaBloco, mat, pos.length);
                 const matriz = new THREE.Matrix4();
                 pos.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); instancedMesh.setMatrixAt(index, matriz); });
-                instancedMesh.castShadow = true; instancedMesh.receiveShadow = true; grupo.add(instancedMesh);
+                if (!isLOD) { instancedMesh.castShadow = true; instancedMesh.receiveShadow = true; }
+                instancedMesh.renderOrder = 0;
+                grupo.add(instancedMesh);
+            }
+            // 🌿 Plantas (geometria em X)
+            for (let tipo in blocosPlantas) {
+                const pos = blocosPlantas[tipo]; if (pos.length === 0) continue;
+                const mat = useMats[tipo] || materiaisLOD[tipo] || materiaisLOD[3];
+                const instancedPlanta = new THREE.InstancedMesh(geometriaPlanta, mat, pos.length);
+                const matriz = new THREE.Matrix4();
+                pos.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); instancedPlanta.setMatrixAt(index, matriz); });
+                instancedPlanta.castShadow = true;
+                instancedPlanta.receiveShadow = true;
+                instancedPlanta.renderOrder = 0;
+                grupo.add(instancedPlanta);
+            }
+            // Água depois (renderOrder alto para transparência correta)
+            if (blocosAgua.length > 0) {
+                const matAgua = useMats[6] || materiaisLOD[6];
+                const aguaMesh = new THREE.InstancedMesh(geometriaBlocoAgua, matAgua, blocosAgua.length);
+                const matriz = new THREE.Matrix4();
+                blocosAgua.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); aguaMesh.setMatrixAt(index, matriz); });
+                aguaMesh.renderOrder = 1;
+                aguaMesh.castShadow = false;
+                aguaMesh.receiveShadow = false;
+                grupo.add(aguaMesh);
             }
             cena.add(grupo); chunksVisuais.set(id, grupo);
         }
@@ -928,9 +2279,26 @@
         function atualizarChunks() {
             const px = Math.floor(camera.position.x / TAMANHO_CHUNK); const pz = Math.floor(camera.position.z / TAMANHO_CHUNK);
             if (px !== chunkAtualX || pz !== chunkAtualZ || chunksVisuais.size === 0) {
-                document.getElementById('loading').innerText = "Carregando área..."; chunkAtualX = px; chunkAtualZ = pz;
-                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) { for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) { gerarDadosChunk(cx, cz); } }
-                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) { for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) { construirChunkVisual(cx, cz); } }
+                document.getElementById('loading').innerText = "Carregando área...";
+                chunkAtualX = px; chunkAtualZ = pz;
+
+                // Gera dados de todos os chunks
+                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
+                    for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
+                        gerarDadosChunk(cx, cz);
+                    }
+                }
+
+                // Constrói visuais: próximos com textura, distantes com LOD
+                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
+                    for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
+                        const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
+                        const isLOD = dist > DISTANCIA_DETALHE;
+                        construirChunkVisual(cx, cz, isLOD);
+                    }
+                }
+
+                // Limpeza de chunks fora do range
                 for (const [id, grupo] of chunksVisuais.entries()) {
                     const [cx, cz] = id.split(',').map(Number);
                     if (Math.abs(cx - px) > DISTANCIA_RENDER || Math.abs(cz - pz) > DISTANCIA_RENDER) {
@@ -938,12 +2306,20 @@
                         animais = animais.filter(a => { if (a.chunkId === id) { cena.remove(a.mesh); return false; } return true; });
                     }
                 }
-                document.getElementById('loading').innerText = `Chunks ativos: ${chunksVisuais.size}`;
+
+                // Esconde/mostra mobs baseado na distância
+                animais.forEach(a => {
+                    const mobDist = camera.position.distanceTo(a.mesh.position) / TAMANHO_CHUNK;
+                    a.mesh.visible = mobDist <= DISTANCIA_MOB;
+                });
+
+                document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size}`;
 
                 if (!window.playerSpawned && chunksVisuais.size > 0) {
-                    for (let y = 25; y >= -15; y--) {
-                        if (mundo.has(`0,${y},0`)) {
-                            camera.position.set(0, y + 2.12, 0); // y+0.5 da superficie + 1.62 do player
+                    for (let y = 45; y >= -15; y--) {
+                        const tipo = mundo.get(`0,${y},0`);
+                        if (tipo && tipo !== 6) { // Não spawna na água
+                            camera.position.set(0, y + 2.12, 0);
                             window.playerSpawned = true;
                             velocidadeY = 0;
                             break;
@@ -964,6 +2340,234 @@
         let velocidadeY = 0; let noChao = false;
         let sprintAtivo = false;
         let ultimoW = 0; // Para detectar double-tap do W
+        let currentSneakOffset = 0; // Offset visual do agachar (0 = em pé, 0.2 = agachado)
+
+        // 🌊 ESTADO DA ÁGUA
+        let naAgua = false;
+        let cabecaSubmersa = false;
+        const waterOverlay = document.getElementById('water-overlay');
+        const fogNormal = { color: corCeu, near: 20, far: 60 };
+        const fogAgua = { color: 0x3F76E4, near: 1, far: 18 };
+
+        function checarPlayerNaAgua(delta = 0) {
+            // Checa pés do player
+            const pesY = camera.position.y - 1.62;
+            const bx = Math.round(camera.position.x);
+            const bz = Math.round(camera.position.z);
+            const byPes = Math.round(pesY);
+            const byCorpo = Math.round(pesY + 0.8);
+            const byCabeca = Math.round(camera.position.y);
+
+            const tipoPes = mundo.get(`${bx},${byPes},${bz}`);
+            const tipoCorpo = mundo.get(`${bx},${byCorpo},${bz}`);
+            const tipoCabeca = mundo.get(`${bx},${byCabeca},${bz}`);
+
+            const estavaNaAgua = naAgua;
+            const cabecaEstavaSubmersa = cabecaSubmersa;
+
+            naAgua = (tipoPes === 6 || tipoCorpo === 6);
+            cabecaSubmersa = (tipoCabeca === 6);
+
+            // Audio cues
+            if (!cabecaEstavaSubmersa && cabecaSubmersa) {
+                soundManager.playSound('water_enter');
+                soundManager.startLoop('underwater');
+            } else if (cabecaEstavaSubmersa && !cabecaSubmersa) {
+                soundManager.playSound('water_exit');
+                soundManager.stopLoop('underwater');
+            } else if (!estavaNaAgua && naAgua) {
+                soundManager.playSound('splash');
+            }
+
+            // Sistema de Fôlego
+            if (cabecaSubmersa) {
+                if (playerOxygen > 0) {
+                    playerOxygen -= delta;
+                    if (Math.floor(playerOxygen * 10) % 5 === 0) callRenderUI(); // Redraw de tempos em tempos
+                } else {
+                    // Dano de afogamento (2 HP por segundo)
+                    if (Date.now() - lastDrownDamage > 1000) {
+                        playerHP -= 2;
+                        lastDrownDamage = Date.now();
+                        const df = document.getElementById('damage-flash');
+                        df.style.background = 'rgba(0, 0, 150, 0.4)';
+                        setTimeout(() => df.style.background = 'rgba(255, 0, 0, 0)', 200);
+                        soundManager.playSound('hit');
+                        callRenderUI();
+                        if (playerHP <= 0) {
+                            alert("Você se afogou! Respawnando...");
+                            playerHP = 20;
+                            playerOxygen = 15;
+                            camera.position.set(0, 50, 0); // respawn fallback
+                            window.playerSpawned = false;
+                        }
+                    }
+                }
+            } else {
+                if (playerOxygen < 15) {
+                    playerOxygen += delta * 5; // recupera rápido
+                    if (playerOxygen > 15) playerOxygen = 15;
+                    callRenderUI();
+                }
+            }
+
+            // Overlay visual
+            if (cabecaSubmersa) {
+                waterOverlay.classList.add('active');
+            } else {
+                waterOverlay.classList.remove('active');
+            }
+
+            // Fog subaquático e FOV
+            if (cabecaSubmersa) {
+                cena.fog.color.setHex(fogAgua.color);
+                cena.fog.near = fogAgua.near;
+                cena.fog.far = fogAgua.far;
+                cena.background = new THREE.Color(fogAgua.color);
+                if (camera.fov !== 65) {
+                    camera.fov = 65;
+                    camera.updateProjectionMatrix();
+                }
+            } else {
+                cena.fog.color.setHex(fogNormal.color);
+                cena.fog.near = fogNormal.near;
+                cena.fog.far = fogNormal.far;
+                cena.background = new THREE.Color(corCeu);
+                if (camera.fov !== 75) {
+                    camera.fov = 75;
+                    camera.updateProjectionMatrix();
+                }
+            }
+        }
+
+        window.openInventory = function (is3x3 = false) {
+            inventoryMenu.style.display = 'flex';
+            menu.style.display = 'none';
+            document.getElementById('crafting-grid').style.gridTemplateColumns = is3x3 ? "repeat(3, 1fr)" : "repeat(2, 1fr)";
+            const slots3x3 = document.querySelectorAll('.craft-3x3');
+            slots3x3.forEach(el => el.style.display = is3x3 ? 'block' : 'none');
+            controles.unlock();
+            callRenderUI();
+        };
+
+        window.closeInventory = function () {
+            inventoryMenu.style.display = 'none';
+            document.getElementById('recipe-book-modal').style.display = 'none';
+
+            // Devolve itens da crafting table pro inventário ou spawna no chão
+            for (let i = 0; i < 9; i++) {
+                const slot = uiBuilder.craftInput[i];
+                if (slot) {
+                    if (!uiBuilder.addItem(slot.id, slot.count)) {
+                        const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
+                        for (let count = 0; count < slot.count; count++) {
+                            droparItem(px - 0.5, py - 1, pz - 0.5, slot.id);
+                        }
+                    }
+                    uiBuilder.craftInput[i] = null;
+                }
+            }
+            uiBuilder.craftOutput = null;
+            if (uiBuilder.mouseSlot) {
+                if (!uiBuilder.addItem(uiBuilder.mouseSlot.id, uiBuilder.mouseSlot.count)) {
+                    const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
+                    for (let count = 0; count < uiBuilder.mouseSlot.count; count++) {
+                        droparItem(px - 0.5, py - 1, pz - 0.5, uiBuilder.mouseSlot.id);
+                    }
+                }
+                uiBuilder.mouseSlot = null;
+            }
+
+            callRenderUI();
+            checkCrafting();
+            updateMouseIcon();
+            controles.lock();
+        };
+
+        // Inventário Criativo - mostra todos os blocos disponíveis
+        window.openCreativeInventory = function() {
+            const creativeMenu = document.getElementById('creative-menu');
+            if (creativeMenu.style.display === 'flex') {
+                creativeMenu.style.display = 'none';
+                controles.lock();
+                return;
+            }
+            creativeMenu.style.display = 'flex';
+            controles.unlock();
+            
+            // Atualiza os itens do menu criativo
+            const grid = document.getElementById('creative-grid');
+            grid.innerHTML = '';
+            
+            // Lista de todos os blocos/itens disponíveis
+            const allItems = [
+                { id: 1, nome: 'Grama' },
+                { id: 2, nome: 'Terra' },
+                { id: 3, nome: 'Pedra' },
+                { id: 4, nome: 'Madeira' },
+                { id: 5, nome: 'Folhas' },
+                { id: 6, nome: 'Água' },
+                { id: 7, nome: 'Areia' },
+                { id: 8, nome: 'Tábua' },
+                { id: 9, nome: 'Bancada' },
+                { id: 10, nome: 'Min.Carvão' },
+                { id: 11, nome: 'Min.Ferro' },
+                { id: 12, nome: 'Min.Ouro' },
+                { id: 13, nome: 'Min.Diamante' },
+                { id: 14, nome: 'Pedregulho' },
+                { id: 15, nome: 'Graveto' },
+                { id: 18, nome: 'Grama Curta' },
+                { id: 19, nome: 'Papoula' },
+                { id: 20, nome: 'Dente-de-leão' },
+                { id: 21, nome: 'Centáurea' },
+                { id: 'picareta', nome: 'Picareta' },
+                { id: 'machado', nome: 'Machado' },
+                { id: 'picareta_pedra', nome: 'Pic.Pedra' },
+                { id: 'machado_pedra', nome: 'Mach.Pedra' },
+                { id: 'picareta_ferro', nome: 'Pic.Ferro' },
+                { id: 'machado_ferro', nome: 'Mach.Ferro' },
+                { id: 'picareta_diamante', nome: 'Pic.Diamante' },
+                { id: 'machado_diamante', nome: 'Mach.Diamante' },
+                { id: 'pa', nome: 'Pá Madeira' },
+                { id: 'pa_pedra', nome: 'Pá Pedra' },
+                { id: 'pa_ferro', nome: 'Pá Ferro' },
+                { id: 'pa_diamante', nome: 'Pá Diamante' }
+            ];
+            
+            allItems.forEach(item => {
+                const slot = document.createElement('div');
+                slot.className = 'creative-slot';
+                slot.title = item.nome;
+                
+                // Definir background baseado no tipo
+                const itemDef = uiBuilder.itemDefs[item.id];
+                if (itemDef && itemDef.svgBase) {
+                    slot.style.backgroundImage = itemDef.svgBase;
+                }
+                
+                slot.addEventListener('click', () => {
+                    // Adiciona 64 do item ao inventário
+                    uiBuilder.addItem(item.id, 64);
+                    callRenderUI();
+                });
+                
+                const label = document.createElement('span');
+                label.className = 'creative-label';
+                label.textContent = item.nome;
+                slot.appendChild(label);
+                
+                grid.appendChild(slot);
+            });
+        };
+
+        document.getElementById('btn-recipe-book').addEventListener('click', () => {
+            const modal = document.getElementById('recipe-book-modal');
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('btn-close-recipe').addEventListener('click', () => {
+            document.getElementById('recipe-book-modal').style.display = 'none';
+        });
 
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyW') {
@@ -977,51 +2581,67 @@
                 }
                 teclas.w = true;
             }
-            if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'Space') teclas.space = true; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = true;
+            if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'Space') teclas.space = true; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') teclas.shift = true;
 
-            if (e.key >= '1' && e.key <= '7') {
+            if (e.key >= '1' && e.key <= '9') {
                 uiBuilder.selectedHotbarIndex = parseInt(e.key) - 1;
                 callRenderUI();
             }
             if (e.key.toLowerCase() === 'e') {
                 if (inventoryMenu.style.display === 'flex') {
-                    inventoryMenu.style.display = 'none';
-                    controles.lock();
+                    window.closeInventory();
+                } else if (furnaceMenu.style.display === 'block') {
+                    window.closeFurnace();
                 } else {
-                    inventoryMenu.style.display = 'flex';
-                    menu.style.display = 'none';
-                    controles.unlock();
+                    window.openInventory(false);
                 }
+            }
+            if (e.key.toLowerCase() === 'y') {
+                // Alternar modo de jogo
+                if (gameMode === 'survival') {
+                    gameMode = 'creative';
+                    playerHP = 20;
+                    console.log('Modo Criativo ativado!');
+                } else {
+                    gameMode = 'survival';
+                    console.log('Modo Survival ativado!');
+                }
+                window.openCreativeInventory();
             }
         });
 
         document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') { teclas.w = false; if (sprintAtivo) { sprintAtivo = false; teclas.ctrl = false; } }
-            if (e.code === 'KeyS') teclas.s = false; if (e.code === 'KeyA') teclas.a = false; if (e.code === 'KeyD') teclas.d = false; if (e.code === 'Space') teclas.space = false; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = false;
+            if (e.code === 'KeyW') { teclas.w = false; /* Sprint NÃO cancela ao soltar W se estiver no ar */ if (sprintAtivo && noChao) { sprintAtivo = false; teclas.ctrl = false; } }
+            if (e.code === 'KeyS') teclas.s = false; if (e.code === 'KeyA') teclas.a = false; if (e.code === 'KeyD') teclas.d = false; if (e.code === 'Space') teclas.space = false; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') teclas.shift = false;
         });
 
         document.addEventListener('wheel', (e) => {
             if (!(controles.isLocked || window._mobileMode)) return;
-            if (e.deltaY > 0) uiBuilder.selectedHotbarIndex = (uiBuilder.selectedHotbarIndex + 1) % 7;
-            else uiBuilder.selectedHotbarIndex = (uiBuilder.selectedHotbarIndex - 1 + 7) % 7;
+            if (e.deltaY > 0) uiBuilder.selectedHotbarIndex = (uiBuilder.selectedHotbarIndex + 1) % 9;
+            else uiBuilder.selectedHotbarIndex = (uiBuilder.selectedHotbarIndex - 1 + 9) % 9;
             callRenderUI();
         });
 
         function checarColisao(x, y, z) {
-            const w = 0.15; // Menor para passar em buracos de 1 bloco com facilidade
+            const w = 0.15;
             const pos = [
-                [x - w, y - 1.62, z - w], [x + w, y - 1.62, z - w], [x - w, y - 1.62, z + w], [x + w, y - 1.62, z + w], // Pés
-                [x - w, y - 0.8, z - w], [x + w, y - 0.8, z - w], [x - w, y - 0.8, z + w], [x + w, y - 0.8, z + w],    // Cintura
-                [x - w, y + 0.1, z - w], [x + w, y + 0.1, z - w], [x - w, y + 0.1, z + w], [x + w, y + 0.1, z + w]      // Cabeça
+                [x - w, y - 1.62, z - w], [x + w, y - 1.62, z - w], [x - w, y - 1.62, z + w], [x + w, y - 1.62, z + w],
+                [x - w, y - 0.8, z - w], [x + w, y - 0.8, z - w], [x - w, y - 0.8, z + w], [x + w, y - 0.8, z + w],
+                [x - w, y + 0.1, z - w], [x + w, y + 0.1, z - w], [x - w, y + 0.1, z + w], [x + w, y + 0.1, z + w]
             ];
-            return pos.some(p => mundo.has(`${Math.round(p[0])},${Math.round(p[1])},${Math.round(p[2])}`));
+            return pos.some(p => {
+                const key = `${Math.round(p[0])},${Math.round(p[1])},${Math.round(p[2])}`;
+                const tipo = mundo.get(key);
+                return tipo && tipo !== 6 && !PLANT_IDS.has(tipo); // Água e plantas não bloqueiam
+            });
         }
 
         // 📦 SISTEMA DE DROPS (ITENS NO CHÃO)
         let itensDropados = [];
         const geoDrop = new THREE.BoxGeometry(0.25, 0.25, 0.25);
         function droparItem(x, y, z, tipo) {
-            const mesh = new THREE.Mesh(geoDrop, materiais[tipo]);
+            const mat = materiais[tipo] || new THREE.MeshLambertMaterial({ color: 0x8B6914 }); // Fallback para itens sem textura 3D
+            const mesh = new THREE.Mesh(geoDrop, mat);
             mesh.position.set(x + 0.5, y + 0.5, z + 0.5);
             mesh.castShadow = true; cena.add(mesh);
             itensDropados.push({ mesh, tipo, vy: 0.2 }); // Dá um pulinho ao nascer
@@ -1056,6 +2676,71 @@
         let tempoQuebrando = 0;
         let tempoAtualParaQuebrar = 1.3;
         const TEMPO_PARA_QUEBRAR = 1.3;
+        let isLeftMouseDown = false;
+        let lastAttackTime = 0;
+
+        function realizarRaycastEsquerdo(isContinuo) {
+            raycaster.setFromCamera(centroTela, camera);
+            const MAX_DIST = 6.0;
+
+            const objetos = Array.from(chunksVisuais.values()).flatMap(g => g.children);
+            const blockHits = raycaster.intersectObjects(objetos);
+            const animalHits = raycaster.intersectObjects(animais.map(a => a.mesh), true);
+
+            let closestBlock = (blockHits.length > 0 && blockHits[0].distance <= MAX_DIST) ? blockHits[0] : null;
+            let closestAnimal = (animalHits.length > 0 && animalHits[0].distance <= MAX_DIST) ? animalHits[0] : null;
+
+            let hitAnimal = false;
+            if (closestAnimal) {
+                if (!closestBlock || closestAnimal.distance < closestBlock.distance) {
+                    hitAnimal = true;
+                }
+            }
+
+            if (hitAnimal) {
+                // Cooldown de ataque
+                const now = performance.now();
+                if (now - lastAttackTime < 400) return; // 0.4s cooldown
+                lastAttackTime = now;
+
+                const meshHit = closestAnimal.object;
+                const animal = animais.find(a => {
+                    let isChild = false;
+                    a.mesh.traverse(child => { if (child === meshHit) isChild = true; });
+                    return isChild;
+                });
+
+                if (animal) {
+                    const dirVector = new THREE.Vector3();
+                    dirVector.subVectors(animal.mesh.position, camera.position);
+                    dirVector.y = 0;
+                    dirVector.normalize();
+
+                    const forcaKnockback = 0.20;
+                    animal.sofrerDano(5, soundManager, dirVector.x * forcaKnockback, dirVector.z * forcaKnockback);
+                }
+                quebrandoBloco = null;
+                tempoQuebrando = 0;
+
+            } else if (closestBlock) {
+                const hit = closestBlock;
+                const pt = hit.point; const normal = hit.face.normal;
+                const hitX = Math.round(pt.x - normal.x * 0.5);
+                const hitY = Math.round(pt.y - normal.y * 0.5);
+                const hitZ = Math.round(pt.z - normal.z * 0.5);
+
+                const tipoAlvo = mundo.get(`${hitX},${hitY},${hitZ}`);
+                if (tipoAlvo === 6 || !tipoAlvo) { quebrandoBloco = null; tempoQuebrando = 0; }
+                else {
+                    quebrandoBloco = { x: hitX, y: hitY, z: hitZ };
+                    // Se foi continuo, não zera se for o mesmo bloco (já tratado no loop, mas por via das dúvidas)
+                    if (!isContinuo) tempoQuebrando = 0;
+                }
+            } else {
+                quebrandoBloco = null;
+                tempoQuebrando = 0;
+            }
+        }
 
         function balancarMao() {
             animandoMao = true;
@@ -1067,44 +2752,47 @@
 
             balancarMao(); // Toda vez que clica, balança a mão
 
-            if (e.button === 0) { // Tentativa de quebrar
-                raycaster.setFromCamera(centroTela, camera);
-                const objetos = Array.from(chunksVisuais.values()).flatMap(g => g.children);
-                const interseccoes = raycaster.intersectObjects(objetos);
+            if (e.button === 0) { // Tentativa de quebrar ou bater
+                isLeftMouseDown = true;
+                realizarRaycastEsquerdo(false);
+            } else if (e.button === 2) { // Colocar ou Interagir
+                const slot = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
+                const itemDef = slot ? uiBuilder.itemDefs[slot.id] : null;
 
-                if (interseccoes.length > 0) {
-                    const hit = interseccoes[0];
-                    const pt = hit.point; const normal = hit.face.normal;
-                    const hitX = Math.round(pt.x - normal.x * 0.5);
-                    const hitY = Math.round(pt.y - normal.y * 0.5);
-                    const hitZ = Math.round(pt.z - normal.z * 0.5);
-                    quebrandoBloco = { x: hitX, y: hitY, z: hitZ };
-                    tempoQuebrando = 0;
-                } else {
-                    // Tenta bater em animal
-                    const animalIntersects = raycaster.intersectObjects(animais.map(a => a.mesh), true);
-                    if (animalIntersects.length > 0) {
-                        const meshHit = animalIntersects[0].object;
-                        const animal = animais.find(a => {
-                            let isChild = false;
-                            a.mesh.traverse(child => { if (child === meshHit) isChild = true; });
-                            return isChild;
-                        });
-                        if (animal) animal.sofrerDano(5, soundManager);
-                        animandoMao = true; progressoMao = 0;
+                if (itemDef && itemDef.type === "food") {
+                    if (playerFood < 20) {
+                        playerFood = Math.min(20, playerFood + (itemDef.foodValue || 2));
+                        slot.count--;
+                        if (slot.count <= 0) uiBuilder.inventory[uiBuilder.selectedHotbarIndex] = null;
+                        callRenderUI();
+                        balancarMao();
                     }
+                    return;
                 }
-            } else if (e.button === 2) { // Colocar
-                const slot = uiBuilder.hotbar[uiBuilder.selectedHotbarIndex];
-                if (slot.kind !== "block" || uiBuilder.getItemCount(slot.itemId) === 0) return;
 
                 raycaster.setFromCamera(centroTela, camera);
                 const objetos = Array.from(chunksVisuais.values()).flatMap(g => g.children);
                 const interseccoes = raycaster.intersectObjects(objetos);
-                if (interseccoes.length > 0) {
+
+                if (interseccoes.length > 0 && interseccoes[0].distance <= 6.0) {
                     const hit = interseccoes[0]; const pt = hit.point; const normal = hit.face.normal;
                     const nx = Math.round(normal.x); const ny = Math.round(normal.y); const nz = Math.round(normal.z);
                     const hitX = Math.round(pt.x - nx * 0.5); const hitY = Math.round(pt.y - ny * 0.5); const hitZ = Math.round(pt.z - nz * 0.5);
+
+                    // Interação com bloco (Bancada ou Fornalha)
+                    const alvoInteract = mundo.get(`${hitX},${hitY},${hitZ}`);
+                    if (alvoInteract === 9) { // 9 é o ID da Bancada
+                        window.openInventory(true); // Abre Bancada
+                        return;
+                    }
+                    if (alvoInteract === 22) { // 22 é ID da Fornalha
+                        window.openFurnace();
+                        return;
+                    }
+
+                    const slot = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
+                    if (!slot || uiBuilder.itemDefs[slot.id]?.type !== "block" || slot.count === 0) return;
+
                     const placeX = hitX + nx; const placeY = hitY + ny; const placeZ = hitZ + nz;
 
                     // Bloqueia se o bloco colidir com a hitbox do jogador (pés, corpo, cabeça)
@@ -1120,10 +2808,44 @@
                         playerMinZ < blockMaxZ && playerMaxZ > blockMinZ;
                     if (overlaps) return;
 
-                    if (!mundo.has(`${placeX},${placeY},${placeZ}`)) {
-                        mundo.set(`${placeX},${placeY},${placeZ}`, slot.itemId);
-                        soundManager.playSound('place');
-                        uiBuilder.removeItem(slot.itemId, 1);
+                    // Se o lugar onde vou colocar o bloco tem ÁGUA (6) ou planta
+                    const blocoNoLocal = mundo.get(`${placeX},${placeY},${placeZ}`);
+                    
+                    if (!blocoNoLocal || blocoNoLocal === 6 || PLANT_IDS.has(blocoNoLocal)) {
+                        // Regra: Substituir água se tiver um bloco sólido abaixo
+                        if (blocoNoLocal === 6) {
+                            const blocoAbaixo = mundo.get(`${placeX},${placeY - 1},${placeZ}`);
+                            // Se não tiver nada abaixo ou for água profunda, não substitui
+                            if (!blocoAbaixo || blocoAbaixo === 6) {
+                                // Em água profunda, o bloco só pode ser colocado se for "empilhado" (difícil sem física, ignoramos por enquanto ou permitimos)
+                                // Para seguir o pedido: "se tiver mais 2 bloco de funura a agua n vai acontecer nada"
+                                // Interpretando: Se tiver água 2 blocos abaixo, não coloca o bloco
+                                const bloco2Abaixo = mundo.get(`${placeX},${placeY - 2},${placeZ}`);
+                                if (bloco2Abaixo === 6) return; 
+                            }
+                        }
+
+                        // Determina orientação do bloco de madeira baseado na face clicada
+                        let blockIdToPlace = slot.id;
+                        if (slot.id === 4) {
+                            if (Math.abs(nx) === 1) blockIdToPlace = 16;      // Eixo X
+                            else if (Math.abs(nz) === 1) blockIdToPlace = 17;  // Eixo Z
+                            // ny = eixo Y (padrão = 4)
+                        }
+                        mundo.set(`${placeX},${placeY},${placeZ}`, blockIdToPlace);
+                        agendarUpdateFluido(placeX, placeY, placeZ);
+
+                        // E atualizar os fluidos em volta do bloco recém colocado
+                        agendarUpdateFluido(placeX + 1, placeY, placeZ);
+                        agendarUpdateFluido(placeX - 1, placeY, placeZ);
+                        agendarUpdateFluido(placeX, placeY + 1, placeZ);
+                        agendarUpdateFluido(placeX, placeY - 1, placeZ);
+                        agendarUpdateFluido(placeX, placeY, placeZ + 1);
+                        agendarUpdateFluido(placeX, placeY, placeZ - 1);
+
+                        soundManager.playSound('place', { blockType: slot.id });
+                        slot.count--;
+                        if (slot.count <= 0) uiBuilder.inventory[uiBuilder.selectedHotbarIndex] = null;
                         callRenderUI();
                         recriarChunkVisual(placeX, placeZ);
                         // Vizinhos
@@ -1138,6 +2860,7 @@
 
         document.addEventListener('mouseup', (e) => {
             if (e.button === 0) {
+                isLeftMouseDown = false;
                 quebrandoBloco = null;
                 tempoQuebrando = 0;
                 contornoBloco.scale.set(1, 1, 1);
@@ -1145,8 +2868,73 @@
         });
 
         const relogio = new THREE.Clock();
+
+        // 💧 MÁQUINA DE ESTADO FLUIDA (Otimizada)
+        const fluidQueue = new Set();
+        let fluidDistances = new Map();
+
+        function agendarUpdateFluido(x, y, z) {
+            fluidQueue.add(`${x},${y},${z}`);
+            // Adiciona vizinhos para processamento (trigger block update)
+            fluidQueue.add(`${x+1},${y},${z}`);
+            fluidQueue.add(`${x-1},${y},${z}`);
+            fluidQueue.add(`${x},${y+1},${z}`);
+            fluidQueue.add(`${x},${y-1},${z}`);
+            fluidQueue.add(`${x},${y},${z+1}`);
+            fluidQueue.add(`${x},${y},${z-1}`);
+        }
+
+        function processarFluidos() {
+            if (fluidQueue.size === 0) return;
+            const processCount = Math.min(20, fluidQueue.size); // Limite por frame para otimização
+            const toProcess = Array.from(fluidQueue).slice(0, processCount);
+            
+            let changedChunks = new Set();
+
+            for (const chave of toProcess) {
+                fluidQueue.delete(chave);
+                const [x, y, z] = chave.split(',').map(Number);
+                
+                const tipoAtual = mundo.get(chave);
+                if (tipoAtual === 6) {
+                    // Água tenta fluir para baixo primeiro
+                    const underKey = `${x},${y-1},${z}`;
+                    if (!mundo.has(underKey)) {
+                        mundo.set(underKey, 6);
+                        fluidDistances.set(underKey, 8); // Água em queda é fonte
+                        agendarUpdateFluido(x, y-1, z);
+                        changedChunks.add(`${Math.floor(x/TAMANHO_CHUNK)},${Math.floor(z/TAMANHO_CHUNK)}`);
+                    } else if (mundo.get(underKey) !== 6 && mundo.get(underKey) !== 5) {
+                        // Flui para os lados se tem chão que não seja folha
+                        let currentDist = fluidDistances.get(chave) || 8; 
+                        if (currentDist > 1) { // Limite de expansão (7 blocos do source)
+                            const lados = [[1,0,0], [-1,0,0], [0,0,1], [0,0,-1]];
+                            for (let [dx, dy, dz] of lados) {
+                                const sideKey = `${x+dx},${y},${z+dz}`;
+                                if (!mundo.has(sideKey)) {
+                                    mundo.set(sideKey, 6);
+                                    fluidDistances.set(sideKey, currentDist - 1);
+                                    agendarUpdateFluido(x+dx, y, z+dz);
+                                    changedChunks.add(`${Math.floor((x+dx)/TAMANHO_CHUNK)},${Math.floor((z+dz)/TAMANHO_CHUNK)}`);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (const cid of changedChunks) {
+                const [cx, cz] = cid.split(',').map(Number);
+                const id = obterIdChunk(cx, cz);
+                if (chunksVisuais.has(id)) {
+                    recriarChunkVisual(cx * TAMANHO_CHUNK, cz * TAMANHO_CHUNK);
+                }
+            }
+        }
+
         function animar() {
             requestAnimationFrame(animar);
+            processarFluidos();
             if ((controles.isLocked || window._mobileMode)) {
                 atualizarChunks(); const delta = relogio.getDelta();
 
@@ -1161,9 +2949,24 @@
                     contornoBloco.visible = true;
                 } else contornoBloco.visible = false;
 
+                // 🌊 Checa se player está na água
+                checarPlayerNaAgua(delta);
+
                 let velocidadeAndar = (teclas.ctrl ? 10 : 5); // x2 speed for sprint
-                if (!noChao) velocidadeAndar = 5; // Aceleração menor no ar, mas manteve limitação basi.
+                if (!noChao) velocidadeAndar = (teclas.ctrl ? 8 : 5); // Mantém sprint no ar (um pouco menor)
+                if (naAgua) velocidadeAndar = 2.5; // Na água = 50% velocidade
+                if (teclas.shift && noChao) velocidadeAndar = 2.0;
                 velocidadeAndar *= delta;
+
+                // Abaixar câmera quando estiver no shift (sneak) - offset único, não cumulativo
+                {
+                    const targetSneakOffset = (teclas.shift && noChao) ? 0.2 : 0;
+                    const deltaSneakOffset = targetSneakOffset - currentSneakOffset;
+                    if (Math.abs(deltaSneakOffset) > 0.001) {
+                        camera.position.y -= deltaSneakOffset;
+                        currentSneakOffset = targetSneakOffset;
+                    }
+                }
 
                 const posAntiga = camera.position.clone();
                 let moveZ = Number(teclas.w) - Number(teclas.s); let moveX = Number(teclas.a) - Number(teclas.d);
@@ -1240,6 +3043,11 @@
                 }
 
                 // ⛏️ LÓGICA DE QUEBRA GRADUAL
+                if (isLeftMouseDown && !quebrandoBloco) {
+                    realizarRaycastEsquerdo(true);
+                    if (quebrandoBloco) balancarMao();
+                }
+
                 if (quebrandoBloco) {
                     // Verifica se o bloco que estamos quebrando ainda existe
                     const chaveBloco = `${quebrandoBloco.x},${quebrandoBloco.y},${quebrandoBloco.z}`;
@@ -1257,16 +3065,63 @@
 
                     const tipoBlocoQuebrando = mundo.get(`${quebrandoBloco.x},${quebrandoBloco.y},${quebrandoBloco.z}`);
                     tempoAtualParaQuebrar = TEMPO_PARA_QUEBRAR;
-                    const slotAtivo = uiBuilder.hotbar[uiBuilder.selectedHotbarIndex];
-                    if (tipoBlocoQuebrando === 3 && slotAtivo.kind === "tool" && slotAtivo.toolId === "picareta" && slotAtivo.unlocked) {
-                        tempoAtualParaQuebrar = 0.3;
+
+                    // Plantas quebram instantaneamente
+                    if (PLANT_IDS.has(tipoBlocoQuebrando)) {
+                        tempoAtualParaQuebrar = 0.05;
                     }
-                    if (tipoBlocoQuebrando === 4 && slotAtivo.kind === "tool" && slotAtivo.toolId === "machado" && slotAtivo.unlocked) {
-                        tempoAtualParaQuebrar = 0.3;
+
+                    // Grama, folhas e flores quebram instantaneamente (sem animação de rachadura)
+                    const blocosInstantaneos = [1, 5]; // Grama de bloco, Folhas
+                    if (blocosInstantaneos.includes(tipoBlocoQuebrando) || PLANT_IDS.has(tipoBlocoQuebrando)) {
+                        tempoAtualParaQuebrar = 0;
+                    }
+                    const slotAtivo = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
+                    if (slotAtivo) {
+                        const def = uiBuilder.itemDefs[slotAtivo.id] || { type: "unknown" };
+                        if (def.type === "tool") {
+                            const toolId = slotAtivo.id;
+                            const blocosPicareta = [3, 10, 11, 12, 13, 14]; // Pedra, Ores, Pedregulho
+                            const blocosMachado = [4, 5, 8, 16, 17]; // Madeira, Folhas, Tábua, Logs rotados
+                            const blocosPa = [1, 2, 7]; // Grama, Terra, Areia
+
+                            // Picaretas
+                            if (blocosPicareta.includes(tipoBlocoQuebrando)) {
+                                if (toolId === 'picareta') tempoAtualParaQuebrar = 0.6;
+                                if (toolId === 'picareta_pedra') tempoAtualParaQuebrar = 0.4;
+                                if (toolId === 'picareta_ferro') tempoAtualParaQuebrar = 0.25;
+                                if (toolId === 'picareta_diamante') tempoAtualParaQuebrar = 0.15;
+                            }
+                            // Machados
+                            if (blocosMachado.includes(tipoBlocoQuebrando)) {
+                                if (toolId === 'machado') tempoAtualParaQuebrar = 0.5;
+                                if (toolId === 'machado_pedra') tempoAtualParaQuebrar = 0.35;
+                                if (toolId === 'machado_ferro') tempoAtualParaQuebrar = 0.2;
+                                if (toolId === 'machado_diamante') tempoAtualParaQuebrar = 0.12;
+                            }
+                            // Pás
+                            if (blocosPa.includes(tipoBlocoQuebrando)) {
+                                if (toolId === 'pa') tempoAtualParaQuebrar = 0.4;
+                                if (toolId === 'pa_pedra') tempoAtualParaQuebrar = 0.25;
+                                if (toolId === 'pa_ferro') tempoAtualParaQuebrar = 0.15;
+                                if (toolId === 'pa_diamante') tempoAtualParaQuebrar = 0.1;
+                            }
+                        }
+                    }
+
+                    // Penalidade de mineração subaquática (5x mais lento)
+                    if (cabecaSubmersa) {
+                        tempoAtualParaQuebrar *= 5;
                     }
 
                     const prog = tempoQuebrando / tempoAtualParaQuebrar;
 
+                    // Blocos instantâneos: quebra sem animação de rachadura
+                    if (tempoAtualParaQuebrar <= 0) {
+                        // Pula direto para a quebra
+                        tempoQuebrando = 1;
+                        meshQuebra.visible = false;
+                    } else {
                     // Mostra as rachaduras com efeito de Shake e Redução visual (ilusão óptica nas texturas adjacentes)
                     meshQuebra.visible = true;
                     const shakeInt = prog * 0.05;
@@ -1289,6 +3144,7 @@
                     if (Math.random() < 0.2 && tipoBlocoQuebrando) {
                         criarParticulas(quebrandoBloco.x, quebrandoBloco.y, quebrandoBloco.z, tipoBlocoQuebrando, 1);
                     }
+                    } // fim do else (blocos não-instantâneos)
 
                     if (tempoQuebrando >= tempoAtualParaQuebrar) {
                         const { x, y, z } = quebrandoBloco;
@@ -1304,8 +3160,26 @@
 
                             // Drop único garantido: deleta do mundo ANTES
                             mundo.delete(`${x},${y},${z}`);
-                            droparItem(x, y, z, tipoBlocoQuebrando);
-                            soundManager.playSound('pop');
+                            agendarUpdateFluido(x, y, z);
+                            agendarUpdateFluido(x+1, y, z);
+                            agendarUpdateFluido(x-1, y, z);
+                            agendarUpdateFluido(x, y+1, z);
+                            agendarUpdateFluido(x, y-1, z);
+                            agendarUpdateFluido(x, y, z+1);
+                            agendarUpdateFluido(x, y, z-1);
+
+                            // Logs rotados (16, 17) dropam como madeira normal (4)
+                            // Grama curta (18) não dropa nada;
+                            let tipoDropar = (tipoBlocoQuebrando === 16 || tipoBlocoQuebrando === 17) ? 4 : tipoBlocoQuebrando;
+                            if (tipoBlocoQuebrando === 10) tipoDropar = "carvao"; // Minério de Carvão dropa Carvão (item)
+                            
+                            if (tipoBlocoQuebrando !== 18) {
+                                droparItem(x, y, z, tipoDropar);
+                            }
+                            soundManager.playSound('pop', { blockType: tipoBlocoQuebrando });
+                            // XP por blocos quebrados (pedra dá mais XP)
+                            const xpPorBloco = { 3: 2, 7: 1, 10: 4, 11: 6, 12: 10, 13: 20, 14: 2 }; // Minérios dão mais XP
+                            ganharXP(xpPorBloco[tipoBlocoQuebrando] || 1);
 
                             recriarChunkVisual(x, z);
                             if (x % TAMANHO_CHUNK === 0) recriarChunkVisual(x - 1, z);
@@ -1320,7 +3194,34 @@
                 }
 
                 // 🐄 IA ANIMAIS
-                animais.forEach(a => a.update(delta, mundo, camera));
+                for (let i = animais.length - 1; i >= 0; i--) {
+                    const a = animais[i];
+                    a.update(delta, mundo, camera);
+                    if (a.estado === 'morrer') {
+                        a.deathTimer = (a.deathTimer || 0) + delta;
+                        if (a.deathTimer > 1.5) {
+                            if (a.lifeBarContainer) a.lifeBarContainer.remove();
+                            cena.remove(a.mesh);
+                            
+                            // Drop food
+                            let foodType = null;
+                            if (a.type === 'vaca') foodType = 'carne_vaca';
+                            else if (a.type === 'porco') foodType = 'carne_porco';
+                            else if (a.type === 'galinha') foodType = 'frango';
+                            else if (a.type === 'ovelha') foodType = 'carneirinho';
+                            
+                            if (foodType) {
+                                // Drop 1 ou 2 itens
+                                const qtd = Math.floor(Math.random() * 2) + 1;
+                                for (let j = 0; j < qtd; j++) {
+                                    droparItem(a.mesh.position.x, a.mesh.position.y + 0.5, a.mesh.position.z, foodType);
+                                }
+                            }
+                            
+                            animais.splice(i, 1);
+                        }
+                    }
+                }
 
                 const direcao = new THREE.Vector3(); camera.getWorldDirection(direcao); direcao.y = 0; direcao.normalize();
                 const lado = new THREE.Vector3(); lado.crossVectors(camera.up, direcao).normalize();
@@ -1330,24 +3231,175 @@
                     const velX = (lado.x * moveDir.x + direcao.x * moveDir.y) * velocidadeAndar;
                     const velZ = (lado.z * moveDir.x + direcao.z * moveDir.y) * velocidadeAndar;
 
-                    camera.position.x += velX;
-                    if (checarColisao(camera.position.x, posAntiga.y, posAntiga.z)) {
-                        camera.position.x = posAntiga.x;
-                        if (noChao && !checarColisao(camera.position.x + velX, posAntiga.y + 1.1, posAntiga.z)) { velocidadeY = 0.2; camera.position.y += 0.1; noChao = false; }
+                    let canMoveX = true;
+                    if (teclas.shift && noChao) {
+                        const fallX = camera.position.x + velX;
+                        // Checa se as extremidades dos pés estariam no vazio
+                        const w = 0.15;
+                        const posY = posAntiga.y - 1.62 - 0.5; // Bloco abaixo
+                        const safe = [[fallX - w, posAntiga.z - w], [fallX + w, posAntiga.z - w], [fallX - w, posAntiga.z + w], [fallX + w, posAntiga.z + w]].some(p => {
+                            const tipo = mundo.get(`${Math.round(p[0])},${Math.round(posY)},${Math.round(p[1])}`);
+                            return tipo && tipo !== 6 && !PLANT_IDS.has(tipo);
+                        });
+                        if (!safe) canMoveX = false;
+                    }
+                    if (canMoveX) {
+                        camera.position.x += velX;
+                        if (checarColisao(camera.position.x, posAntiga.y, posAntiga.z)) {
+                            camera.position.x = posAntiga.x;
+                            if (naAgua && (teclas.space || moveX !== 0 || moveZ !== 0)) {
+                                velocidadeY = 0.12;
+                            } else if (noChao && !checarColisao(camera.position.x + velX, posAntiga.y + 1.1, posAntiga.z)) {
+                                velocidadeY = 0.2; camera.position.y += 0.1; noChao = false;
+                            }
+                        }
                     }
 
-                    camera.position.z += velZ;
-                    if (checarColisao(camera.position.x, posAntiga.y, camera.position.z)) {
-                        camera.position.z = posAntiga.z;
-                        if (noChao && !checarColisao(camera.position.x, posAntiga.y + 1.1, posAntiga.z + velZ)) { velocidadeY = 0.2; camera.position.y += 0.1; noChao = false; }
+                    let canMoveZ = true;
+                    if (teclas.shift && noChao) {
+                        const fallZ = camera.position.z + velZ;
+                        const w = 0.15;
+                        const posY = posAntiga.y - 1.62 - 0.5;
+                        const safe = [[camera.position.x - w, fallZ - w], [camera.position.x + w, fallZ - w], [camera.position.x - w, fallZ + w], [camera.position.x + w, fallZ + w]].some(p => {
+                            const tipo = mundo.get(`${Math.round(p[0])},${Math.round(posY)},${Math.round(p[1])}`);
+                            return tipo && tipo !== 6 && !PLANT_IDS.has(tipo);
+                        });
+                        if (!safe) canMoveZ = false;
+                    }
+                    if (canMoveZ) {
+                        camera.position.z += velZ;
+                        if (checarColisao(camera.position.x, posAntiga.y, camera.position.z)) {
+                            camera.position.z = posAntiga.z;
+                            if (naAgua && (teclas.space || moveX !== 0 || moveZ !== 0)) {
+                                velocidadeY = 0.12;
+                            } else if (noChao && !checarColisao(camera.position.x, posAntiga.y + 1.1, posAntiga.z + velZ)) {
+                                velocidadeY = 0.2; camera.position.y += 0.1; noChao = false;
+                            }
+                        }
                     }
                 }
 
-                if (teclas.space && noChao) { velocidadeY = 0.22; noChao = false; soundManager.playSound('jump'); } // Pulo mais forte (Minecraft)
-                velocidadeY -= 0.6 * delta; camera.position.y += velocidadeY; // Gravidade mais forte
+                // 🌊 FÍSICA DE NATAÇÃO
+                if (naAgua) {
+                    // Na água: gravidade reduzida, espaço sobe
+                    velocidadeY -= 0.12 * delta; // Gravidade muito mais fraca na água
+                    // Drag da água freia a queda
+                    velocidadeY *= 0.92;
+                    if (teclas.space) {
+                        velocidadeY = 0.08; // Sobe na água
+                    }
+                    // Flutua na superfície se não fizer nada
+                    if (!teclas.space && velocidadeY < -0.02) {
+                        velocidadeY = Math.max(velocidadeY, -0.04);
+                    }
+                } else {
+                    if (teclas.space && noChao) {
+                        velocidadeY = 0.22; noChao = false;
+                        const jumpBlockY = Math.round(camera.position.y - 2.62);
+                        const jumpBlockType = mundo.get(`${Math.round(camera.position.x)},${jumpBlockY},${Math.round(camera.position.z)}`);
+                        soundManager.playSound('jump', { blockType: jumpBlockType || 1 });
+                    }
+                    velocidadeY -= 0.6 * delta; // Gravidade normal
+                }
+                camera.position.y += velocidadeY;
 
                 if (checarColisao(camera.position.x, camera.position.y, camera.position.z)) { camera.position.y = posAntiga.y; velocidadeY = 0; noChao = true; } else noChao = false;
                 if (camera.position.y < -30) { camera.position.set(camera.position.x, 20, camera.position.z); velocidadeY = 0; }
+
+                // 👣 FOOTSTEPS & SWIM SOUNDS
+                if (movendo && noChao && !naAgua) {
+                    const footBlockY = Math.round(camera.position.y - 2.62);
+                    const footBlockType = mundo.get(`${Math.round(camera.position.x)},${footBlockY},${Math.round(camera.position.z)}`) || 1;
+                    soundManager.playFootstep(footBlockType, teclas.ctrl);
+                } else if (movendo && naAgua) {
+                    soundManager.playSwimStep();
+                }
+
+                // 🌙 AMBIENT CAVE SOUNDS
+                soundManager.updateAmbient(camera.position.y);
+
+                // 🍗 SISTEMA DE FOME
+                {
+                    const agoraNow = Date.now();
+                    // Drena 1 ponto de fome a cada 20s andando / 12s correndo
+                    if (movendo && noChao) {
+                        const intervalo = teclas.ctrl ? 12000 : 20000;
+                        if (agoraNow - lastFoodDrain > intervalo) {
+                            playerFood = Math.max(0, playerFood - 1);
+                            lastFoodDrain = agoraNow;
+                            callRenderUI();
+                        }
+                    } else {
+                        lastFoodDrain = agoraNow;
+                    }
+                    // Cura passiva quando comida ≥ 18 (1 HP a cada 2s)
+                    if (playerFood >= 18 && playerHP < 20 && agoraNow - lastFoodHeal > 2000) {
+                        playerHP = Math.min(20, playerHP + 1);
+                        lastFoodHeal = agoraNow;
+                        callRenderUI();
+                    }
+                    // Dano de fome quando = 0 (para em 1 HP, 1 dano a cada 3s)
+                    if (playerFood <= 0 && playerHP > 1 && agoraNow - lastHungerDamage > 3000) {
+                        playerHP = Math.max(1, playerHP - 1);
+                        lastHungerDamage = agoraNow;
+                        const df = document.getElementById('damage-flash');
+                        df.style.background = 'rgba(180, 90, 0, 0.35)';
+                        setTimeout(() => df.style.background = 'rgba(255, 0, 0, 0)', 300);
+                        callRenderUI();
+                    }
+                }
+
+                // 🌱 SISTEMA DE CRESCIMENTO DE GRAMA (Terra → Grama estilo Minecraft)
+                {
+                    const agoraTick = Date.now();
+                    if (!window._lastGrassTick) window._lastGrassTick = agoraTick;
+                    if (agoraTick - window._lastGrassTick > 3000) {
+                        window._lastGrassTick = agoraTick;
+                        const pcx = Math.round(camera.position.x);
+                        const pcy = Math.round(camera.position.y);
+                        const pcz = Math.round(camera.position.z);
+                        const chunksAtualizarGrama = new Set();
+                        for (let tentativa = 0; tentativa < 30; tentativa++) {
+                            const rx = pcx + Math.floor(Math.random() * 32) - 16;
+                            const ry = pcy + Math.floor(Math.random() * 16) - 8;
+                            const rz = pcz + Math.floor(Math.random() * 32) - 16;
+                            const blocoAtual = mundo.get(`${rx},${ry},${rz}`);
+                            // Terra exposta com grama vizinha → vira grama
+                            if (blocoAtual === 2) {
+                                const acima = mundo.get(`${rx},${ry + 1},${rz}`);
+                                if (!acima || acima === 0 || PLANT_IDS.has(acima)) {
+                                    const vizinhos = [
+                                        [rx+1,ry,rz],[rx-1,ry,rz],[rx,ry+1,rz],[rx,ry-1,rz],
+                                        [rx,ry,rz+1],[rx,ry,rz-1],
+                                        [rx+1,ry+1,rz],[rx-1,ry+1,rz],[rx,ry+1,rz+1],[rx,ry+1,rz-1],
+                                        [rx+1,ry-1,rz],[rx-1,ry-1,rz],[rx,ry-1,rz+1],[rx,ry-1,rz-1]
+                                    ];
+                                    let temGrama = false;
+                                    for (const [vx,vy,vz] of vizinhos) {
+                                        if (mundo.get(`${vx},${vy},${vz}`) === 1) { temGrama = true; break; }
+                                    }
+                                    if (temGrama) {
+                                        mundo.set(`${rx},${ry},${rz}`, 1);
+                                        chunksAtualizarGrama.add(`${rx},${rz}`);
+                                    }
+                                }
+                            }
+                            // Grama coberta por bloco opaco → vira terra
+                            if (blocoAtual === 1) {
+                                const blocoAcima = mundo.get(`${rx},${ry+1},${rz}`);
+                                if (blocoAcima && blocoAcima !== 0 && blocoAcima !== 5 && blocoAcima !== 6 && !PLANT_IDS.has(blocoAcima)) {
+                                    mundo.set(`${rx},${ry},${rz}`, 2);
+                                    chunksAtualizarGrama.add(`${rx},${rz}`);
+                                }
+                            }
+                        }
+                        for (const chave of chunksAtualizarGrama) {
+                            const [gx, gz] = chave.split(',').map(Number);
+                            recriarChunkVisual(gx, gz);
+                        }
+                    }
+                }
+
             } else relogio.getDelta();
 
             renderizador.clear();
@@ -1363,6 +3415,77 @@
             cameraMao.updateProjectionMatrix();
             renderizador.setSize(window.innerWidth, window.innerHeight);
         });
+        function tickFornalha() {
+            const input = uiBuilder.furnaceInput[0];
+            const fuel = uiBuilder.furnaceFuel[0];
+            const output = uiBuilder.furnaceOutput[0];
+
+            let isBurning = uiBuilder.furnaceFuelTime > 0;
+            let needsUpdate = false;
+
+            // Consome 1 tick de combustivel
+            if (isBurning) {
+                uiBuilder.furnaceFuelTime--;
+                if (uiBuilder.furnaceFuelTime <= 0) {
+                    isBurning = false;
+                }
+                needsUpdate = true;
+            }
+
+            // Verifica se pode assar
+            const recipeInfo = input ? uiBuilder.furnaceRecipes[input.id] : null;
+            const canSmelt = recipeInfo && input.count > 0 && (!output || (output.id === recipeInfo.id && output.count + recipeInfo.count <= uiBuilder.STACK_MAX));
+
+            if (canSmelt) {
+                // Tenta puxar combustivel se não estiver queimando e houver lenha
+                if (!isBurning && fuel && uiBuilder.fuelValues[fuel.id]) {
+                    uiBuilder.furnaceMaxFuel = uiBuilder.fuelValues[fuel.id];
+                    uiBuilder.furnaceFuelTime = uiBuilder.furnaceMaxFuel;
+                    fuel.count--;
+                    if (fuel.count <= 0) uiBuilder.furnaceFuel[0] = null;
+                    isBurning = true;
+                    needsUpdate = true;
+                }
+
+                if (isBurning) {
+                    uiBuilder.furnaceProgress++;
+                    if (uiBuilder.furnaceProgress >= 200) { // 200 ticks = 10s pra assar
+                        uiBuilder.furnaceProgress = 0;
+                        input.count--;
+                        if (input.count <= 0) uiBuilder.furnaceInput[0] = null;
+                        
+                        if (!output) {
+                            uiBuilder.furnaceOutput[0] = { id: recipeInfo.id, count: recipeInfo.count };
+                        } else {
+                            output.count += recipeInfo.count;
+                        }
+                    }
+                    needsUpdate = true;
+                } else {
+                    // Resfria
+                    if (uiBuilder.furnaceProgress > 0) {
+                        uiBuilder.furnaceProgress = Math.max(0, uiBuilder.furnaceProgress - 2);
+                        needsUpdate = true;
+                    }
+                }
+            } else {
+                if (uiBuilder.furnaceProgress > 0) {
+                    uiBuilder.furnaceProgress = 0;
+                    needsUpdate = true;
+                }
+            }
+
+            if (needsUpdate && document.getElementById('furnace-menu').style.display === 'block') {
+                const fireEl = document.getElementById('furnace-fire-icon');
+                const arrowEl = document.getElementById('furnace-arrow-progress');
+                if (fireEl) fireEl.style.opacity = isBurning ? "1" : "0.2";
+                if (arrowEl) arrowEl.style.width = (uiBuilder.furnaceProgress / 200 * 100) + "%";
+                callRenderUI(); // Atualiza apenas visual de items/slots
+            }
+        }
+
+        setInterval(tickFornalha, 50);
+
         atualizarChunks(); animar();
 
         // 📱 CONTROLES MOBILE

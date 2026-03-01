@@ -11,6 +11,8 @@ export class Mob {
 
         this.pernas = [];
         this.vy = 0;
+        this.vx = 0;
+        this.vz = 0;
         this.chaoEncontrado = false;
         this.direcao = Math.random() * Math.PI * 2;
         this.tempoAcao = Math.random() * 3;
@@ -27,8 +29,12 @@ export class Mob {
 
         this.materials = [];
 
+        // 🔊 Sistema de sons do mob
+        this.ambientSoundTimer = 5 + Math.random() * 15; // 5-20s entre sons ambientes
+        this._deathSoundPlayed = false;
+
         // 🎯 HITBOX E BARRA DE VIDA (proporcional ao corpo, estilo Minecraft)
-        const isSmall = (type === 'porco');
+        const isSmall = (type === 'porco' || type === 'lobo');
         const hbW = isSmall ? 0.6 : 0.9;
         const hbH = isSmall ? 0.8 : 1.2;
         const hbD = isSmall ? 0.9 : 1.4;
@@ -39,12 +45,25 @@ export class Mob {
         this.hitbox.position.y = isSmall ? 0.4 : 0.6;
         this.mesh.add(this.hitbox);
 
-        const lifeGeo = new THREE.PlaneGeometry(1.2, 0.15);
-        const lifeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        this.lifeBar = new THREE.Mesh(lifeGeo, lifeMat);
-        this.lifeBar.position.y = isSmall ? 1.5 : 2.2;
-        this.lifeBar.visible = false;
-        this.mesh.add(this.lifeBar);
+        // Barra de vida em 2D UI para melhorar a visualização e seguir a tela
+        this.lifeBarContainer = document.createElement('div');
+        this.lifeBarContainer.style.position = 'absolute';
+        this.lifeBarContainer.style.width = '40px';
+        this.lifeBarContainer.style.height = '6px';
+        this.lifeBarContainer.style.background = '#333';
+        this.lifeBarContainer.style.border = '2px solid black';
+        this.lifeBarContainer.style.display = 'none';
+        this.lifeBarContainer.style.pointerEvents = 'none';
+        this.lifeBarContainer.style.zIndex = '1000';
+        
+        this.lifeBarFill = document.createElement('div');
+        this.lifeBarFill.style.width = '100%';
+        this.lifeBarFill.style.height = '100%';
+        this.lifeBarFill.style.background = '#00ff00';
+        this.lifeBarFill.style.transformOrigin = 'left center';
+        
+        this.lifeBarContainer.appendChild(this.lifeBarFill);
+        document.body.appendChild(this.lifeBarContainer);
 
         this.scene.add(this.mesh);
     }
@@ -55,7 +74,7 @@ export class Mob {
         });
     }
 
-    sofrerDano(quantidade, SoundManager) {
+    sofrerDano(quantidade, SoundManager, pushX = 0, pushZ = 0) {
         if (this.estado === 'morrer') return;
 
         this.vida -= quantidade;
@@ -63,15 +82,27 @@ export class Mob {
         this.tempoAcao = 0;
         this.eating = false; // Cancela comer se levar dano
 
-        if (this.lifeBar) {
-            this.lifeBar.visible = true;
-            this.lifeBar.scale.x = Math.max(0, this.vida / 10);
+        // Aplica knockback
+        this.vx = pushX;
+        this.vz = pushZ;
+        this.vy = 0.25; // Pulinho de dano
+
+        if (this.lifeBarContainer) {
+            this.lifeBarContainer.style.display = 'block';
+            this.lifeBarFill.style.transform = `scaleX(${Math.max(0, this.vida / 10)})`;
+            if (this.vida <= 3) this.lifeBarFill.style.background = '#ff0000';
+            else if (this.vida <= 6) this.lifeBarFill.style.background = '#ffff00';
+            else this.lifeBarFill.style.background = '#00ff00';
         }
 
-        if (SoundManager) SoundManager.playSound('hit');
+        if (SoundManager) {
+            SoundManager.playSound('hit');  // Som de hit (pancada)
+            if (SoundManager.playMobHurt) SoundManager.playMobHurt(this.type); // Som do mob
+        }
 
         if (this.vida <= 0) {
             this.estado = 'morrer';
+            if (SoundManager && SoundManager.playMobDeath) SoundManager.playMobDeath(this.type);
         }
     }
 
@@ -81,16 +112,52 @@ export class Mob {
         if (this.estado === 'morrer') {
             this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, Math.PI / 2, 0.05);
             this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, -0.6, 0.05);
-            if (this.lifeBar) this.lifeBar.visible = false;
+            if (this.lifeBarContainer) this.lifeBarContainer.style.display = 'none';
             return;
         }
 
-        // Rotacionar barra de vida para a câmara
-        if (this.lifeBar && this.lifeBar.visible && camera) {
-            this.lifeBar.quaternion.copy(camera.quaternion);
+        // 🔊 Sons ambientes (mugidos, clucks, oinks...)
+        if (camera) {
+            this.ambientSoundTimer -= delta;
+            if (this.ambientSoundTimer <= 0) {
+                this.ambientSoundTimer = 8 + Math.random() * 20; // Próximo em 8-28s
+                const dist = this.mesh.position.distanceTo(camera.position);
+                if (dist < 16 && window._soundManager) {
+                    window._soundManager.playMobAmbient(this.type);
+                }
+            }
+        }
+
+        // Atualizar barra de vida UI tracking
+        if (this.lifeBarContainer && this.lifeBarContainer.style.display === 'block' && camera) {
+            const vector = new THREE.Vector3();
+            this.hitbox.getWorldPosition(vector);
+            vector.y += 1.0; // Acima da cabeça
+            vector.project(camera);
+            
+            // Só exibe se estiver na frente da câmera (z menor que 1 e maior que -1)
+            // e remove se muito longe ou atrás
+            const isVisible = vector.z < 1 && vector.z > -1;
+            const dist = this.mesh.position.distanceTo(camera.position);
+
+            if (isVisible && dist < 12) {
+                this.lifeBarContainer.style.opacity = '1';
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+                this.lifeBarContainer.style.left = `${x - 20}px`;
+                this.lifeBarContainer.style.top = `${y}px`;
+            } else {
+                this.lifeBarContainer.style.opacity = '0';
+            }
         }
 
         if (this.estado === 'dano') {
+            // Aplica física de knockback
+            this.mesh.position.x += this.vx;
+            this.mesh.position.z += this.vz;
+            this.vx *= 0.85; // Fricção no ar/chão
+            this.vz *= 0.85;
+
             if (this.tempoAcao > -0.5) {
                 const t = Math.abs(this.tempoAcao);
                 if (Math.floor(t * 15) % 2 === 0) {
@@ -159,8 +226,8 @@ export class Mob {
             this.andando = Math.random() > 0.3;
             this.tempoAcao = 1 + Math.random() * 3;
 
-            // IA Agressiva do Cavaleiro / CavaleiroTrevas
-            if ((this.type === 'cavaleiro' || this.type === 'cavaleirotrevas') && camera) {
+            // IA Agressiva do Cavaleiro / CavaleiroTrevas ou mobs que revidam
+            if ((this.type === 'cavaleiro' || this.type === 'cavaleirotrevas' || this.agressivo) && camera) {
                 const dist = this.mesh.position.distanceTo(camera.position);
                 if (dist < 10) { // Raio de aggro de 10 blocos
                     this.direcao = Math.atan2(camera.position.x - this.mesh.position.x, camera.position.z - this.mesh.position.z);
@@ -169,8 +236,10 @@ export class Mob {
                         this.estado = 'atacar';
                         this.tempoAcao = 1.0;
                         this.andando = false;
-                        // O trevas tira 2 de dano, cavaleiro normal tira 1
-                        window.dispatchEvent(new CustomEvent('playerDamage', { detail: { amount: this.type === 'cavaleirotrevas' ? 2 : 1 } }));
+                        // O trevas tira 2 de dano, cavaleiro normal tira 1, leopardo tira 2
+                        let dmg = 1;
+                        if (this.type === 'cavaleirotrevas' || this.type === 'leopardo') dmg = 2;
+                        window.dispatchEvent(new CustomEvent('playerDamage', { detail: { amount: dmg } }));
                     } else {
                         this.estado = 'andar';
                     }
@@ -187,6 +256,21 @@ export class Mob {
             const vel = velMult * delta;
             const nextX = this.mesh.position.x + Math.sin(this.direcao) * vel;
             const nextZ = this.mesh.position.z + Math.cos(this.direcao) * vel;
+
+            // Evitar água: verifica se o bloco à frente (pé do mob) é água
+            const checkX = Math.round(nextX);
+            const checkZ = Math.round(nextZ);
+            const checkY = Math.round(this.mesh.position.y - 0.4);
+            const blocoFrente = world.get(`${checkX},${checkY},${checkZ}`);
+            const blocoAbaixoFrente = world.get(`${checkX},${checkY - 1},${checkZ}`);
+            
+            if (this.estado !== 'dano' && !this.agressivo && (blocoFrente === 6 || blocoAbaixoFrente === 6)) {
+                // Água detectada: vira pra outro lado
+                this.direcao += Math.PI * (0.5 + Math.random());
+                this.andando = false;
+                this.estado = 'parado';
+                this.tempoAcao = 0.5 + Math.random();
+            } else {
 
             this.mesh.position.x = nextX;
             this.mesh.position.z = nextZ;
@@ -220,6 +304,7 @@ export class Mob {
                     this.mesh.position.z -= Math.cos(this.direcao) * vel;
                 }
             }
+            } // fecha o else da verificação de água
         } else if (this.estado === 'parado') {
             this.pernas.forEach(p => p.rotation.x = 0);
         }
@@ -233,15 +318,23 @@ export class Mob {
 
         for (let y = Math.floor(this.mesh.position.y - baseOffset); y >= Math.floor(this.mesh.position.y - baseOffset - 1); y--) {
             if (world.has(`${blockX},${y},${blockZ}`)) {
-                const alturaBloco = y + 0.5; // Topo do bloco
+                const tipo = world.get(`${blockX},${y},${blockZ}`);
+                const alturaBloco = y + 0.5;
                 const peMob = this.mesh.position.y - baseOffset;
 
-                // Se o pé do mob passou do topo do bloco
-                if (peMob <= alturaBloco) {
-                    this.mesh.position.y = alturaBloco + baseOffset;
-                    this.vy = 0;
-                    this.chaoEncontrado = true;
-                    break;
+                if (tipo !== 6) {
+                    if (peMob <= alturaBloco) {
+                        this.mesh.position.y = alturaBloco + baseOffset;
+                        this.vy = 0;
+                        this.chaoEncontrado = true;
+                        break;
+                    }
+                } else {
+                    if (peMob < alturaBloco) {
+                        this.vy *= 0.85; // Drag mais forte
+                        this.vy += 0.04; // Empuxo constante para cima
+                        this.chaoEncontrado = false;
+                    }
                 }
             }
         }

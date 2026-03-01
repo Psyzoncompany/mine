@@ -16,6 +16,8 @@ export class WorldGenerator {
         this.chunkAtualX = -999;
         this.chunkAtualZ = -999;
         this.noise = new ImprovedNoise();
+        this.seedX = Math.random() * 10000;
+        this.seedZ = Math.random() * 10000;
 
         this.materiais = {};
         this.animais = [];
@@ -56,17 +58,54 @@ export class WorldGenerator {
             for (let lz = 0; lz < this.TAMANHO_CHUNK; lz++) {
                 const x = cx * this.TAMANHO_CHUNK + lx;
                 const z = cz * this.TAMANHO_CHUNK + lz;
-                let alt = Math.floor(this.noise.noise(x / 30, 0, z / 30) * 8);
+                
+                const nx = x / 30 + this.seedX;
+                const nz = z / 30 + this.seedZ;
+                let alt = Math.floor(this.noise.noise(nx, 0, nz) * 8);
+                
+                // Biome noise para decidir se é praia ou rio (praias em terrenos mais abertos/oceanos, rios mais estreitos)
+                const isBeach = this.noise.noise(nx / 3, 0, nz / 3) > 0.1 && alt <= 2 && alt >= -2;
 
                 for (let y = -15; y <= alt; y++) {
-                    let buraco = this.noise.noise(x / 12, y / 12, z / 12);
+                    let buraco = this.noise.noise((x + this.seedX) / 12, y / 12, (z + this.seedZ) / 12);
                     if (y < alt - 2 && buraco > 0.4) continue;
-                    let tipo = 3;
-                    if (y === alt) tipo = 1;
-                    else if (y > alt - 3) tipo = 2;
+                    let tipo = 3; // Pedra por padrão
+                    
+                    // Adicionar minérios aleatoriamente na pedra
+                    if (tipo === 3 && y < alt - 4) {
+                        const prob = Math.random();
+                        if (y < -10 && prob < 0.01) tipo = 13; // Diamante
+                        else if (y < 0 && prob < 0.03) tipo = 12; // Ouro
+                        else if (y < 10 && prob < 0.05) tipo = 11; // Ferro
+                        else if (prob < 0.06) tipo = 10; // Carvão
+                    }
 
+                    if (y === alt) {
+                        tipo = 1; // Grama
+                        if (y <= 2) {
+                            if (isBeach) {
+                                tipo = 7; // Areia apenas nas praias
+                            } else if (y < 0) {
+                                tipo = 2; // Terra em rios/baixo d'água
+                            }
+                        }
+                    }
+                    else if (y > alt - 3 && tipo === 3) {
+                        tipo = (isBeach && y <= 2) ? 7 : 2; // Areia debaixo da superfície da praia ou Terra
+                    }
+
+                    // Se preencher um buraco e não tiver nada pode colocar água se for nivel baixo
                     if (!this.mundo.has(`${x},${y},${z}`)) {
                         this.mundo.set(`${x},${y},${z}`, tipo);
+                    }
+                }
+                
+                // Gerar Água em vales
+                if (alt < 0) {
+                    for (let y = alt + 1; y <= 0; y++) {
+                        if (!this.mundo.has(`${x},${y},${z}`)) {
+                            this.mundo.set(`${x},${y},${z}`, 6); // Água
+                        }
                     }
                 }
 
@@ -83,7 +122,7 @@ export class WorldGenerator {
             for (let y = 25; y >= -15; y--) {
                 const tipo = this.mundo.get(`${ax},${y},${az}`);
                 if (tipo) {
-                    if (tipo !== 5) { // Não nasce na Folha
+                    if (tipo !== 5 && tipo !== 6) { // Não nasce na Folha nem na Água
                         const animalFactory = this.getAnimalFactory();
                         const novoMob = animalFactory(ax, y + 1.62, az, cx, cz);
                         if (novoMob) this.animais.push(...novoMob);
@@ -99,7 +138,7 @@ export class WorldGenerator {
         if (this.chunksVisuais.has(id)) return;
 
         const grupo = new THREE.Group();
-        const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+        const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [] };
 
         for (let lx = 0; lx < this.TAMANHO_CHUNK; lx++) {
             for (let lz = 0; lz < this.TAMANHO_CHUNK; lz++) {
@@ -108,13 +147,18 @@ export class WorldGenerator {
                 for (let y = -15; y < 25; y++) {
                     const tipo = this.mundo.get(`${x},${y},${z}`);
                     if (tipo) {
-                        const exposto = !this.mundo.has(`${x + 1},${y},${z}`) ||
-                            !this.mundo.has(`${x - 1},${y},${z}`) ||
-                            !this.mundo.has(`${x},${y + 1},${z}`) ||
-                            !this.mundo.has(`${x},${y - 1},${z}`) ||
-                            !this.mundo.has(`${x},${y},${z + 1}`) ||
-                            !this.mundo.has(`${x},${y},${z - 1}`);
-                        if (exposto) blocosChunk[tipo].push(new THREE.Vector3(x, y, z));
+                        const tBlock = (bx, by, bz) => {
+                            const val = this.mundo.get(`${bx},${by},${bz}`);
+                            return !val || (val === 5 && tipo !== 5) || (val === 6 && tipo !== 6);
+                        };
+                        
+                        const exposto = tBlock(x + 1, y, z) ||
+                            tBlock(x - 1, y, z) ||
+                            tBlock(x, y + 1, z) ||
+                            tBlock(x, y - 1, z) ||
+                            tBlock(x, y, z + 1) ||
+                            tBlock(x, y, z - 1);
+                        if (exposto && blocosChunk[tipo]) blocosChunk[tipo].push(new THREE.Vector3(x, y, z));
                     }
                 }
             }
@@ -123,7 +167,8 @@ export class WorldGenerator {
         for (let tipo in blocosChunk) {
             const pos = blocosChunk[tipo];
             if (pos.length === 0) continue;
-            const instancedMesh = new THREE.InstancedMesh(this.geometriaBloco, this.materiais[tipo], pos.length);
+            const mat = this.materiais[tipo] || this.materiais[3]; // Fallback para pedra
+            const instancedMesh = new THREE.InstancedMesh(this.geometriaBloco, mat, pos.length);
             const matriz = new THREE.Matrix4();
             pos.forEach((p, index) => {
                 matriz.setPosition(p.x, p.y, p.z);
