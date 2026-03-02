@@ -14,6 +14,7 @@ export class MiningSystem {
         this._initOverlay();
     }
 
+    static UNBREAKABLE = 999;
     // Block hardness (seconds to break by hand)
     static HARDNESS = {
         1: 0.6,   // grass
@@ -21,7 +22,7 @@ export class MiningSystem {
         3: 1.4,   // stone
         4: 1.0,   // wood
         5: 0.3,   // leaves
-        6: 999,   // water (unbreakable by hand)
+        6: MiningSystem.UNBREAKABLE, // water (unbreakable by hand)
         7: 0.6,   // sand
         9: 1.2,   // crafting table (bancada)
         10: 1.5,  // coal ore

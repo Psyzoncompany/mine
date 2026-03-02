@@ -40,7 +40,9 @@ export class AddToHomeScreen {
         btn.id = 'btn-add-home';
         btn.title = 'Add to Home Screen';
         btn.style.cssText = `
-            display:none; position:fixed; top:10px; left:10px;
+            display:none; position:fixed;
+            top: calc(10px + env(safe-area-inset-top, 0px));
+            left: calc(10px + env(safe-area-inset-left, 0px));
             width:40px; height:40px; border-radius:8px; z-index:200;
             background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.4);
             cursor:pointer; align-items:center; justify-content:center;

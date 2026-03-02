@@ -118,6 +118,7 @@ export class CombatSystem {
     _getThree() {
         // Access THREE from the global scope or import
         if (typeof THREE !== 'undefined') return THREE;
-        return { Vector3: class { constructor() { this.x = 0; this.y = 0; this.z = 0; } } };
+        // This should not happen in production - THREE is always available in the game context
+        return null;
     }
 }

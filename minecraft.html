@@ -4367,9 +4367,10 @@
         }
 
         // ── Touch UX: Prevent accidental zoom/scroll ──
+        const menuSelectors = '#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal';
         document.addEventListener('touchmove', (e) => {
             // Allow scrolling inside menus/inventory
-            if (e.target.closest('#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal')) return;
+            if (e.target.closest(menuSelectors)) return;
             e.preventDefault();
         }, { passive: false });
 
@@ -4383,10 +4384,12 @@
             lastTouchEnd = now;
         }, { passive: false });
 
-        // Prevent gesture-based zoom
-        document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
-        document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
-        document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+        // Prevent gesture-based zoom (iOS Safari)
+        if (/iP(hone|od|ad)/.test(navigator.userAgent)) {
+            document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+            document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+            document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+        }
     </script>
 </body>
 

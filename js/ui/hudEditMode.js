@@ -118,9 +118,13 @@ export class HudEditMode {
         el.style.right = 'auto';
     }
 
-    _onPointerUp() {
+    _onPointerUp(e) {
         if (!this._dragState) return;
-        this._savePosition(this._dragState.id, this._dragState.el);
+        const el = this._dragState.el;
+        if (el.releasePointerCapture && e.pointerId !== undefined) {
+            try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+        this._savePosition(this._dragState.id, el);
         this._dragState = null;
     }
 
