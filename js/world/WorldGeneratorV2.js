@@ -637,3 +637,5 @@ export class WorldGeneratorV2 {
         }
     }
 }
+
+export { BLOCK };
