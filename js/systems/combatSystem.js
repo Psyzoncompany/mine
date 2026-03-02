@@ -9,7 +9,7 @@ export class CombatSystem {
         this.soundManager = soundManager;
         this.cooldown = 0.35; // seconds between hits
         this.lastAttackTime = 0;
-        this.reach = 4.5; // attack reach in blocks
+        this.reach = 3.0; // attack reach in blocks (Bedrock-style)
         this._raycaster = null;
         this._cooldownRing = null;
     }

@@ -690,27 +690,7 @@
             background: #aaa;
         }
 
-        /* Sprint (toque duplo no W) */
-        .btn-sprint {
-            position: absolute;
-            bottom: calc(clamp(200px, 35vh, 260px) + env(safe-area-inset-bottom, 0px));
-            left: calc(clamp(40px, 8vw, 60px) + env(safe-area-inset-left, 0px));
-            width: clamp(32px, 6vw, 44px);
-            height: clamp(32px, 6vw, 44px);
-            border-radius: 8px;
-            background: rgba(255, 165, 0, 0.3);
-            border: 2px solid rgba(255, 165, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: white;
-            text-shadow: 1px 1px 2px #000;
-            pointer-events: auto;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-        }
+        /* Sprint button removed (flag icon cleanup) */
 
         /* ── Landscape Overlay ── */
         #landscape-overlay {
@@ -1080,13 +1060,7 @@
                 font-size: 16px;
             }
 
-            .btn-sprint {
-                bottom: calc(clamp(160px, 28vh, 200px) + env(safe-area-inset-bottom, 0px));
-                left: calc(clamp(30px, 6vw, 45px) + env(safe-area-inset-left, 0px));
-                width: clamp(30px, 5vw, 38px);
-                height: clamp(30px, 5vw, 38px);
-                font-size: 12px;
-            }
+            /* Sprint button removed (flag icon cleanup) */
 
             button {
                 font-size: 14px;
@@ -1184,7 +1158,7 @@
     <div id="recursos" style="display:none;"></div> <!-- Ocultando pq agora temos inventário real -->
     <!-- HUD bottom: saúde + fome + oxigênio + barra de XP (estilo Minecraft) -->
     <div id="hud-wrapper">
-    <div id="hud-bottom">
+    <div id="hud-bottom" data-ui="true">
         <div id="health-hunger-row">
             <div id="vida-player"></div>
             <div id="hunger-bar"></div>
@@ -1198,7 +1172,7 @@
         <div id="xp-level-display">0</div>
     </div>
 
-    <div id="hotbar">
+    <div id="hotbar" data-ui="true">
         <div class="hotbar-arrow" id="hotbar-arrow-left" style="display:none;">
             <svg width="12" height="16" viewBox="0 0 12 16" fill="white"><polygon points="10,0 2,8 10,16"/></svg>
         </div>
@@ -1469,8 +1443,8 @@
     </div>
 
     <!-- 📱 CONTROLES MOBILE -->
-    <div id="mobile-controls">
-        <div class="dpad">
+    <div id="mobile-controls" data-ui="true">
+        <div class="dpad" data-ui="true">
             <div class="dpad-btn dpad-up" data-key="w">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><polygon points="10,2 18,16 2,16"/></svg>
             </div>
@@ -1484,19 +1458,17 @@
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><polygon points="18,10 4,2 4,18"/></svg>
             </div>
         </div>
-        <div class="btn-sprint" id="btn-sprint" data-key="ctrl">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4v16"/><path d="M17 4v16"/><path d="M9 4l-4 8 4 8"/></svg>
-        </div>
-        <div class="action-btns">
-            <div class="action-btn btn-jump" id="btn-mobile-jump">
+        <!-- Sprint button removed (flag icon cleanup) -->
+        <div class="action-btns" data-ui="true">
+            <div class="action-btn btn-jump" id="btn-mobile-jump" data-ui="true">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
             </div>
-            <div class="action-btn btn-attack" id="btn-mobile-attack" style="bottom:0; left:0; background:rgba(255,80,80,0.35);">
+            <div class="action-btn btn-attack" id="btn-mobile-attack" data-ui="true" style="bottom:0; left:0; background:rgba(255,80,80,0.35);">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6-10 10H5v-5.5z"/><path d="M14.5 3.5l2 2"/></svg>
                 <div id="attack-cooldown-ring" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;pointer-events:none;"></div>
             </div>
         </div>
-        <div class="btn-pause" id="btn-mobile-pause">
+        <div class="btn-pause" id="btn-mobile-pause" data-ui="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         </div>
     </div>
@@ -1527,6 +1499,7 @@
         import { AddToHomeScreen } from './ui/addToHomeScreen.js';
         import { CombatSystem } from './systems/combatSystem.js';
         import { MiningSystem } from './systems/miningSystem.js';
+        import { InputRouter } from './systems/InputRouter.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -3290,14 +3263,31 @@
 
             const objetos = Array.from(chunksVisuais.values()).flatMap(g => g.children);
             const blockHits = raycaster.intersectObjects(objetos);
-            const animalHits = raycaster.intersectObjects(animais.map(a => a.mesh), true);
+
+            // Entity hitbox raycast: collect all hitbox meshes + visible meshes
+            const entityMeshes = [];
+            for (const a of animais) {
+                if (!a || !a.mesh || a.estado === 'morrer') continue;
+                // Temporarily make hitbox raycastable
+                if (a.hitbox) {
+                    a.hitbox.material.visible = true;
+                    entityMeshes.push(a.hitbox);
+                }
+                entityMeshes.push(a.mesh);
+            }
+            const animalHits = raycaster.intersectObjects(entityMeshes, true);
+            // Restore hitbox visibility
+            for (const a of animais) {
+                if (a && a.hitbox) a.hitbox.material.visible = false;
+            }
 
             let closestBlock = (blockHits.length > 0 && blockHits[0].distance <= MAX_DIST) ? blockHits[0] : null;
             let closestAnimal = (animalHits.length > 0 && animalHits[0].distance <= MAX_DIST) ? animalHits[0] : null;
 
+            // Entity hit ALWAYS overrides block hit (priority)
             let hitAnimal = false;
             if (closestAnimal) {
-                if (!closestBlock || closestAnimal.distance < closestBlock.distance) {
+                if (!closestBlock || closestAnimal.distance <= closestBlock.distance + 0.5) {
                     hitAnimal = true;
                 }
             }
@@ -3305,7 +3295,7 @@
             if (hitAnimal) {
                 // Cooldown de ataque
                 const now = performance.now();
-                if (now - lastAttackTime < 400) return; // 0.4s cooldown
+                if (now - lastAttackTime < 350) return; // 350ms cooldown
                 lastAttackTime = now;
 
                 const meshHit = closestAnimal.object;
@@ -4347,10 +4337,7 @@
                 btn.addEventListener('touchcancel', (e) => { teclas[key] = false; btn.classList.remove('pressed'); });
             });
 
-            // SPRINT
-            const sprintBtn = document.getElementById('btn-sprint');
-            let sprintAtivoMobile = false;
-            sprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); sprintAtivoMobile = !sprintAtivoMobile; teclas.ctrl = sprintAtivoMobile; sprintBtn.classList.toggle('pressed', sprintAtivoMobile); }, { passive: false });
+            // Sprint button removed — sprint is toggled via double-tap forward on joystick/dpad
 
             // PULAR (double-tap for fly in creative)
             let lastJumpTap = 0;
@@ -4366,16 +4353,15 @@
             }, { passive: false });
             document.getElementById('btn-mobile-jump').addEventListener('touchend', (e) => { e.preventDefault(); teclas.space = false; }, { passive: false });
 
-            // ATTACK MOBILE
+            // ATTACK MOBILE — triggers attack via raycast (same logic as left-click)
             const btnMobileAttack = document.getElementById('btn-mobile-attack');
             if (btnMobileAttack) {
                 btnMobileAttack.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    const result = combatSystem.attack(camera.position);
-                    if (result.hit) {
-                        // Trigger hand swing animation
-                        if (typeof swingHand === 'function') swingHand();
-                    }
+                    balancarMao();
+                    // Use the main raycast attack logic so entities get hit properly
+                    raycaster.setFromCamera(centroTela, camera);
+                    realizarRaycastEsquerdo(false);
                 }, { passive: false });
             }
 
@@ -4399,7 +4385,7 @@
                 }
             }, { passive: false });
 
-            // HOTBAR TOUCH (toque no slot seleciona ele)
+            // HOTBAR TOUCH (toque no slot seleciona ele + update held item immediately)
             for (let hi = 0; hi < 9; hi++) {
                 const hs = document.getElementById(`hotbar-slot-${hi}`);
                 if (hs) {
@@ -4407,6 +4393,8 @@
                         e.preventDefault();
                         uiBuilder.selectedHotbarIndex = hi;
                         callRenderUI();
+                        // Update held item mesh instantly (fix desync)
+                        atualizarMao();
                     }, { passive: false });
                 }
             }
@@ -4417,103 +4405,105 @@
                 inventoryUI.setupHotbarSwipe(hotbarContainer, () => updateHotbarPages());
             }
 
-            // TOQUE NA TELA PARA QUEBRAR/COLOCAR E OLHAR (Estilo Minecraft Bedrock)
+            // ── BEDROCK-STYLE TOUCH INPUT via InputRouter ──
             const gameCanvas = renderizador.domElement;
-            let activeTouchId = null;
-            let touchStartX = 0, touchStartY = 0;
-            let touchLastX = 0, touchLastY = 0;
-            let touchHasMoved = false;
-            let touchStartMs = 0;
-            let holdBreakTimer = null;
-            const HOLD_THRESHOLD = 300;
-            const MOVE_THRESHOLD = 12;
+            const inputRouter = new InputRouter();
 
-            gameCanvas.addEventListener('touchstart', (e) => {
+            // TAP → Attack entity (priority) or place block
+            inputRouter.onTap = (x, y) => {
                 if (!window._mobileMode) return;
                 const uiOpen = inventoryMenu.style.display === 'flex' || furnaceMenu.style.display === 'block' || document.getElementById('creative-menu').style.display !== 'none' || document.getElementById('gamemode-selector').classList.contains('open') || document.getElementById('recipe-book-modal').style.display === 'flex';
                 if (uiOpen) return;
-                e.preventDefault();
-                if (activeTouchId !== null) return;
-                const t = e.changedTouches[0];
-                activeTouchId = t.identifier;
-                touchStartX = touchLastX = t.clientX;
-                touchStartY = touchLastY = t.clientY;
-                touchHasMoved = false;
-                touchStartMs = Date.now();
 
-                // Store touch position for Bedrock "Touch Anywhere" mode
-                window._lastTouchX = t.clientX;
-                window._lastTouchY = t.clientY;
+                balancarMao();
 
-                holdBreakTimer = setTimeout(() => {
-                    if (!touchHasMoved) {
-                        balancarMao();
-                        isLeftMouseDown = true;
-                        // In Touch Anywhere mode, raycast from touch position
-                        if (settingsManager.get('interactionMode') === 'touchAnywhere') {
-                            const touchNDC = new THREE.Vector2(
-                                (touchStartX / window.innerWidth) * 2 - 1,
-                                -(touchStartY / window.innerHeight) * 2 + 1
-                            );
-                            raycaster.setFromCamera(touchNDC, camera);
-                        }
-                        realizarRaycastEsquerdo(false);
+                // Raycast from crosshair (center) or touch position based on mode
+                if (settingsManager.get('interactionMode') === 'touchAnywhere') {
+                    const touchNDC = new THREE.Vector2(
+                        (x / window.innerWidth) * 2 - 1,
+                        -(y / window.innerHeight) * 2 + 1
+                    );
+                    raycaster.setFromCamera(touchNDC, camera);
+                } else {
+                    raycaster.setFromCamera(centroTela, camera);
+                }
+
+                // Try attacking entity first (entity priority over blocks)
+                const animalMeshes = animais.filter(a => a && a.mesh && !a.isDead && a.estado !== 'morrer').map(a => a.mesh);
+                const animalHits = raycaster.intersectObjects(animalMeshes, true);
+                const closestAnimal = (animalHits.length > 0 && animalHits[0].distance <= 4.5) ? animalHits[0] : null;
+
+                if (closestAnimal) {
+                    const now = performance.now();
+                    if (now - lastAttackTime < 350) return; // 350ms cooldown
+                    lastAttackTime = now;
+
+                    const meshHit = closestAnimal.object;
+                    const animal = animais.find(a => {
+                        let isChild = false;
+                        a.mesh.traverse(child => { if (child === meshHit) isChild = true; });
+                        return isChild;
+                    });
+
+                    if (animal) {
+                        const dirVector = new THREE.Vector3();
+                        dirVector.subVectors(animal.mesh.position, camera.position);
+                        dirVector.y = 0;
+                        dirVector.normalize();
+                        animal.sofrerDano(5, soundManager, dirVector.x * 0.20, dirVector.z * 0.20);
                     }
-                }, HOLD_THRESHOLD);
-            }, { passive: false });
+                    return; // Entity hit — don't place block
+                }
 
-            gameCanvas.addEventListener('touchmove', (e) => {
+                // No entity hit — treat as right-click (place block / interact)
+                document.dispatchEvent(new MouseEvent('mousedown', { button: 2 }));
+            };
+
+            // HOLD START → Begin mining
+            inputRouter.onHoldStart = (x, y) => {
                 if (!window._mobileMode) return;
-                e.preventDefault();
-                for (const t of e.changedTouches) {
-                    if (t.identifier !== activeTouchId) continue;
-                    const dx = t.clientX - touchStartX;
-                    const dy = t.clientY - touchStartY;
-                    if (dx * dx + dy * dy > MOVE_THRESHOLD * MOVE_THRESHOLD) {
-                        touchHasMoved = true;
-                        if (holdBreakTimer) { clearTimeout(holdBreakTimer); holdBreakTimer = null; }
-                        if (isLeftMouseDown) { isLeftMouseDown = false; quebrandoBloco = null; tempoQuebrando = 0; }
-                    }
-                    // Rotacionar câmera com o dedo (sensitivity from settings)
-                    const camDx = t.clientX - touchLastX;
-                    const camDy = t.clientY - touchLastY;
-                    const sens = 0.004 * settingsManager.get('sensitivity');
-                    camera.rotation.order = 'YXZ';
-                    camera.rotation.y -= camDx * sens;
-                    camera.rotation.x -= camDy * sens;
-                    camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-                    touchLastX = t.clientX;
-                    touchLastY = t.clientY;
-                }
-            }, { passive: false });
+                const uiOpen = inventoryMenu.style.display === 'flex' || furnaceMenu.style.display === 'block' || document.getElementById('creative-menu').style.display !== 'none' || document.getElementById('gamemode-selector').classList.contains('open') || document.getElementById('recipe-book-modal').style.display === 'flex';
+                if (uiOpen) return;
 
-            gameCanvas.addEventListener('touchend', (e) => {
-                if (holdBreakTimer) { clearTimeout(holdBreakTimer); holdBreakTimer = null; }
-                for (const t of e.changedTouches) {
-                    if (t.identifier !== activeTouchId) continue;
-                    activeTouchId = null;
-                    if (!touchHasMoved && window._mobileMode) {
-                        const elapsed = Date.now() - touchStartMs;
-                        if (elapsed < HOLD_THRESHOLD) {
-                            // Toque rápido = colocar/interagir (clique direito)
-                            balancarMao();
-                            if (settingsManager.get('interactionMode') === 'touchAnywhere') {
-                                const touchNDC = new THREE.Vector2(
-                                    (touchStartX / window.innerWidth) * 2 - 1,
-                                    -(touchStartY / window.innerHeight) * 2 + 1
-                                );
-                                raycaster.setFromCamera(touchNDC, camera);
-                            }
-                            document.dispatchEvent(new MouseEvent('mousedown', { button: 2 }));
-                        }
-                    }
-                    if (isLeftMouseDown) {
-                        isLeftMouseDown = false;
-                        quebrandoBloco = null;
-                        tempoQuebrando = 0;
-                    }
+                balancarMao();
+                isLeftMouseDown = true;
+
+                if (settingsManager.get('interactionMode') === 'touchAnywhere') {
+                    const touchNDC = new THREE.Vector2(
+                        (x / window.innerWidth) * 2 - 1,
+                        -(y / window.innerHeight) * 2 + 1
+                    );
+                    raycaster.setFromCamera(touchNDC, camera);
                 }
-            });
+                realizarRaycastEsquerdo(false);
+            };
+
+            // HOLD END → Stop mining
+            inputRouter.onHoldEnd = () => {
+                if (isLeftMouseDown) {
+                    isLeftMouseDown = false;
+                    quebrandoBloco = null;
+                    tempoQuebrando = 0;
+                }
+            };
+
+            // DRAG → Camera look (also allowed during mining hold)
+            inputRouter.onDrag = (dx, dy) => {
+                if (!window._mobileMode) return;
+                const sens = 0.004 * settingsManager.get('sensitivity');
+                camera.rotation.order = 'YXZ';
+                camera.rotation.y -= dx * sens;
+                camera.rotation.x -= dy * sens;
+                camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+            };
+
+            // TOUCH END → Clean up mining state
+            inputRouter.onTouchEnd = () => {
+                // Mining state cleaned up by onHoldEnd already
+            };
+
+            // Attach InputRouter to the game canvas
+            inputRouter.attach(gameCanvas);
 
             // TOUCH NO INVENTÁRIO — TAP-TO-MOVE system for mobile
             let tapSelectedSlotEl = null;
@@ -4620,6 +4610,9 @@
                     clearTapSelection();
                     checkCrafting();
                     callRenderUI();
+
+                    // Update held item immediately after swap
+                    atualizarMao();
                     return;
                 }
 
@@ -4632,6 +4625,7 @@
                 }
             }
 
+            // Inventory and furnace touch handling
             [inventoryMenu, furnaceMenu].forEach(menuEl => {
                 menuEl.addEventListener('touchstart', (e) => {
                     const slotEl = e.target.closest('.inv-slot, .slot');
