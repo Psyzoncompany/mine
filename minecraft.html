@@ -546,8 +546,8 @@
             position: absolute;
             bottom: 90px;
             right: 20px;
-            width: 140px;
-            height: 170px;
+            width: 120px;
+            height: 60px;
             pointer-events: auto;
         }
 
@@ -599,15 +599,57 @@
             background: rgba(200, 200, 100, 0.3);
         }
 
-        /* Joystick de câmera (área direita superior - invisível) */
-        .camera-zone {
+        /* Botão de Pausa Mobile */
+        .btn-pause {
             position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 60%;
+            top: 10px;
+            right: 10px;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px #000;
             pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
             touch-action: none;
+        }
+
+        .btn-pause:active, .btn-pause.pressed {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.93);
+        }
+
+        /* Botão X para fechar menus */
+        .btn-close-menu {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 36px;
+            height: 36px;
+            background: #8b8b8b;
+            border-top: 2px solid #d4d4d4;
+            border-left: 2px solid #d4d4d4;
+            border-bottom: 2px solid #373737;
+            border-right: 2px solid #373737;
+            color: #fff;
+            font-size: 16px;
+            font-family: 'Press Start 2P', monospace;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .btn-close-menu:hover {
+            background: #aaa;
         }
 
         /* Sprint (toque duplo no W) */
@@ -640,17 +682,24 @@
 
         @media (max-width: 768px) {
             #inventory-menu {
-                width: 95%;
-                height: 85%;
-                max-width: 500px;
-                max-height: 500px;
-                padding: 10px;
+                width: 98%;
+                height: 90%;
+                max-width: 520px;
+                max-height: 560px;
+                padding: 8px;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
 
             .inv-grid {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 5px;
-                margin: 10px 0;
+                grid-template-columns: repeat(9, 1fr);
+                gap: 3px;
+                margin: 6px 0;
+            }
+
+            .inv-slot {
+                width: 34px;
+                height: 34px;
             }
 
             .inv-item {
@@ -704,8 +753,8 @@
             .action-btns {
                 bottom: 60px;
                 right: 10px;
-                width: 110px;
-                height: 140px;
+                width: 60px;
+                height: 120px;
             }
 
             .action-btn {
@@ -855,6 +904,7 @@
 
     <!-- Fornalha Menú -->
     <div id="furnace-menu" style="display: none; background: #c6c6c6; border-top: 3px solid #fff; border-left: 3px solid #fff; border-bottom: 3px solid #555; border-right: 3px solid #555; padding: 7px; font-family: 'Press Start 2P', monospace; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55); z-index: 100;">
+        <button id="btn-close-furnace" class="btn-close-menu">✕</button>
         <h2 style="font-size: 16px; margin: 0 0 10px 0; color: #404040; text-shadow: none;">Fornalha</h2>
         <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 10px;">
             <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -882,6 +932,7 @@
     </div>
 
     <div id="inventory-menu">
+        <button id="btn-close-inventory" class="btn-close-menu">✕</button>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 id="craft-title" style="font-size: 16px; margin: 0; color: #404040; text-shadow: none;">Crafting</h2>
             <button id="btn-recipe-book"
@@ -951,7 +1002,6 @@
 
     <!-- 📱 CONTROLES MOBILE -->
     <div id="mobile-controls">
-        <div class="camera-zone" id="camera-zone"></div>
         <div class="dpad">
             <div class="dpad-btn dpad-up" data-key="w">▲</div>
             <div class="dpad-btn dpad-down" data-key="s">▼</div>
@@ -961,10 +1011,9 @@
         <div class="btn-sprint" id="btn-sprint" data-key="ctrl">🏃</div>
         <div class="action-btns">
             <div class="action-btn btn-jump" id="btn-mobile-jump">⬆</div>
-            <div class="action-btn btn-break" id="btn-mobile-break">⛏</div>
-            <div class="action-btn btn-place" id="btn-mobile-place">🧱</div>
             <div class="action-btn btn-inv" id="btn-mobile-inv">🎒</div>
         </div>
+        <div class="btn-pause" id="btn-mobile-pause">⏸</div>
     </div>
 
     <script type="module">
@@ -2569,6 +2618,17 @@
             document.getElementById('recipe-book-modal').style.display = 'none';
         });
 
+        document.getElementById('btn-close-inventory').addEventListener('click', () => {
+            inventoryMenu.style.display = 'none';
+            uiBuilder.mouseSlot = null;
+            updateMouseIcon();
+            callRenderUI();
+        });
+
+        document.getElementById('btn-close-furnace').addEventListener('click', () => {
+            furnaceMenu.style.display = 'none';
+        });
+
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyW') {
                 if (!teclas.w) { // Só conta double-tap se W não estava pressionado
@@ -2749,6 +2809,9 @@
 
         document.addEventListener('mousedown', (e) => {
             if (!(controles.isLocked || window._mobileMode)) return;
+            // Não processa input de jogo se alguma interface estiver aberta
+            const uiAbertaJogo = inventoryMenu.style.display === 'flex' || furnaceMenu.style.display === 'block' || document.getElementById('creative-menu').style.display !== 'none';
+            if (uiAbertaJogo) return;
 
             balancarMao(); // Toda vez que clica, balança a mão
 
@@ -3071,8 +3134,8 @@
                         tempoAtualParaQuebrar = 0.05;
                     }
 
-                    // Grama, folhas e flores quebram instantaneamente (sem animação de rachadura)
-                    const blocosInstantaneos = [1, 5]; // Grama de bloco, Folhas
+                    // Apenas folhas quebram instantaneamente (sem animação de rachadura)
+                    const blocosInstantaneos = [5]; // Folhas
                     if (blocosInstantaneos.includes(tipoBlocoQuebrando) || PLANT_IDS.has(tipoBlocoQuebrando)) {
                         tempoAtualParaQuebrar = 0;
                     }
@@ -3511,25 +3574,6 @@
             document.getElementById('btn-mobile-jump').addEventListener('touchstart', (e) => { e.preventDefault(); teclas.space = true; }, { passive: false });
             document.getElementById('btn-mobile-jump').addEventListener('touchend', (e) => { e.preventDefault(); teclas.space = false; }, { passive: false });
 
-            // QUEBRAR (simula mousedown esquerdo)
-            const btnBreak = document.getElementById('btn-mobile-break');
-            btnBreak.addEventListener('touchstart', (e) => {
-                e.preventDefault(); btnBreak.classList.add('pressed');
-                document.dispatchEvent(new MouseEvent('mousedown', { button: 0 }));
-            }, { passive: false });
-            btnBreak.addEventListener('touchend', (e) => {
-                e.preventDefault(); btnBreak.classList.remove('pressed');
-                document.dispatchEvent(new MouseEvent('mouseup', { button: 0 }));
-            }, { passive: false });
-
-            // COLOCAR (simula mousedown direito) 
-            const btnPlace = document.getElementById('btn-mobile-place');
-            btnPlace.addEventListener('touchstart', (e) => {
-                e.preventDefault(); btnPlace.classList.add('pressed');
-                document.dispatchEvent(new MouseEvent('mousedown', { button: 2 }));
-            }, { passive: false });
-            btnPlace.addEventListener('touchend', (e) => { e.preventDefault(); btnPlace.classList.remove('pressed'); }, { passive: false });
-
             // INVENTÁRIO
             document.getElementById('btn-mobile-inv').addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -3542,47 +3586,130 @@
                 }
             }, { passive: false });
 
-            // CÂMERA (arrastar para olhar ao redor)
-            const cameraZone = document.getElementById('camera-zone');
-            let lastTouchX = 0, lastTouchY = 0;
-            let cameraTouch = null;
-
-            cameraZone.addEventListener('touchstart', (e) => {
+            // PAUSA MOBILE
+            document.getElementById('btn-mobile-pause').addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                const t = e.changedTouches[0];
-                cameraTouch = t.identifier;
-                lastTouchX = t.clientX;
-                lastTouchY = t.clientY;
+                if (menu.style.display === 'flex') {
+                    menu.style.display = 'none';
+                    window._mobileMode = true;
+                } else {
+                    inventoryMenu.style.display = 'none';
+                    furnaceMenu.style.display = 'none';
+                    document.getElementById('creative-menu').style.display = 'none';
+                    menu.style.display = 'flex';
+                    window._mobileMode = false;
+                }
             }, { passive: false });
 
-            cameraZone.addEventListener('touchmove', (e) => {
+            // HOTBAR TOUCH (toque no slot seleciona ele)
+            for (let hi = 0; hi < 9; hi++) {
+                const hs = document.getElementById(`hotbar-slot-${hi}`);
+                if (hs) {
+                    hs.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        uiBuilder.selectedHotbarIndex = hi;
+                        callRenderUI();
+                    }, { passive: false });
+                }
+            }
+
+            // TOQUE NA TELA PARA QUEBRAR/COLOCAR E OLHAR (Estilo Minecraft Bedrock)
+            // Toque rápido (< 300ms, sem mover) = colocar bloco (clique direito)
+            // Segurar (> 300ms, sem mover) = quebrar bloco (mantém clique esquerdo)
+            // Arrastar = rotacionar câmera
+            const gameCanvas = renderizador.domElement;
+            let activeTouchId = null;
+            let touchStartX = 0, touchStartY = 0;
+            let touchLastX = 0, touchLastY = 0;
+            let touchHasMoved = false;
+            let touchStartMs = 0;
+            let holdBreakTimer = null;
+            const HOLD_THRESHOLD = 300;
+            const MOVE_THRESHOLD = 12;
+
+            gameCanvas.addEventListener('touchstart', (e) => {
+                if (!window._mobileMode) return;
+                const uiOpen = inventoryMenu.style.display === 'flex' || furnaceMenu.style.display === 'block' || document.getElementById('creative-menu').style.display !== 'none';
+                if (uiOpen) return;
                 e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const t = e.changedTouches[i];
-                    if (t.identifier === cameraTouch) {
-                        const dx = t.clientX - lastTouchX;
-                        const dy = t.clientY - lastTouchY;
-                        // Rotaciona câmera
-                        camera.rotation.order = 'YXZ';
-                        camera.rotation.y -= dx * 0.004;
-                        camera.rotation.x -= dy * 0.004;
-                        camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-                        lastTouchX = t.clientX;
-                        lastTouchY = t.clientY;
+                if (activeTouchId !== null) return;
+                const t = e.changedTouches[0];
+                activeTouchId = t.identifier;
+                touchStartX = touchLastX = t.clientX;
+                touchStartY = touchLastY = t.clientY;
+                touchHasMoved = false;
+                touchStartMs = Date.now();
+                holdBreakTimer = setTimeout(() => {
+                    if (!touchHasMoved) {
+                        balancarMao();
+                        isLeftMouseDown = true;
+                        realizarRaycastEsquerdo(false);
+                    }
+                }, HOLD_THRESHOLD);
+            }, { passive: false });
+
+            gameCanvas.addEventListener('touchmove', (e) => {
+                if (!window._mobileMode) return;
+                e.preventDefault();
+                for (const t of e.changedTouches) {
+                    if (t.identifier !== activeTouchId) continue;
+                    const dx = t.clientX - touchStartX;
+                    const dy = t.clientY - touchStartY;
+                    if (dx * dx + dy * dy > MOVE_THRESHOLD * MOVE_THRESHOLD) {
+                        touchHasMoved = true;
+                        if (holdBreakTimer) { clearTimeout(holdBreakTimer); holdBreakTimer = null; }
+                        if (isLeftMouseDown) { isLeftMouseDown = false; quebrandoBloco = null; tempoQuebrando = 0; }
+                    }
+                    // Rotacionar câmera com o dedo
+                    const camDx = t.clientX - touchLastX;
+                    const camDy = t.clientY - touchLastY;
+                    camera.rotation.order = 'YXZ';
+                    camera.rotation.y -= camDx * 0.004;
+                    camera.rotation.x -= camDy * 0.004;
+                    camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+                    touchLastX = t.clientX;
+                    touchLastY = t.clientY;
+                }
+            }, { passive: false });
+
+            gameCanvas.addEventListener('touchend', (e) => {
+                if (holdBreakTimer) { clearTimeout(holdBreakTimer); holdBreakTimer = null; }
+                for (const t of e.changedTouches) {
+                    if (t.identifier !== activeTouchId) continue;
+                    activeTouchId = null;
+                    if (!touchHasMoved && window._mobileMode) {
+                        const elapsed = Date.now() - touchStartMs;
+                        if (elapsed < HOLD_THRESHOLD) {
+                            // Toque rápido = colocar/interagir (clique direito)
+                            balancarMao();
+                            document.dispatchEvent(new MouseEvent('mousedown', { button: 2 }));
+                        }
+                    }
+                    if (isLeftMouseDown) {
+                        isLeftMouseDown = false;
+                        quebrandoBloco = null;
+                        tempoQuebrando = 0;
                     }
                 }
-            }, { passive: false });
+            });
 
-            cameraZone.addEventListener('touchend', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === cameraTouch) cameraTouch = null;
-                }
+            // TOUCH NO INVENTÁRIO (suporte para mover itens com o dedo)
+            [inventoryMenu, furnaceMenu].forEach(menuEl => {
+                menuEl.addEventListener('touchstart', (e) => {
+                    const slotEl = e.target.closest('.inv-slot, .slot');
+                    if (!slotEl) return;
+                    e.preventDefault();
+                    const touch = e.changedTouches[0];
+                    slotEl.dispatchEvent(new MouseEvent('mousedown', {
+                        bubbles: true, cancelable: true, button: 0,
+                        clientX: touch.clientX, clientY: touch.clientY
+                    }));
+                }, { passive: false });
             });
 
             // No mobile, inicia sem PointerLock — usa touch para olhar
             document.getElementById('btn-play').addEventListener('click', () => {
                 menu.style.display = 'none';
-                // Simula que os controles estão ativos sem PointerLock
                 window._mobileMode = true;
             });
         }
