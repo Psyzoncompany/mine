@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Meu Craft 🌍 - Vaca 3D, Drops & Animação</title>
+    <title>Meu Craft - Vaca 3D, Drops &amp; Animacao</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -674,6 +674,197 @@
             touch-action: none;
         }
 
+        /* ── Landscape Overlay ── */
+        #landscape-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #landscape-overlay.visible {
+            display: flex;
+        }
+        .landscape-overlay-content {
+            text-align: center;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+        }
+        .landscape-overlay-content p {
+            font-size: 14px;
+            margin: 12px 0 0;
+        }
+        .landscape-overlay-content .landscape-sub {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 6px;
+        }
+        .landscape-overlay-content .rotate-icon {
+            animation: rotateHint 2s ease-in-out infinite;
+            margin-top: 16px;
+        }
+        @keyframes rotateHint {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+
+        /* ── Settings Panel ── */
+        #settings-panel {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #c6c6c6;
+            border-top: 3px solid #fff;
+            border-left: 3px solid #fff;
+            border-bottom: 3px solid #555;
+            border-right: 3px solid #555;
+            padding: 12px 18px;
+            z-index: 1001;
+            width: 90%;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
+            font-family: 'Press Start 2P', monospace;
+            box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55);
+        }
+        #settings-panel h2 {
+            font-size: 13px;
+            color: #404040;
+            text-shadow: none;
+            margin: 0 0 12px;
+        }
+        .settings-group {
+            margin-bottom: 14px;
+        }
+        .settings-group label {
+            display: block;
+            font-size: 9px;
+            color: #404040;
+            margin-bottom: 6px;
+        }
+        .settings-group .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .settings-group input[type="range"] {
+            flex: 1;
+            accent-color: #6b4d31;
+        }
+        .settings-group .slider-val {
+            font-size: 9px;
+            color: #404040;
+            min-width: 30px;
+            text-align: center;
+        }
+        .settings-radio-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .settings-radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 8px;
+            color: #404040;
+            cursor: pointer;
+            background: #8b8b8b;
+            padding: 4px 8px;
+            border-top: 2px solid #d4d4d4;
+            border-left: 2px solid #d4d4d4;
+            border-bottom: 2px solid #373737;
+            border-right: 2px solid #373737;
+        }
+        .settings-radio-group label.active {
+            background: #6b9d6b;
+        }
+        .settings-radio-group input[type="radio"] {
+            accent-color: #6b4d31;
+        }
+
+        /* ── Joystick ── */
+        .joystick-zone {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            width: 180px;
+            height: 180px;
+            pointer-events: auto;
+            touch-action: none;
+        }
+        .joystick-base {
+            display: none;
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+        }
+        .joystick-knob {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            border: 2px solid rgba(255,255,255,0.6);
+            transform: translate(-50%, -50%);
+        }
+
+        /* ── Hotbar page arrows ── */
+        .hotbar-arrow {
+            display: none;
+            width: 24px;
+            height: 48px;
+            background: rgba(40,40,40,0.85);
+            border: 2px solid #111;
+            color: #ccc;
+            font-size: 14px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            pointer-events: auto;
+        }
+        .hotbar-arrow:active {
+            background: rgba(80,80,80,0.85);
+        }
+        .hotbar-inv-btn {
+            width: 48px;
+            height: 48px;
+            background-color: #8b8b8b;
+            border-top: 3px solid #d4d4d4;
+            border-left: 3px solid #d4d4d4;
+            border-bottom: 3px solid #373737;
+            border-right: 3px solid #373737;
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            pointer-events: auto;
+            image-rendering: pixelated;
+        }
+        .hotbar-inv-btn:active {
+            background-color: #aaa;
+        }
+
         @media (min-width: 1025px) {
             #mobile-controls {
                 display: none !important;
@@ -682,13 +873,14 @@
 
         @media (max-width: 768px) {
             #inventory-menu {
-                width: 98%;
-                height: 90%;
+                width: 95%;
                 max-width: 520px;
-                max-height: 560px;
+                max-height: 85vh;
                 padding: 8px;
                 overflow-y: auto;
                 overflow-x: hidden;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
             }
 
             .inv-grid {
@@ -719,6 +911,12 @@
             .slot {
                 width: 36px;
                 height: 36px;
+            }
+
+            .hotbar-inv-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
             }
 
             .dpad {
@@ -786,6 +984,44 @@
                 width: 16px;
                 height: 16px;
             }
+
+            /* Responsive pause menu */
+            #menu-content {
+                max-width: 90vw;
+                padding: 10px;
+            }
+            #menu-content .instructions {
+                font-size: 8px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .slot {
+                width: 32px;
+                height: 32px;
+            }
+            .hotbar-inv-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            .hotbar-arrow {
+                width: 20px;
+                height: 32px;
+                font-size: 11px;
+            }
+            #hud-bottom {
+                bottom: 58px;
+            }
+            .heart, .bubble-icon, .food-icon {
+                width: 14px;
+                height: 14px;
+            }
+            .inv-slot {
+                width: 30px;
+                height: 30px;
+            }
         }
     </style>
 
@@ -806,7 +1042,7 @@
 
 <body>
 
-    <div id="loading">🌍 Carregando mundo...</div>
+    <div id="loading">Carregando mundo...</div>
     <div id="recursos" style="display:none;"></div> <!-- Ocultando pq agora temos inventário real -->
     <!-- HUD bottom: saúde + fome + oxigênio + barra de XP (estilo Minecraft) -->
     <div id="hud-bottom">
@@ -826,16 +1062,25 @@
     <div id="water-overlay"></div>
     <div id="crosshair"></div>
 
-    <div id="hotbar">
-        <div class="slot active" id="hotbar-slot-0"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-1"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-2"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-3"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-4"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-5"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-6"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-7"><span class="qty"></span></div>
-        <div class="slot" id="hotbar-slot-8"><span class="qty"></span></div>
+    <div id="hotbar" style="display:flex; align-items:center;">
+        <div class="hotbar-arrow" id="hotbar-arrow-left" style="display:none;">
+            <svg width="12" height="16" viewBox="0 0 12 16" fill="white"><polygon points="10,0 2,8 10,16"/></svg>
+        </div>
+        <div style="display:flex; gap:2px; background:rgba(40,40,40,0.85); padding:4px; border:2px solid #111;" id="hotbar-slots-container">
+            <div class="slot active" id="hotbar-slot-0"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-1"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-2"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-3"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-4"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-5"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-6"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-7"><span class="qty"></span></div>
+            <div class="slot" id="hotbar-slot-8"><span class="qty"></span></div>
+            <div class="hotbar-inv-btn" id="hotbar-inv-btn" title="Inventario">...</div>
+        </div>
+        <div class="hotbar-arrow" id="hotbar-arrow-right" style="display:none;">
+            <svg width="12" height="16" viewBox="0 0 12 16" fill="white"><polygon points="2,0 10,8 2,16"/></svg>
+        </div>
     </div>
 
     <div id="menu">
@@ -843,20 +1088,50 @@
         <div id="menu-content">
             <h1 style="color:white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 20px;">Menu de Pausa</h1>
             <button class="mc-button" id="btn-play">Retomar Jogo</button>
+            <button class="mc-button" id="btn-settings">Configuracoes</button>
+            <button class="mc-button" id="btn-creative-mode">Modo Criativo</button>
             <button class="mc-button" id="btn-save-world">Salvar Mundo</button>
             <button class="mc-button" id="btn-load-world">Carregar Mundo</button>
             <button class="mc-button" onclick="location.reload()">Sair do Jogo</button>
             
             <div class="instructions" style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 4px; margin-top: 20px; font-size: 10px; line-height: 1.6;">
-                🏃‍♂️ <b>WASD</b>: Andar | <b>Espaço</b>: Pular | <b>Mouse</b>: Olhar<br>
-                ⛏️ <b>Clique Esq</b>: Quebrar | 🧱 <b>Clique Dir</b>: Colocar<br>
-                🎒 <b>1 a 9 / Scroll</b>: Hotbar | 🎒 <b>E</b>: Inventário / Crafting<br>
-                ✨ <b>Y</b>: Modo Criativo
+                <b>WASD</b>: Andar | <b>Espaco</b>: Pular | <b>Mouse</b>: Olhar<br>
+                <b>Clique Esq</b>: Quebrar | <b>Clique Dir</b>: Colocar<br>
+                <b>1 a 9 / Scroll</b>: Hotbar | <b>E</b>: Inventario / Crafting<br>
+                <b>Y</b>: Modo Criativo
             </div>
         </div>
     </div>
 
     <div id="mouse-drag-icon"></div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel">
+        <button id="btn-close-settings" class="btn-close-menu">X</button>
+        <h2>Configuracoes</h2>
+        <div class="settings-group">
+            <label>Sensibilidade da Camera</label>
+            <div class="slider-row">
+                <input type="range" id="setting-sensitivity" min="0.3" max="2.5" step="0.1" value="1.0">
+                <span class="slider-val" id="sensitivity-val">1.0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label>Tipo de Movimento</label>
+            <div class="settings-radio-group" id="movement-type-group">
+                <label class="active"><input type="radio" name="movementType" value="buttons" checked> Botoes</label>
+                <label><input type="radio" name="movementType" value="joystick"> Joystick</label>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label>Modo de Interacao</label>
+            <div class="settings-radio-group" id="interaction-mode-group">
+                <label class="active"><input type="radio" name="interactionMode" value="crosshair" checked> Modo Crosshair</label>
+                <label><input type="radio" name="interactionMode" value="touchAnywhere"> Toque na Tela (Bedrock)</label>
+            </div>
+        </div>
+        <button class="mc-button" id="btn-close-settings-bottom" style="margin-top:10px;">Voltar</button>
+    </div>
     
     <!-- Menu Criativo -->
     <div id="creative-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#c6c6c6; border-top:3px solid #fff; border-left:3px solid #fff; border-bottom:3px solid #555; border-right:3px solid #555; padding:15px; z-index:100; width:90%; max-width:600px; max-height:80vh;">
@@ -909,7 +1184,9 @@
         <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 10px;">
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div class="inv-slot" id="furnace-in"><span class="qty"></span></div>
-                <div style="font-size:16px; text-align:center; height:16px;" id="furnace-fire-icon">🔥</div>
+                <div style="font-size:16px; text-align:center; height:16px;" id="furnace-fire-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#ff6600"><path d="M8 1C6 4 3 6 3 10c0 3 2.5 5 5 5s5-2 5-5C13 6 10 4 8 1z"/></svg>
+                </div>
                 <div class="inv-slot" id="furnace-fuel"><span class="qty"></span></div>
             </div>
             <div style="width: 30px; height: 15px; background: #999; position: relative;">
@@ -936,8 +1213,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 id="craft-title" style="font-size: 16px; margin: 0; color: #404040; text-shadow: none;">Crafting</h2>
             <button id="btn-recipe-book"
-                style="margin:0; padding:4px 8px; font-size:10px; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">📖
-                Livro de Receitas</button>
+                style="margin:0; padding:4px 8px; font-size:10px; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">Receitas</button>
         </div>
 
         <div class="crafting-area">
@@ -983,17 +1259,17 @@
     <!-- Modal do Livro de Receitas -->
     <div id="recipe-book-modal"
         style="display:none; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#e0d0b0; border:4px solid #404040; padding:20px; z-index:100; color:#404040; font-family:'Press Start 2P', monospace; width:90%; max-width:400px; box-shadow:0 0 0 100vw rgba(0,0,0,0.5);">
-        <h3 style="margin-top:0;">📖 Receitas</h3>
+        <h3 style="margin-top:0;">Receitas</h3>
         <div style="max-height:300px; overflow-y:auto; font-size:10px; line-height:2;">
-            <p><b>🪵 Tábua de Madeira:</b> 1 Mad.</p>
-            <p><b>🪓 Graveto:</b> 2 Tábuas (verticais)</p>
-            <p><b>🗜️ Bancada:</b> 4 Tábuas (2x2 na Grade ou 4 em linha)</p>
-            <p><b>⛏️ Picareta Mad.:</b> 3 Tábuas no topo, 2 Gravetos no meio</p>
-            <p><b>⛏️ Machado Mad.:</b> 3 Tábuas no canto superior esq, 2 Gravetos no meio</p>
-            <p><b>⛏️ Picareta/Machado de Pedra:</b> Igual a Mad. mas usando <b>Pedra</b> invés de Tábua!</p>
-            <p><b>🪓 Picareta/Machado de Ferro:</b> Igual mas com <b>Min. Ferro</b> (3x3 na Bancada)</p>
-            <p><b>💎 Picareta/Machado de Diamante:</b> Igual mas com <b>Min. Diamante</b></p>
-            <p><b>🪣 Pá (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
+            <p><b>Tabua de Madeira:</b> 1 Mad.</p>
+            <p><b>Graveto:</b> 2 Tabuas (verticais)</p>
+            <p><b>Bancada:</b> 4 Tabuas (2x2 na Grade ou 4 em linha)</p>
+            <p><b>Picareta Mad.:</b> 3 Tabuas no topo, 2 Gravetos no meio</p>
+            <p><b>Machado Mad.:</b> 3 Tabuas no canto superior esq, 2 Gravetos no meio</p>
+            <p><b>Picareta/Machado de Pedra:</b> Igual a Mad. mas usando <b>Pedra</b> inves de Tabua!</p>
+            <p><b>Picareta/Machado de Ferro:</b> Igual mas com <b>Min. Ferro</b> (3x3 na Bancada)</p>
+            <p><b>Picareta/Machado de Diamante:</b> Igual mas com <b>Min. Diamante</b></p>
+            <p><b>Pa (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
             <p><b>Dica:</b> Interaja (Clique Dir) com a Bancada para grades 3x3!</p>
         </div>
         <button id="btn-close-recipe"
@@ -1003,17 +1279,30 @@
     <!-- 📱 CONTROLES MOBILE -->
     <div id="mobile-controls">
         <div class="dpad">
-            <div class="dpad-btn dpad-up" data-key="w">▲</div>
-            <div class="dpad-btn dpad-down" data-key="s">▼</div>
-            <div class="dpad-btn dpad-left" data-key="a">◀</div>
-            <div class="dpad-btn dpad-right" data-key="d">▶</div>
+            <div class="dpad-btn dpad-up" data-key="w">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><polygon points="10,2 18,16 2,16"/></svg>
+            </div>
+            <div class="dpad-btn dpad-down" data-key="s">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><polygon points="10,18 2,4 18,4"/></svg>
+            </div>
+            <div class="dpad-btn dpad-left" data-key="a">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><polygon points="2,10 16,2 16,18"/></svg>
+            </div>
+            <div class="dpad-btn dpad-right" data-key="d">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="white"><polygon points="18,10 4,2 4,18"/></svg>
+            </div>
         </div>
-        <div class="btn-sprint" id="btn-sprint" data-key="ctrl">🏃</div>
+        <div class="btn-sprint" id="btn-sprint" data-key="ctrl">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4v16"/><path d="M17 4v16"/><path d="M9 4l-4 8 4 8"/></svg>
+        </div>
         <div class="action-btns">
-            <div class="action-btn btn-jump" id="btn-mobile-jump">⬆</div>
-            <div class="action-btn btn-inv" id="btn-mobile-inv">🎒</div>
+            <div class="action-btn btn-jump" id="btn-mobile-jump">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+            </div>
         </div>
-        <div class="btn-pause" id="btn-mobile-pause">⏸</div>
+        <div class="btn-pause" id="btn-mobile-pause">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </div>
     </div>
 
     <script type="module">
@@ -1033,6 +1322,10 @@
         import { criarPicaretaElite } from './items/PicaretaElite.js';
         import { UIBuilder } from './ui/UIBuilder.js';
         import { WorldGenerator } from './world/WorldGenerator.js';
+        import { SettingsManager } from './ui/settingsManager.js';
+        import { HudManager } from './ui/hudManager.js';
+        import { MobileControls } from './ui/mobileControls.js';
+        import { InventoryUI } from './ui/inventoryUI.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -1050,6 +1343,12 @@
 
         const controles = new PointerLockControls(camera, document.body);
         const menu = document.getElementById('menu');
+
+        // ── New Modular Systems ──
+        const settingsManager = new SettingsManager();
+        const hudManager = new HudManager();
+        const inventoryUI = new InventoryUI();
+        const isMobileDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const inventoryMenu = document.getElementById('inventory-menu');
         const furnaceMenu = document.getElementById('furnace-menu');
 
@@ -1242,7 +1541,7 @@
 
                 // Feedback visual
                 const toast = document.createElement('div');
-                toast.textContent = '✅ Mundo salvo!';
+                toast.textContent = 'Mundo salvo!';
                 toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#7dff7d;padding:12px 24px;font-family:"Press Start 2P",monospace;font-size:12px;z-index:9999;border:2px solid #7dff7d;';
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 2000);
@@ -1331,7 +1630,7 @@
                 // Feedback
                 const toast = document.createElement('div');
                 const dataStr = new Date(saveData.timestamp).toLocaleDateString('pt-BR') + ' ' + new Date(saveData.timestamp).toLocaleTimeString('pt-BR');
-                toast.textContent = '📂 Mundo carregado! (' + dataStr + ')';
+                toast.textContent = 'Mundo carregado! (' + dataStr + ')';
                 toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#7dacff;padding:12px 24px;font-family:"Press Start 2P",monospace;font-size:11px;z-index:9999;border:2px solid #7dacff;';
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
@@ -2907,8 +3206,11 @@
                         agendarUpdateFluido(placeX, placeY, placeZ - 1);
 
                         soundManager.playSound('place', { blockType: slot.id });
-                        slot.count--;
-                        if (slot.count <= 0) uiBuilder.inventory[uiBuilder.selectedHotbarIndex] = null;
+                        // Creative mode: infinite blocks
+                        if (gameMode !== 'creative') {
+                            slot.count--;
+                            if (slot.count <= 0) uiBuilder.inventory[uiBuilder.selectedHotbarIndex] = null;
+                        }
                         callRenderUI();
                         recriarChunkVisual(placeX, placeZ);
                         // Vizinhos
@@ -2997,6 +3299,11 @@
 
         function animar() {
             requestAnimationFrame(animar);
+            // Pause rendering when in portrait mode on mobile
+            if (isMobileDevice && hudManager.shouldPauseRendering) {
+                relogio.getDelta(); // consume delta to avoid jump
+                return;
+            }
             processarFluidos();
             if ((controles.isLocked || window._mobileMode)) {
                 atualizarChunks(); const delta = relogio.getDelta();
@@ -3137,6 +3444,10 @@
                     // Apenas folhas quebram instantaneamente (sem animação de rachadura)
                     const blocosInstantaneos = [5]; // Folhas
                     if (blocosInstantaneos.includes(tipoBlocoQuebrando) || PLANT_IDS.has(tipoBlocoQuebrando)) {
+                        tempoAtualParaQuebrar = 0;
+                    }
+                    // Creative mode: instant break
+                    if (gameMode === 'creative') {
                         tempoAtualParaQuebrar = 0;
                     }
                     const slotAtivo = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
@@ -3355,6 +3666,11 @@
                     if (!teclas.space && velocidadeY < -0.02) {
                         velocidadeY = Math.max(velocidadeY, -0.04);
                     }
+                } else if (gameMode === 'creative' && window._creativeFlying) {
+                    // Creative mode flying
+                    velocidadeY = 0;
+                    if (teclas.space) velocidadeY = 0.15;
+                    if (teclas.shift) velocidadeY = -0.15;
                 } else {
                     if (teclas.space && noChao) {
                         velocidadeY = 0.22; noChao = false;
@@ -3366,7 +3682,16 @@
                 }
                 camera.position.y += velocidadeY;
 
-                if (checarColisao(camera.position.x, camera.position.y, camera.position.z)) { camera.position.y = posAntiga.y; velocidadeY = 0; noChao = true; } else noChao = false;
+                if (checarColisao(camera.position.x, camera.position.y, camera.position.z)) {
+                    // Disable fall damage in creative mode
+                    if (gameMode !== 'creative' && velocidadeY < -0.4 && posAntiga.y > camera.position.y) {
+                        const fallDamage = Math.floor(Math.abs(velocidadeY) * 20);
+                        if (fallDamage > 0) {
+                            window.dispatchEvent(new CustomEvent('playerDamage', { detail: { amount: fallDamage } }));
+                        }
+                    }
+                    camera.position.y = posAntiga.y; velocidadeY = 0; noChao = true;
+                } else noChao = false;
                 if (camera.position.y < -30) { camera.position.set(camera.position.x, 20, camera.position.z); velocidadeY = 0; }
 
                 // 👣 FOOTSTEPS & SWIM SOUNDS
@@ -3381,8 +3706,8 @@
                 // 🌙 AMBIENT CAVE SOUNDS
                 soundManager.updateAmbient(camera.position.y);
 
-                // 🍗 SISTEMA DE FOME
-                {
+                // 🍗 SISTEMA DE FOME (disabled in creative mode)
+                if (gameMode === 'survival') {
                     const agoraNow = Date.now();
                     // Drena 1 ponto de fome a cada 20s andando / 12s correndo
                     if (movendo && noChao) {
@@ -3553,9 +3878,148 @@
 
         // 📱 CONTROLES MOBILE
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // ── Settings Panel Logic ──
+        function openSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = 'block';
+            menu.style.display = 'none';
+
+            // Sync settings UI
+            document.getElementById('setting-sensitivity').value = settingsManager.get('sensitivity');
+            document.getElementById('sensitivity-val').textContent = settingsManager.get('sensitivity').toFixed(1);
+
+            const movType = settingsManager.get('movementType');
+            document.querySelectorAll('#movement-type-group label').forEach(l => {
+                const r = l.querySelector('input');
+                r.checked = r.value === movType;
+                l.classList.toggle('active', r.checked);
+            });
+
+            const intMode = settingsManager.get('interactionMode');
+            document.querySelectorAll('#interaction-mode-group label').forEach(l => {
+                const r = l.querySelector('input');
+                r.checked = r.value === intMode;
+                l.classList.toggle('active', r.checked);
+            });
+
+            if (!isMobile) { controles.unlock(); }
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-panel').style.display = 'none';
+            menu.style.display = 'flex';
+        }
+
+        document.getElementById('btn-settings').addEventListener('click', openSettings);
+        document.getElementById('btn-close-settings').addEventListener('click', closeSettings);
+        document.getElementById('btn-close-settings-bottom').addEventListener('click', closeSettings);
+
+        document.getElementById('setting-sensitivity').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            settingsManager.set('sensitivity', val);
+            document.getElementById('sensitivity-val').textContent = val.toFixed(1);
+        });
+
+        document.querySelectorAll('#movement-type-group input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                settingsManager.set('movementType', e.target.value);
+                document.querySelectorAll('#movement-type-group label').forEach(l => {
+                    l.classList.toggle('active', l.querySelector('input').checked);
+                });
+                if (window._mobileControlsRef) {
+                    window._mobileControlsRef.applyMode(e.target.value);
+                }
+            });
+        });
+
+        document.querySelectorAll('#interaction-mode-group input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                settingsManager.set('interactionMode', e.target.value);
+                document.querySelectorAll('#interaction-mode-group label').forEach(l => {
+                    l.classList.toggle('active', l.querySelector('input').checked);
+                });
+            });
+        });
+
+        // ── Creative Mode Button (Pause Menu) ──
+        document.getElementById('btn-creative-mode').addEventListener('click', () => {
+            if (gameMode === 'survival') {
+                gameMode = 'creative';
+                playerHP = 20;
+                console.log('Modo Criativo ativado!');
+            } else {
+                gameMode = 'survival';
+                console.log('Modo Survival ativado!');
+            }
+            menu.style.display = 'none';
+            if (isMobile) {
+                window._mobileMode = true;
+            } else {
+                controles.lock();
+            }
+            window.openCreativeInventory();
+        });
+
+        // ── Hotbar "..." Inventory Button (Mobile) ──
+        const hotbarInvBtn = document.getElementById('hotbar-inv-btn');
+        if (hotbarInvBtn) {
+            hotbarInvBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const inv = document.getElementById('inventory-menu');
+                if (inv.style.display === 'flex') {
+                    inv.style.display = 'none';
+                } else {
+                    inv.style.display = 'flex';
+                    menu.style.display = 'none';
+                }
+            }, { passive: false });
+            hotbarInvBtn.addEventListener('click', () => {
+                const inv = document.getElementById('inventory-menu');
+                if (inv.style.display === 'flex') {
+                    window.closeInventory();
+                } else {
+                    window.openInventory(false);
+                }
+            });
+        }
+
+        // ── Hotbar Page Navigation (arrows for mobile) ──
+        const hotbarArrowLeft = document.getElementById('hotbar-arrow-left');
+        const hotbarArrowRight = document.getElementById('hotbar-arrow-right');
+        if (hotbarArrowLeft) {
+            hotbarArrowLeft.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                inventoryUI.prevPage();
+                updateHotbarPages();
+            }, { passive: false });
+        }
+        if (hotbarArrowRight) {
+            hotbarArrowRight.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                inventoryUI.nextPage();
+                updateHotbarPages();
+            }, { passive: false });
+        }
+
+        function updateHotbarPages() {
+            // For now, single page - arrows shown on mobile for future expandability
+            // With 9 slots + "..." btn, single page is sufficient
+        }
+
         if (isMobile) {
             const mc = document.getElementById('mobile-controls');
             mc.classList.add('active');
+
+            // Show "..." inventory button and arrows on mobile
+            if (hotbarInvBtn) hotbarInvBtn.style.display = 'flex';
+            if (hotbarArrowLeft) hotbarArrowLeft.style.display = 'flex';
+            if (hotbarArrowRight) hotbarArrowRight.style.display = 'flex';
+
+            // Initialize joystick/button movement system
+            const mobileControls = new MobileControls(settingsManager);
+            mobileControls.init(teclas, 'mobile-controls');
+            window._mobileControlsRef = mobileControls;
 
             // D-PAD: pressionar/soltar mapeia para teclas virtuais
             document.querySelectorAll('.dpad-btn').forEach(btn => {
@@ -3567,35 +4031,35 @@
 
             // SPRINT
             const sprintBtn = document.getElementById('btn-sprint');
-            let sprintAtivo = false;
-            sprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); sprintAtivo = !sprintAtivo; teclas.ctrl = sprintAtivo; sprintBtn.classList.toggle('pressed', sprintAtivo); }, { passive: false });
+            let sprintAtivoMobile = false;
+            sprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); sprintAtivoMobile = !sprintAtivoMobile; teclas.ctrl = sprintAtivoMobile; sprintBtn.classList.toggle('pressed', sprintAtivoMobile); }, { passive: false });
 
-            // PULAR
-            document.getElementById('btn-mobile-jump').addEventListener('touchstart', (e) => { e.preventDefault(); teclas.space = true; }, { passive: false });
-            document.getElementById('btn-mobile-jump').addEventListener('touchend', (e) => { e.preventDefault(); teclas.space = false; }, { passive: false });
-
-            // INVENTÁRIO
-            document.getElementById('btn-mobile-inv').addEventListener('touchstart', (e) => {
+            // PULAR (double-tap for fly in creative)
+            let lastJumpTap = 0;
+            document.getElementById('btn-mobile-jump').addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                const inv = document.getElementById('inventory-menu');
-                if (inv.style.display === 'flex') {
-                    inv.style.display = 'none';
-                } else {
-                    inv.style.display = 'flex';
-                    document.getElementById('menu').style.display = 'none';
+                teclas.space = true;
+                const now = Date.now();
+                if (gameMode === 'creative' && now - lastJumpTap < 350) {
+                    // Double tap = toggle fly in creative mode
+                    window._creativeFlying = !window._creativeFlying;
                 }
+                lastJumpTap = now;
             }, { passive: false });
+            document.getElementById('btn-mobile-jump').addEventListener('touchend', (e) => { e.preventDefault(); teclas.space = false; }, { passive: false });
 
             // PAUSA MOBILE
             document.getElementById('btn-mobile-pause').addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 if (menu.style.display === 'flex') {
                     menu.style.display = 'none';
+                    document.getElementById('settings-panel').style.display = 'none';
                     window._mobileMode = true;
                 } else {
                     inventoryMenu.style.display = 'none';
                     furnaceMenu.style.display = 'none';
                     document.getElementById('creative-menu').style.display = 'none';
+                    document.getElementById('settings-panel').style.display = 'none';
                     menu.style.display = 'flex';
                     window._mobileMode = false;
                 }
@@ -3613,10 +4077,13 @@
                 }
             }
 
+            // Hotbar swipe support
+            const hotbarContainer = document.getElementById('hotbar-slots-container');
+            if (hotbarContainer) {
+                inventoryUI.setupHotbarSwipe(hotbarContainer, () => updateHotbarPages());
+            }
+
             // TOQUE NA TELA PARA QUEBRAR/COLOCAR E OLHAR (Estilo Minecraft Bedrock)
-            // Toque rápido (< 300ms, sem mover) = colocar bloco (clique direito)
-            // Segurar (> 300ms, sem mover) = quebrar bloco (mantém clique esquerdo)
-            // Arrastar = rotacionar câmera
             const gameCanvas = renderizador.domElement;
             let activeTouchId = null;
             let touchStartX = 0, touchStartY = 0;
@@ -3639,10 +4106,23 @@
                 touchStartY = touchLastY = t.clientY;
                 touchHasMoved = false;
                 touchStartMs = Date.now();
+
+                // Store touch position for Bedrock "Touch Anywhere" mode
+                window._lastTouchX = t.clientX;
+                window._lastTouchY = t.clientY;
+
                 holdBreakTimer = setTimeout(() => {
                     if (!touchHasMoved) {
                         balancarMao();
                         isLeftMouseDown = true;
+                        // In Touch Anywhere mode, raycast from touch position
+                        if (settingsManager.get('interactionMode') === 'touchAnywhere') {
+                            const touchNDC = new THREE.Vector2(
+                                (touchStartX / window.innerWidth) * 2 - 1,
+                                -(touchStartY / window.innerHeight) * 2 + 1
+                            );
+                            raycaster.setFromCamera(touchNDC, camera);
+                        }
                         realizarRaycastEsquerdo(false);
                     }
                 }, HOLD_THRESHOLD);
@@ -3660,12 +4140,13 @@
                         if (holdBreakTimer) { clearTimeout(holdBreakTimer); holdBreakTimer = null; }
                         if (isLeftMouseDown) { isLeftMouseDown = false; quebrandoBloco = null; tempoQuebrando = 0; }
                     }
-                    // Rotacionar câmera com o dedo
+                    // Rotacionar câmera com o dedo (sensitivity from settings)
                     const camDx = t.clientX - touchLastX;
                     const camDy = t.clientY - touchLastY;
+                    const sens = 0.004 * settingsManager.get('sensitivity');
                     camera.rotation.order = 'YXZ';
-                    camera.rotation.y -= camDx * 0.004;
-                    camera.rotation.x -= camDy * 0.004;
+                    camera.rotation.y -= camDx * sens;
+                    camera.rotation.x -= camDy * sens;
                     camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
                     touchLastX = t.clientX;
                     touchLastY = t.clientY;
@@ -3682,6 +4163,13 @@
                         if (elapsed < HOLD_THRESHOLD) {
                             // Toque rápido = colocar/interagir (clique direito)
                             balancarMao();
+                            if (settingsManager.get('interactionMode') === 'touchAnywhere') {
+                                const touchNDC = new THREE.Vector2(
+                                    (touchStartX / window.innerWidth) * 2 - 1,
+                                    -(touchStartY / window.innerHeight) * 2 + 1
+                                );
+                                raycaster.setFromCamera(touchNDC, camera);
+                            }
                             document.dispatchEvent(new MouseEvent('mousedown', { button: 2 }));
                         }
                     }
@@ -3710,6 +4198,7 @@
             // No mobile, inicia sem PointerLock — usa touch para olhar
             document.getElementById('btn-play').addEventListener('click', () => {
                 menu.style.display = 'none';
+                document.getElementById('settings-panel').style.display = 'none';
                 window._mobileMode = true;
             });
         }
