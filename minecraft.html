@@ -1500,6 +1500,11 @@
         import { CombatSystem } from './systems/combatSystem.js';
         import { MiningSystem } from './systems/miningSystem.js';
         import { InputRouter } from './systems/InputRouter.js';
+        import { VillageGenerator } from './world/villageGenerator.js';
+        import { VillagerAI } from './world/villagerAI.js';
+        import { GolemSystem } from './world/golemSystem.js';
+        import { Villager } from './scripts/mobs/Villager.js';
+        import { IronGolem } from './scripts/mobs/IronGolem.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -2522,6 +2527,12 @@
         let seedX = Math.random() * 10000;
         let seedZ = Math.random() * 10000;
 
+        // 🏘️ VILLAGE GENERATION SYSTEM
+        const villageGenerator = new VillageGenerator(noise, seedX, seedZ);
+        const villagerAI = new VillagerAI();
+        const golemSystem = new GolemSystem();
+        const generatedVillageChunks = new Set();
+
         // 🎨 Materiais LOD (cor sólida, sem textura, ultra leve)
         const materiaisLOD = {
             1: new THREE.MeshLambertMaterial({ color: 0x4a8c2a }), // Grama
@@ -2699,9 +2710,41 @@
                     }
                 }
             }
-        }
 
-        // Checa se bloco é "exposto" considerando que água é transparente
+            // 🏘️ Village generation for this chunk area
+            const villageKey = `village_${cx},${cz}`;
+            if (!generatedVillageChunks.has(villageKey)) {
+                generatedVillageChunks.add(villageKey);
+                const village = villageGenerator.getVillageAt(cx, cz);
+                if (village) {
+                    // Only generate village once (from the chunk nearest to center)
+                    const centerCX = Math.floor(village.centerX / TAMANHO_CHUNK);
+                    const centerCZ = Math.floor(village.centerZ / TAMANHO_CHUNK);
+                    const masterKey = `village_master_${centerCX},${centerCZ}`;
+                    if (!generatedVillageChunks.has(masterKey)) {
+                        generatedVillageChunks.add(masterKey);
+                        const villageData = villageGenerator.generateVillage(mundo, village.centerX, village.centerZ, village.biome);
+
+                        // Spawn villagers near beds
+                        const numVillagers = Math.max(2, villageData.beds.length);
+                        for (let i = 0; i < numVillagers; i++) {
+                            const spawnX = village.centerX + (i % 3) * 3 - 3;
+                            const spawnZ = village.centerZ + Math.floor(i / 3) * 3 - 3;
+                            const spawnY = villageGenerator.getTerrainHeight(spawnX, spawnZ) + 1.62;
+                            const villager = new Villager(cena, spawnX, spawnY, spawnZ, `${centerCX},${centerCZ}`);
+                            animais.push(villager);
+                            villagerAI.registerVillager(villager, villageData);
+                        }
+
+                        // Spawn iron golem at village center
+                        const golemY = villageGenerator.getTerrainHeight(village.centerX, village.centerZ) + 1.62;
+                        const golem = new IronGolem(cena, village.centerX + 5, golemY, village.centerZ + 5, `${centerCX},${centerCZ}`);
+                        animais.push(golem);
+                        golemSystem.registerGolem(golem, villageData);
+                    }
+                }
+            }
+        }
         function blocoExposto(x, y, z, tipoAtual) {
             // Plantas são sempre visíveis (rendered as cross)
             if (PLANT_IDS.has(tipoAtual)) return true;
@@ -3834,6 +3877,10 @@
                         }
                     }
                 }
+
+                // 🏘️ Village AI updates
+                villagerAI.update(delta, mundo, camera);
+                golemSystem.update(delta, mundo, animais, camera);
 
                 const direcao = new THREE.Vector3(); camera.getWorldDirection(direcao); direcao.y = 0; direcao.normalize();
                 const lado = new THREE.Vector3(); lado.crossVectors(camera.up, direcao).normalize();
