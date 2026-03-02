@@ -15,7 +15,7 @@ export class InputRouter {
         this.totalMovement = 0;
 
         // Gesture thresholds
-        this.TAP_MAX_DURATION = 180;   // ms — tap detection
+        this.TAP_MAX_DURATION = 200;   // ms — tap detection
         this.TAP_MAX_MOVEMENT = 12;    // px — tap detection
         this.HOLD_THRESHOLD = 300;     // ms — hold-to-mine start
         this.DRAG_THRESHOLD = 12;      // px — camera drag start
