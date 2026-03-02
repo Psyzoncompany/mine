@@ -1155,6 +1155,7 @@
 <body>
 
     <div id="loading">Carregando mundo...</div>
+    <div id="debug-overlay" style="position:fixed;top:8px;left:8px;color:#fff;font-family:'Press Start 2P',monospace;font-size:8px;line-height:14px;pointer-events:none;z-index:200;text-shadow:1px 1px 1px #000;display:none;"></div>
     <div id="recursos" style="display:none;"></div> <!-- Ocultando pq agora temos inventário real -->
     <!-- HUD bottom: saúde + fome + oxigênio + barra de XP (estilo Minecraft) -->
     <div id="hud-wrapper">
@@ -1490,6 +1491,7 @@
         import { criarPicaretaElite } from './items/PicaretaElite.js';
         import { UIBuilder } from './ui/UIBuilder.js';
         import { WorldGenerator } from './world/WorldGenerator.js';
+        import { WorldGeneratorV2 } from './world/WorldGeneratorV2.js';
         import { SettingsManager } from './ui/settingsManager.js';
         import { HudManager } from './ui/hudManager.js';
         import { MobileControls } from './ui/mobileControls.js';
@@ -1712,12 +1714,13 @@
 
                 // Serializa posição do player
                 const saveData = {
-                    version: 2,
+                    version: 3,
                     timestamp: Date.now(),
                     blocos: blocos,
                     chunksGerados: Array.from(chunksGerados),
                     seedX: seedX,
                     seedZ: seedZ,
+                    worldGenSeed: worldGenV2.seed,
                     playerPos: {
                         x: camera.position.x,
                         y: camera.position.y,
@@ -1790,6 +1793,10 @@
                 if (saveData.seedX !== undefined) {
                     seedX = saveData.seedX;
                     seedZ = saveData.seedZ;
+                }
+                // Restaura seed do WorldGen V2
+                if (saveData.worldGenSeed !== undefined) {
+                    worldGenV2.setSeed(saveData.worldGenSeed);
                 }
 
                 // Restaura chunks gerados
@@ -2283,6 +2290,21 @@
         const texFurnaceTop = carregarTextura('java/textures/block/furnace_top.png');
         const texCoalBlock = carregarTextura('java/textures/block/coal_block.png');
 
+        // WorldGen V2 – novas texturas
+        const texSandstone = carregarTextura('java/textures/block/sandstone.png');
+        const texSandstoneTopo = carregarTextura('java/textures/block/sandstone_top.png');
+        const texSnow = carregarTextura('java/textures/block/snow.png');
+        const texGrassSnow = carregarTextura('java/textures/block/grass_block_snow.png');
+        const texGravel = carregarTextura('java/textures/block/gravel.png');
+        const texLava = carregarTextura('java/textures/block/lava_still.png');
+        const texBedrock = carregarTextura('java/textures/block/bedrock.png');
+        const texSpruceLado = carregarTextura('java/textures/block/spruce_log.png');
+        const texSpruceTopo = carregarTextura('java/textures/block/spruce_log_top.png');
+        const texSpruceFolhas = carregarTextura('java/textures/block/spruce_leaves.png');
+
+        const matSpruceLado = new THREE.MeshLambertMaterial({ map: texSpruceLado });
+        const matSpruceTopo = new THREE.MeshLambertMaterial({ map: texSpruceTopo });
+
         const matTerra = new THREE.MeshLambertMaterial({ map: texTerra });
         const matGramaTopo = new THREE.MeshLambertMaterial({ map: texGramaTopo, color: 0x7cbd6b });
         const matGramaLado = new THREE.MeshLambertMaterial({ map: texGramaLado });
@@ -2334,7 +2356,14 @@
             18: new THREE.MeshLambertMaterial({ map: texShortGrass, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, color: 0x48b518 }), // Grama Curta
             19: new THREE.MeshLambertMaterial({ map: texPoppy, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), // Papoula
             20: new THREE.MeshLambertMaterial({ map: texDandelion, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), // Dente-de-leão
-            21: new THREE.MeshLambertMaterial({ map: texCornflower, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }) // Centaurea
+            21: new THREE.MeshLambertMaterial({ map: texCornflower, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), // Centaurea
+            24: [new THREE.MeshLambertMaterial({ map: texSandstone }), new THREE.MeshLambertMaterial({ map: texSandstone }), new THREE.MeshLambertMaterial({ map: texSandstoneTopo }), new THREE.MeshLambertMaterial({ map: texSandstoneTopo }), new THREE.MeshLambertMaterial({ map: texSandstone }), new THREE.MeshLambertMaterial({ map: texSandstone })], // Sandstone
+            25: [new THREE.MeshLambertMaterial({ map: texGrassSnow }), new THREE.MeshLambertMaterial({ map: texGrassSnow }), new THREE.MeshLambertMaterial({ map: texSnow }), matTerra, new THREE.MeshLambertMaterial({ map: texGrassSnow }), new THREE.MeshLambertMaterial({ map: texGrassSnow })], // Snow block
+            26: new THREE.MeshLambertMaterial({ map: texGravel }), // Gravel
+            27: new THREE.MeshBasicMaterial({ map: texLava, color: 0xff6600 }), // Lava
+            28: new THREE.MeshLambertMaterial({ map: texBedrock }), // Bedrock
+            29: [matSpruceLado, matSpruceLado, matSpruceTopo, matSpruceTopo, matSpruceLado, matSpruceLado], // Spruce log
+            30: new THREE.MeshLambertMaterial({ map: texSpruceFolhas, transparent: true, alphaTest: 0.5, color: 0x3d6b2f }) // Spruce leaves
         };
 
         // Geometria especial para água
@@ -2527,6 +2556,17 @@
         let seedX = Math.random() * 10000;
         let seedZ = Math.random() * 10000;
 
+        // 🌍 WorldGen V2 – Minecraft-like procedural generation
+        const worldGenV2 = new WorldGeneratorV2({
+            seed: Math.floor(seedX * 1000 + seedZ),
+            seaLevel: 5,
+            enableCaves: true,
+            enableAquifers: true,
+            enableOres: true,
+            enableTrees: true,
+            enableStructures: false,
+        });
+
         // 🏘️ VILLAGE GENERATION SYSTEM
         const villageGenerator = new VillageGenerator(noise, seedX, seedZ);
         const villagerAI = new VillagerAI();
@@ -2556,7 +2596,14 @@
             18: new THREE.MeshLambertMaterial({ color: 0x48b518 }), // Grama Curta
             19: new THREE.MeshLambertMaterial({ color: 0xff3333 }), // Papoula
             20: new THREE.MeshLambertMaterial({ color: 0xffee00 }), // Dente-de-leão
-            21: new THREE.MeshLambertMaterial({ color: 0x6495ED })  // Centaurea
+            21: new THREE.MeshLambertMaterial({ color: 0x6495ED }),  // Centaurea
+            24: new THREE.MeshLambertMaterial({ color: 0xd2c07c }), // Sandstone
+            25: new THREE.MeshLambertMaterial({ color: 0xf0f0f0 }), // Snow
+            26: new THREE.MeshLambertMaterial({ color: 0x8a8a8a }), // Gravel
+            27: new THREE.MeshBasicMaterial({ color: 0xff4400 }),    // Lava
+            28: new THREE.MeshLambertMaterial({ color: 0x333333 }), // Bedrock
+            29: new THREE.MeshLambertMaterial({ color: 0x4a3020 }), // Spruce log
+            30: new THREE.MeshLambertMaterial({ color: 0x2d5a20 })  // Spruce leaves
         };
 
         // Fila de chunks para gerar progressivamente (evita travar)
@@ -2617,94 +2664,29 @@
 
         function gerarDadosChunk(cx, cz) {
             const id = obterIdChunk(cx, cz); if (chunksGerados.has(id)) return; chunksGerados.add(id);
-            for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
-                for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
-                    const x = cx * TAMANHO_CHUNK + lx; const z = cz * TAMANHO_CHUNK + lz;
 
-                    // 🏔️ TERRENO: múltiplas oitavas de noise para montanhas
-                    let alt = 0;
-                    alt += noise.noise(x / 100 + seedX, 0, z / 100 + seedZ) * 20;   // Colinas amplas
-                    alt += noise.noise(x / 40 + seedX, 0, z / 40 + seedZ) * 8;      // Detalhe médio
-                    alt += noise.noise(x / 15 + seedX, 0, z / 15 + seedZ) * 3;      // Micro-detalhe
-                    alt = Math.floor(alt);
-
-                    // 🌊 RIOS: noise separado cria vales/rios
-                    const rioNoise = noise.noise(x / 60 + seedX, 0.5, z / 60 + seedZ);
-                    const rioNoise2 = noise.noise(x / 30 + seedX, 1.5, z / 30 + seedZ) * 0.3;
-                    const rioVal = Math.abs(rioNoise + rioNoise2);
-                    const isRio = rioVal < 0.06;  // Faixa estreita = rio
-                    const isMargemRio = rioVal < 0.12;
-
-                    if (isRio) {
-                        alt = Math.min(alt, -1); // Rio sempre abaixo do nível 0
-                    } else if (isMargemRio) {
-                        alt = Math.min(alt, 1); // Margem baixa
-                    }
-
-                    for (let y = -15; y <= alt; y++) {
-                        let buraco = noise.noise(x / 12 + seedX, y / 12, z / 12 + seedZ);
-                        if (y < alt - 2 && buraco > 0.4) continue; // Cavernas
-                        let tipo = 3; // Pedra
-
-                        const isPraia = (alt >= -1 && alt <= 2);
-
-                        if (y === alt) {
-                            if (isRio || isPraia) tipo = 7; // Areia no nível do rio ou na praia
-                            else tipo = 1; // Grama
-                        } else if (y > alt - 3) {
-                            if (isRio || isPraia) tipo = 7; // Profundidade de areia
-                            else tipo = 2; // Terra
-                        }
-
-                        if (!mundo.has(`${x},${y},${z}`)) mundo.set(`${x},${y},${z}`, tipo);
-                    }
-
-                    // 💧 Água nos rios (preenche até y=0)
-                    if (isRio || alt < 0) {
-                        for (let wy = alt + 1; wy <= 0; wy++) {
-                            if (!mundo.has(`${x},${wy},${z}`)) mundo.set(`${x},${wy},${z}`, 6);
-                        }
-                    }
-
-                    // 🌲 Árvores (não em rios nem montanhas altas)
-                    if (!isRio && !isMargemRio && alt > 0 && alt < 15 && Math.random() < 0.02 && mundo.get(`${x},${alt},${z}`) === 1) {
-                        gerarArvore(x, alt + 1, z);
-                    }
-
-                    // 🌿 Grama e flores (sobre grama, sem árvore)
-                    if (!isRio && !isMargemRio && alt > 0 && mundo.get(`${x},${alt},${z}`) === 1 && !mundo.has(`${x},${alt + 1},${z}`)) {
-                        const rng = Math.random();
-                        if (rng < 0.15) {
-                            mundo.set(`${x},${alt + 1},${z}`, 18); // Grama curta (15%)
-                        } else if (rng < 0.17) {
-                            mundo.set(`${x},${alt + 1},${z}`, 20); // Dente-de-leão (2%)
-                        } else if (rng < 0.19) {
-                            mundo.set(`${x},${alt + 1},${z}`, 19); // Papoula (2%)
-                        } else if (rng < 0.205) {
-                            mundo.set(`${x},${alt + 1},${z}`, 21); // Centaurea (1.5%)
-                        }
-                    }
-                }
-            }
+            // 🌍 WorldGen V2 – Generate all terrain, caves, ores, water, vegetation
+            worldGenV2.generateChunk(mundo, cx, cz);
 
             // Mobs só em chunks próximos
             const distChunk = Math.abs(cx - chunkAtualX) + Math.abs(cz - chunkAtualZ);
             if (distChunk <= DISTANCIA_MOB && Math.random() < 0.4) {
                 const ax = cx * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
                 const az = cz * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
-                for (let y = 40; y >= -15; y--) {
+                for (let y = 55; y >= -15; y--) {
                     const tipo = mundo.get(`${ax},${y},${az}`);
-                    if (tipo && tipo !== 5 && tipo !== 6) {
+                    if (tipo && tipo !== 5 && tipo !== 6 && tipo !== 30) {
                         // Verifica se acima do bloco sólido tem água - não spawnar em rio/lago
                         const tipoAcima1 = mundo.get(`${ax},${y+1},${az}`);
                         const tipoAcima2 = mundo.get(`${ax},${y+2},${az}`);
                         if (tipoAcima1 === 6 || tipoAcima2 === 6) break; // Bloco coberto por água
+                        if (tipoAcima1 === 27 || tipoAcima2 === 27) break; // Bloco coberto por lava
                         // Verifica blocos adjacentes para não spawnar na beira da água
                         const vizAgua = [
                             mundo.get(`${ax+1},${y+1},${az}`), mundo.get(`${ax-1},${y+1},${az}`),
                             mundo.get(`${ax},${y+1},${az+1}`), mundo.get(`${ax},${y+1},${az-1}`)
                         ];
-                        if (vizAgua.some(v => v === 6)) break; // Muito perto da água
+                        if (vizAgua.some(v => v === 6 || v === 27)) break; // Muito perto da água/lava
                         criarAnimal(ax, y + 1.62, az, cx, cz);
                         break;
                     }
@@ -2717,7 +2699,6 @@
                 generatedVillageChunks.add(villageKey);
                 const village = villageGenerator.getVillageAt(cx, cz);
                 if (village) {
-                    // Only generate village once (from the chunk nearest to center)
                     const centerCX = Math.floor(village.centerX / TAMANHO_CHUNK);
                     const centerCZ = Math.floor(village.centerZ / TAMANHO_CHUNK);
                     const masterKey = `village_master_${centerCX},${centerCZ}`;
@@ -2725,7 +2706,6 @@
                         generatedVillageChunks.add(masterKey);
                         const villageData = villageGenerator.generateVillage(mundo, village.centerX, village.centerZ, village.biome);
 
-                        // Spawn villagers near beds
                         const numVillagers = Math.max(2, villageData.beds.length);
                         for (let i = 0; i < numVillagers; i++) {
                             const spawnX = village.centerX + (i % 3) * 3 - 3;
@@ -2736,7 +2716,6 @@
                             villagerAI.registerVillager(villager, villageData);
                         }
 
-                        // Spawn iron golem at village center
                         const golemY = villageGenerator.getTerrainHeight(village.centerX, village.centerZ) + 1.62;
                         const golem = new IronGolem(cena, village.centerX + 5, golemY, village.centerZ + 5, `${centerCX},${centerCZ}`);
                         animais.push(golem);
@@ -2748,6 +2727,7 @@
         function blocoExposto(x, y, z, tipoAtual) {
             // Plantas são sempre visíveis (rendered as cross)
             if (PLANT_IDS.has(tipoAtual)) return true;
+            const isLeaf = (tipoAtual === 5 || tipoAtual === 30);
             const dirs = [
                 [x + 1, y, z], [x - 1, y, z], [x, y + 1, z], [x, y - 1, z], [x, y, z + 1], [x, y, z - 1]
             ];
@@ -2755,11 +2735,15 @@
                 const vizinho = mundo.get(`${nx},${ny},${nz}`);
                 if (!vizinho) return true; // Sem bloco = exposto
                 if (PLANT_IDS.has(vizinho)) return true; // Planta adjacente = exposto
-                if (tipoAtual !== 5 && vizinho === 5) return true; // Folhas são transparentes, revelar blocos atrás delas
+                // Folhas (oak=5, spruce=30) são transparentes, revelar blocos atrás delas
+                if (!isLeaf && (vizinho === 5 || vizinho === 30)) return true;
                 // Bloco sólido adjacente a água = exposto (água é transparente)
                 if (tipoAtual !== 6 && vizinho === 6) return true;
                 // Água adjacente a não-água = exposto
                 if (tipoAtual === 6 && vizinho !== 6) return true;
+                // Lava adjacente a não-lava = exposto
+                if (tipoAtual === 27 && vizinho !== 27) return true;
+                if (tipoAtual !== 27 && vizinho === 27) return true;
             }
             return false;
         }
@@ -2799,10 +2783,10 @@
             const id = obterIdChunk(cx, cz); if (chunksVisuais.has(id)) return;
             const grupo = new THREE.Group();
             grupo.userData.isLOD = !!isLOD;
-            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [] };
+            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [], 24: [], 25: [], 26: [], 27: [], 28: [], 29: [], 30: [] };
             const blocosAgua = [];
             const blocosPlantas = { 18: [], 19: [], 20: [], 21: [] };
-            const yMax = 45;
+            const yMax = 55;
             for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
                 for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
                     const x = cx * TAMANHO_CHUNK + lx; const z = cz * TAMANHO_CHUNK + lz;
@@ -2899,9 +2883,9 @@
                 document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size}`;
 
                 if (!window.playerSpawned && chunksVisuais.size > 0) {
-                    for (let y = 45; y >= -15; y--) {
+                    for (let y = 55; y >= -15; y--) {
                         const tipo = mundo.get(`0,${y},0`);
-                        if (tipo && tipo !== 6) { // Não spawna na água
+                        if (tipo && tipo !== 6 && tipo !== 27) { // Não spawna na água nem lava
                             camera.position.set(0, y + 2.12, 0);
                             window.playerSpawned = true;
                             velocidadeY = 0;
@@ -3228,6 +3212,11 @@
                 document.getElementById('gamemode-selector').classList.add('open');
                 controles.unlock();
             }
+            if (e.key === 'F3') {
+                e.preventDefault();
+                const dbg = document.getElementById('debug-overlay');
+                dbg.style.display = dbg.style.display === 'none' ? 'block' : 'none';
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -3252,7 +3241,7 @@
             return pos.some(p => {
                 const key = `${Math.round(p[0])},${Math.round(p[1])},${Math.round(p[2])}`;
                 const tipo = mundo.get(key);
-                return tipo && tipo !== 6 && !PLANT_IDS.has(tipo); // Água e plantas não bloqueiam
+                return tipo && tipo !== 6 && tipo !== 27 && !PLANT_IDS.has(tipo); // Água, lava e plantas não bloqueiam
             });
         }
 
@@ -3723,7 +3712,7 @@
                     }
 
                     // Apenas folhas quebram instantaneamente (sem animação de rachadura)
-                    const blocosInstantaneos = [5]; // Folhas
+                    const blocosInstantaneos = [5, 30]; // Folhas (oak, spruce)
                     if (blocosInstantaneos.includes(tipoBlocoQuebrando) || PLANT_IDS.has(tipoBlocoQuebrando)) {
                         tempoAtualParaQuebrar = 0;
                     }
@@ -3736,9 +3725,9 @@
                         const def = uiBuilder.itemDefs[slotAtivo.id] || { type: "unknown" };
                         if (def.type === "tool") {
                             const toolId = slotAtivo.id;
-                            const blocosPicareta = [3, 10, 11, 12, 13, 14]; // Pedra, Ores, Pedregulho
-                            const blocosMachado = [4, 5, 8, 16, 17]; // Madeira, Folhas, Tábua, Logs rotados
-                            const blocosPa = [1, 2, 7]; // Grama, Terra, Areia
+                            const blocosPicareta = [3, 10, 11, 12, 13, 14, 24, 28]; // Pedra, Ores, Pedregulho, Sandstone, Bedrock
+                            const blocosMachado = [4, 5, 8, 16, 17, 29, 30]; // Madeira, Folhas, Tábua, Logs, Spruce
+                            const blocosPa = [1, 2, 7, 25, 26]; // Grama, Terra, Areia, Snow, Gravel
 
                             // Picaretas
                             if (blocosPicareta.includes(tipoBlocoQuebrando)) {
@@ -3824,11 +3813,12 @@
                             agendarUpdateFluido(x, y, z-1);
 
                             // Logs rotados (16, 17) dropam como madeira normal (4)
-                            // Grama curta (18) não dropa nada;
+                            // Grama curta (18) não dropa nada; Folhas (5, 30) não dropam nada; Bedrock (28) não dropa
                             let tipoDropar = (tipoBlocoQuebrando === 16 || tipoBlocoQuebrando === 17) ? 4 : tipoBlocoQuebrando;
+                            if (tipoBlocoQuebrando === 29) tipoDropar = 29; // Spruce log dropa como si mesmo
                             if (tipoBlocoQuebrando === 10) tipoDropar = "carvao"; // Minério de Carvão dropa Carvão (item)
                             
-                            if (tipoBlocoQuebrando !== 18) {
+                            if (tipoBlocoQuebrando !== 18 && tipoBlocoQuebrando !== 28 && tipoBlocoQuebrando !== 30) {
                                 droparItem(x, y, z, tipoDropar);
                             }
                             soundManager.playSound('pop', { blockType: tipoBlocoQuebrando });
@@ -3898,7 +3888,7 @@
                         const posY = posAntiga.y - 1.62 - 0.5; // Bloco abaixo
                         const safe = [[fallX - w, posAntiga.z - w], [fallX + w, posAntiga.z - w], [fallX - w, posAntiga.z + w], [fallX + w, posAntiga.z + w]].some(p => {
                             const tipo = mundo.get(`${Math.round(p[0])},${Math.round(posY)},${Math.round(p[1])}`);
-                            return tipo && tipo !== 6 && !PLANT_IDS.has(tipo);
+                            return tipo && tipo !== 6 && tipo !== 27 && !PLANT_IDS.has(tipo);
                         });
                         if (!safe) canMoveX = false;
                     }
@@ -3921,7 +3911,7 @@
                         const posY = posAntiga.y - 1.62 - 0.5;
                         const safe = [[camera.position.x - w, fallZ - w], [camera.position.x + w, fallZ - w], [camera.position.x - w, fallZ + w], [camera.position.x + w, fallZ + w]].some(p => {
                             const tipo = mundo.get(`${Math.round(p[0])},${Math.round(posY)},${Math.round(p[1])}`);
-                            return tipo && tipo !== 6 && !PLANT_IDS.has(tipo);
+                            return tipo && tipo !== 6 && tipo !== 27 && !PLANT_IDS.has(tipo);
                         });
                         if (!safe) canMoveZ = false;
                     }
@@ -4074,6 +4064,24 @@
                 }
 
             } else relogio.getDelta();
+
+            // 🐛 Debug overlay update (F3)
+            const debugEl = document.getElementById('debug-overlay');
+            if (debugEl && debugEl.style.display !== 'none') {
+                const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
+                const wcx = Math.floor(px / TAMANHO_CHUNK), wcz = Math.floor(pz / TAMANHO_CHUNK);
+                const bx = Math.floor(px), bz = Math.floor(pz);
+                const biome = worldGenV2.getBiomeAt(bx, bz);
+                const h = worldGenV2.getHeightAt(bx, bz);
+                debugEl.innerHTML =
+                    `XYZ: ${px.toFixed(1)} / ${py.toFixed(1)} / ${pz.toFixed(1)}<br>` +
+                    `Chunk: ${wcx}, ${wcz}<br>` +
+                    `Biome: ${biome}<br>` +
+                    `Height: ${h}<br>` +
+                    `Chunks: ${chunksVisuais.size}<br>` +
+                    `Seed: ${worldGenV2.seed}<br>` +
+                    `[F3] toggle`;
+            }
 
             renderizador.clear();
             renderizador.render(cena, camera);
