@@ -30,8 +30,8 @@ export class GolemSystem {
             let nearestDist = Infinity;
 
             for (const mob of animais) {
-                if (!mob.mesh || mob.isDead) continue;
-                if (!this.hostileTypes.includes(mob.tipo)) continue;
+                if (!mob.mesh || mob.estado === 'morrer') continue;
+                if (!this.hostileTypes.includes(mob.type)) continue;
 
                 const mPos = mob.mesh.position;
                 const dxV = mPos.x - center.x;
