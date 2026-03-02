@@ -25,7 +25,7 @@ export class StructurePool {
             { type: 'market_stall', threshold: 1.00 }
         ];
 
-        this.MIN_SPACING = 12;
+        this.MIN_SPACING = 12; // Minimum distance in blocks between structure centers
     }
 
     _seededRandom(x, z, salt) {

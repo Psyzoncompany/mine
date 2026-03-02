@@ -8,7 +8,10 @@ export class VillagerAI {
             smoker: 'butcher'
         };
         this.timeOfDay = 0;
-        this.dayLength = 120;
+        this.dayLength = 120; // seconds for a full day cycle
+        // Day phases (in seconds): gather, work, sleep
+        this.GATHER_PHASE_END = 30;
+        this.WORK_PHASE_END = 90;
     }
 
     registerVillager(villager, villageData) {
@@ -77,7 +80,7 @@ export class VillagerAI {
                 }
             }
 
-            if (phase < 30) {
+            if (phase < this.GATHER_PHASE_END) {
                 // Gather at village center
                 if (center) {
                     const distance = this._distanceTo(villager, center.x, center.z);
@@ -89,7 +92,7 @@ export class VillagerAI {
                 } else {
                     this._wander(villager);
                 }
-            } else if (phase < 90) {
+            } else if (phase < this.WORK_PHASE_END) {
                 // Work phase
                 if (villager.linkedWorkstation) {
                     const ws = villager.linkedWorkstation;

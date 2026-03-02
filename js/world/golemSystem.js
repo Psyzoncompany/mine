@@ -2,6 +2,7 @@ export class GolemSystem {
     constructor() {
         this.golems = [];
         this.hostileTypes = ['cavaleiro', 'cavaleirotrevas', 'monstrovazio'];
+        this.ATTACK_DAMAGE = 7;
     }
 
     registerGolem(golem, villageData) {
@@ -60,7 +61,7 @@ export class GolemSystem {
                     const len = Math.sqrt(dx * dx + dz * dz) || 1;
                     const pushX = (dx / len) * 5;
                     const pushZ = (dz / len) * 5;
-                    nearestHostile.sofrerDano(7, null, pushX, pushZ);
+                    nearestHostile.sofrerDano(this.ATTACK_DAMAGE, null, pushX, pushZ);
                     golem._attackCooldown = 1.0;
                 }
             } else {
