@@ -6,21 +6,41 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Meu Craft - Vaca 3D, Drops &amp; Animacao</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MeuCraft">
+    <meta name="theme-color" content="#78A7FF">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
         body {
             margin: 0;
             overflow: hidden;
             background-color: #78A7FF;
             font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: auto;
+        }
+        html {
+            touch-action: none;
+            overscroll-behavior: none;
         }
 
         /* ── HUD Bottom (acima da hotbar, estilo Minecraft) ── */
         #hud-bottom {
             position: absolute;
-            bottom: 74px;
+            bottom: clamp(60px, 10vh, 80px);
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -29,7 +49,8 @@
             gap: 2px;
             pointer-events: none;
             z-index: 100;
-            width: 460px;
+            width: clamp(280px, 60vw, 460px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         #health-hunger-row {
@@ -173,18 +194,19 @@
 
         #hotbar {
             position: absolute;
-            bottom: 10px;
+            bottom: calc(clamp(6px, 1.5vh, 14px) + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: 2px;
             z-index: 100;
+            max-width: 95vw;
         }
 
         .slot {
-            width: 48px;
-            height: 48px;
+            width: clamp(36px, 7vw, 52px);
+            height: clamp(36px, 7vw, 52px);
             background-color: #8b8b8b;
             border-top: 3px solid #d4d4d4;
             border-left: 3px solid #d4d4d4;
@@ -350,6 +372,10 @@
             transform: translate(-50%, -50%);
             box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55);
             z-index: 100;
+            max-width: 95vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         /* Overlay escuro ao abrir inventário (via box-shadow acima) */
@@ -479,6 +505,7 @@
             height: 100%;
             pointer-events: none;
             z-index: 50;
+            padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
         }
 
         #mobile-controls.active {
@@ -488,17 +515,17 @@
         /* D-PAD (esquerda) */
         .dpad {
             position: absolute;
-            bottom: 90px;
-            left: 20px;
-            width: 150px;
-            height: 150px;
+            bottom: calc(clamp(70px, 14vh, 100px) + env(safe-area-inset-bottom, 0px));
+            left: calc(clamp(10px, 3vw, 24px) + env(safe-area-inset-left, 0px));
+            width: clamp(110px, 22vw, 160px);
+            height: clamp(110px, 22vw, 160px);
             pointer-events: auto;
         }
 
         .dpad-btn {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: clamp(38px, 7vw, 54px);
+            height: clamp(38px, 7vw, 54px);
             background: rgba(255, 255, 255, 0.25);
             border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 8px;
@@ -542,17 +569,17 @@
         /* BOTÕES DE AÇÃO (direita) */
         .action-btns {
             position: absolute;
-            bottom: 90px;
-            right: 20px;
-            width: 120px;
-            height: 60px;
+            bottom: calc(clamp(70px, 14vh, 100px) + env(safe-area-inset-bottom, 0px));
+            right: calc(clamp(10px, 3vw, 24px) + env(safe-area-inset-right, 0px));
+            width: clamp(90px, 18vw, 130px);
+            height: clamp(50px, 10vh, 70px);
             pointer-events: auto;
         }
 
         .action-btn {
             position: absolute;
-            width: 56px;
-            height: 56px;
+            width: clamp(42px, 8vw, 60px);
+            height: clamp(42px, 8vw, 60px);
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.25);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -600,10 +627,10 @@
         /* Botão de Pausa Mobile */
         .btn-pause {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 44px;
-            height: 44px;
+            top: calc(clamp(6px, 1.5vh, 14px) + env(safe-area-inset-top, 0px));
+            right: calc(clamp(6px, 1.5vw, 14px) + env(safe-area-inset-right, 0px));
+            width: clamp(36px, 7vw, 48px);
+            height: clamp(36px, 7vw, 48px);
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.25);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -653,10 +680,10 @@
         /* Sprint (toque duplo no W) */
         .btn-sprint {
             position: absolute;
-            bottom: 250px;
-            left: 55px;
-            width: 40px;
-            height: 40px;
+            bottom: calc(clamp(200px, 35vh, 260px) + env(safe-area-inset-bottom, 0px));
+            left: calc(clamp(40px, 8vw, 60px) + env(safe-area-inset-left, 0px));
+            width: clamp(32px, 6vw, 44px);
+            height: clamp(32px, 6vw, 44px);
             border-radius: 8px;
             background: rgba(255, 165, 0, 0.3);
             border: 2px solid rgba(255, 165, 0, 0.5);
@@ -727,7 +754,7 @@
             z-index: 1001;
             width: 90%;
             max-width: 420px;
-            max-height: 85vh;
+            max-height: 80vh;
             overflow-y: auto;
             font-family: 'Press Start 2P', monospace;
             box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55);
@@ -791,10 +818,10 @@
         /* ── Joystick ── */
         .joystick-zone {
             position: absolute;
-            bottom: 20px;
-            left: 10px;
-            width: 180px;
-            height: 180px;
+            bottom: calc(clamp(10px, 3vh, 24px) + env(safe-area-inset-bottom, 0px));
+            left: calc(clamp(6px, 2vw, 14px) + env(safe-area-inset-left, 0px));
+            width: clamp(130px, 26vw, 190px);
+            height: clamp(130px, 26vw, 190px);
             pointer-events: auto;
             touch-action: none;
         }
@@ -871,9 +898,9 @@
 
         @media (max-width: 768px) {
             #inventory-menu {
-                width: 95%;
+                width: 95vw;
                 max-width: 520px;
-                max-height: 85vh;
+                max-height: 80vh;
                 padding: 8px;
                 overflow-y: auto;
                 overflow-x: hidden;
@@ -888,8 +915,8 @@
             }
 
             .inv-slot {
-                width: 34px;
-                height: 34px;
+                width: clamp(28px, 8vw, 36px);
+                height: clamp(28px, 8vw, 36px);
             }
 
             .inv-item {
@@ -907,63 +934,63 @@
             }
 
             .slot {
-                width: 36px;
-                height: 36px;
+                width: clamp(32px, 7vw, 40px);
+                height: clamp(32px, 7vw, 40px);
             }
 
             .hotbar-inv-btn {
-                width: 36px;
-                height: 36px;
+                width: clamp(32px, 7vw, 40px);
+                height: clamp(32px, 7vw, 40px);
                 font-size: 14px;
             }
 
             .dpad {
-                bottom: 50px;
-                left: 10px;
-                width: 120px;
-                height: 120px;
+                bottom: calc(clamp(40px, 9vh, 60px) + env(safe-area-inset-bottom, 0px));
+                left: calc(clamp(6px, 2vw, 12px) + env(safe-area-inset-left, 0px));
+                width: clamp(100px, 20vw, 130px);
+                height: clamp(100px, 20vw, 130px);
             }
 
             .dpad-btn {
-                width: 40px;
-                height: 40px;
+                width: clamp(34px, 6vw, 42px);
+                height: clamp(34px, 6vw, 42px);
                 font-size: 16px;
             }
 
             .dpad-up {
-                left: 40px;
+                left: clamp(33px, 6vw, 42px);
             }
 
             .dpad-down {
-                left: 40px;
+                left: clamp(33px, 6vw, 42px);
             }
 
             .dpad-left {
-                top: 40px;
+                top: clamp(33px, 6vw, 42px);
             }
 
             .dpad-right {
-                top: 40px;
+                top: clamp(33px, 6vw, 42px);
             }
 
             .action-btns {
-                bottom: 60px;
-                right: 10px;
-                width: 60px;
-                height: 120px;
+                bottom: calc(clamp(50px, 10vh, 70px) + env(safe-area-inset-bottom, 0px));
+                right: calc(clamp(6px, 2vw, 12px) + env(safe-area-inset-right, 0px));
+                width: clamp(50px, 12vw, 70px);
+                height: clamp(100px, 18vh, 130px);
             }
 
             .action-btn {
-                width: 44px;
-                height: 44px;
+                width: clamp(38px, 7vw, 48px);
+                height: clamp(38px, 7vw, 48px);
                 font-size: 16px;
             }
 
             .btn-sprint {
-                bottom: 180px;
-                left: 40px;
-                width: 36px;
-                height: 36px;
+                bottom: calc(clamp(160px, 28vh, 200px) + env(safe-area-inset-bottom, 0px));
+                left: calc(clamp(30px, 6vw, 45px) + env(safe-area-inset-left, 0px));
+                width: clamp(30px, 5vw, 38px);
+                height: clamp(30px, 5vw, 38px);
                 font-size: 12px;
             }
 
@@ -974,13 +1001,13 @@
             }
 
             #hud-bottom {
-                width: 95vw;
-                bottom: 68px;
+                width: clamp(260px, 90vw, 95vw);
+                bottom: calc(clamp(50px, 9vh, 72px) + env(safe-area-inset-bottom, 0px));
             }
 
             .heart, .bubble-icon, .food-icon {
-                width: 16px;
-                height: 16px;
+                width: clamp(12px, 2.5vw, 18px);
+                height: clamp(12px, 2.5vw, 18px);
             }
 
             /* Responsive pause menu */
@@ -996,29 +1023,29 @@
 
         @media (max-width: 480px) {
             .slot {
-                width: 32px;
-                height: 32px;
+                width: clamp(28px, 8vw, 34px);
+                height: clamp(28px, 8vw, 34px);
             }
             .hotbar-inv-btn {
-                width: 32px;
-                height: 32px;
+                width: clamp(28px, 8vw, 34px);
+                height: clamp(28px, 8vw, 34px);
                 font-size: 12px;
             }
             .hotbar-arrow {
-                width: 20px;
-                height: 32px;
+                width: clamp(16px, 4vw, 22px);
+                height: clamp(28px, 8vw, 34px);
                 font-size: 11px;
             }
             #hud-bottom {
-                bottom: 58px;
+                bottom: calc(clamp(44px, 8vh, 60px) + env(safe-area-inset-bottom, 0px));
             }
             .heart, .bubble-icon, .food-icon {
-                width: 14px;
-                height: 14px;
+                width: clamp(10px, 2vw, 14px);
+                height: clamp(10px, 2vw, 14px);
             }
             .inv-slot {
-                width: 30px;
-                height: 30px;
+                width: clamp(26px, 7vw, 32px);
+                height: clamp(26px, 7vw, 32px);
             }
         }
     </style>
@@ -1126,6 +1153,34 @@
             <div class="settings-radio-group" id="interaction-mode-group">
                 <label class="active"><input type="radio" name="interactionMode" value="crosshair" checked> Modo Crosshair</label>
                 <label><input type="radio" name="interactionMode" value="touchAnywhere"> Toque na Tela (Bedrock)</label>
+            </div>
+        </div>
+        <!-- Render Resolution -->
+        <div class="settings-group">
+            <label>Resolucao de Renderizacao</label>
+            <div class="slider-row">
+                <input type="range" id="setting-render-scale" min="0.5" max="1.5" step="0.1" value="1.0">
+                <span class="slider-val" id="render-scale-val">1.0x</span>
+            </div>
+            <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                <button class="mc-button" data-render-preset="0.7" style="font-size:7px; padding:4px 8px;">Low</button>
+                <button class="mc-button" data-render-preset="1.0" style="font-size:7px; padding:4px 8px;">Balanced</button>
+                <button class="mc-button" data-render-preset="1.3" style="font-size:7px; padding:4px 8px;">High</button>
+            </div>
+        </div>
+        <!-- HUD Edit Mode -->
+        <div class="settings-group">
+            <label>Editar Layout do HUD</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="mc-button" id="btn-toggle-hud-edit" style="font-size:7px; padding:4px 8px;">Ativar</button>
+                <button class="mc-button" id="btn-reset-hud" style="font-size:7px; padding:4px 8px;">Resetar HUD</button>
+            </div>
+        </div>
+        <!-- Debug HUD Bounds -->
+        <div class="settings-group">
+            <label>Debug HUD (Mostrar bordas)</label>
+            <div style="display:flex; gap:8px;">
+                <button class="mc-button" id="btn-toggle-hud-debug" style="font-size:7px; padding:4px 8px;">Off</button>
             </div>
         </div>
         <button class="mc-button" id="btn-close-settings-bottom" style="margin-top:10px;">Voltar</button>
@@ -1299,6 +1354,10 @@
             <div class="action-btn btn-jump" id="btn-mobile-jump">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
             </div>
+            <div class="action-btn btn-attack" id="btn-mobile-attack" style="bottom:0; left:0; background:rgba(255,80,80,0.35);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6-10 10H5v-5.5z"/><path d="M14.5 3.5l2 2"/></svg>
+                <div id="attack-cooldown-ring" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;pointer-events:none;"></div>
+            </div>
         </div>
         <div class="btn-pause" id="btn-mobile-pause">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -1326,6 +1385,11 @@
         import { HudManager } from './ui/hudManager.js';
         import { MobileControls } from './ui/mobileControls.js';
         import { InventoryUI } from './ui/inventoryUI.js';
+        import { HudScaler } from './ui/hudScaler.js';
+        import { HudEditMode } from './ui/hudEditMode.js';
+        import { AddToHomeScreen } from './ui/addToHomeScreen.js';
+        import { CombatSystem } from './systems/combatSystem.js';
+        import { MiningSystem } from './systems/miningSystem.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -1348,6 +1412,10 @@
         const settingsManager = new SettingsManager();
         const hudManager = new HudManager();
         const inventoryUI = new InventoryUI();
+        const hudScaler = new HudScaler();
+        const hudEditMode = new HudEditMode();
+        const addToHomeScreen = new AddToHomeScreen();
+        const miningSystem = new MiningSystem();
         const isMobileDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const inventoryMenu = document.getElementById('inventory-menu');
         const furnaceMenu = document.getElementById('furnace-menu');
@@ -2288,6 +2356,7 @@
 
 
         let animais = [];
+        const combatSystem = new CombatSystem(cena, camera, animais, soundManager);
         const geometriaBloco = new THREE.BoxGeometry(1, 1, 1);
 
         // Correção de UV para evitar Texture Bleeding (vazamento de borda)
@@ -3043,6 +3112,7 @@
 
         // ⛏️ INTERAÇÃO & COMBATE
         const raycaster = new THREE.Raycaster(); const centroTela = new THREE.Vector2(0, 0);
+        combatSystem.setRaycaster(raycaster);
         let quebrandoBloco = null;
         let tempoQuebrando = 0;
         let tempoAtualParaQuebrar = 1.3;
@@ -3808,12 +3878,17 @@
             renderizador.render(cenaMao, cameraMao);
         }
 
+        // Render scale: load persisted value and apply
+        let currentRenderScale = parseFloat(localStorage.getItem('meucraft_render_scale') || '1.0');
+        renderizador.setPixelRatio(window.devicePixelRatio * currentRenderScale);
+
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             cameraMao.aspect = window.innerWidth / window.innerHeight;
             cameraMao.updateProjectionMatrix();
             renderizador.setSize(window.innerWidth, window.innerHeight);
+            renderizador.setPixelRatio(window.devicePixelRatio * currentRenderScale);
         });
         function tickFornalha() {
             const input = uiBuilder.furnaceInput[0];
@@ -3954,6 +4029,60 @@
             });
         });
 
+        // ── Render Scale Setting ──
+        const renderScaleSlider = document.getElementById('setting-render-scale');
+        const renderScaleVal = document.getElementById('render-scale-val');
+        if (renderScaleSlider) {
+            renderScaleSlider.value = currentRenderScale;
+            renderScaleVal.textContent = currentRenderScale.toFixed(1) + 'x';
+            renderScaleSlider.addEventListener('input', (e) => {
+                currentRenderScale = parseFloat(e.target.value);
+                localStorage.setItem('meucraft_render_scale', currentRenderScale);
+                renderScaleVal.textContent = currentRenderScale.toFixed(1) + 'x';
+                renderizador.setPixelRatio(window.devicePixelRatio * currentRenderScale);
+            });
+        }
+        document.querySelectorAll('[data-render-preset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.dataset.renderPreset);
+                currentRenderScale = val;
+                localStorage.setItem('meucraft_render_scale', val);
+                if (renderScaleSlider) renderScaleSlider.value = val;
+                if (renderScaleVal) renderScaleVal.textContent = val.toFixed(1) + 'x';
+                renderizador.setPixelRatio(window.devicePixelRatio * val);
+            });
+        });
+
+        // ── HUD Edit Mode ──
+        let hudEditEnabled = false;
+        const btnToggleHudEdit = document.getElementById('btn-toggle-hud-edit');
+        if (btnToggleHudEdit) {
+            btnToggleHudEdit.addEventListener('click', () => {
+                hudEditEnabled = !hudEditEnabled;
+                hudEditMode.toggle(hudEditEnabled);
+                btnToggleHudEdit.textContent = hudEditEnabled ? 'Desativar' : 'Ativar';
+            });
+        }
+        const btnResetHud = document.getElementById('btn-reset-hud');
+        if (btnResetHud) {
+            btnResetHud.addEventListener('click', () => {
+                hudEditMode.resetPositions();
+            });
+        }
+        // Restore saved HUD positions on load
+        hudEditMode.restorePositions();
+
+        // ── HUD Debug Mode ──
+        let hudDebugEnabled = false;
+        const btnToggleHudDebug = document.getElementById('btn-toggle-hud-debug');
+        if (btnToggleHudDebug) {
+            btnToggleHudDebug.addEventListener('click', () => {
+                hudDebugEnabled = !hudDebugEnabled;
+                hudScaler.toggleDebug(hudDebugEnabled);
+                btnToggleHudDebug.textContent = hudDebugEnabled ? 'On' : 'Off';
+            });
+        }
+
         // ── Creative Mode Button (Pause Menu) ──
         document.getElementById('btn-creative-mode').addEventListener('click', () => {
             if (gameMode === 'survival') {
@@ -4059,6 +4188,19 @@
                 lastJumpTap = now;
             }, { passive: false });
             document.getElementById('btn-mobile-jump').addEventListener('touchend', (e) => { e.preventDefault(); teclas.space = false; }, { passive: false });
+
+            // ATTACK MOBILE
+            const btnMobileAttack = document.getElementById('btn-mobile-attack');
+            if (btnMobileAttack) {
+                btnMobileAttack.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const result = combatSystem.attack(camera.position);
+                    if (result.hit) {
+                        // Trigger hand swing animation
+                        if (typeof swingHand === 'function') swingHand();
+                    }
+                }, { passive: false });
+            }
 
             // PAUSA MOBILE
             document.getElementById('btn-mobile-pause').addEventListener('touchstart', (e) => {
@@ -4213,6 +4355,40 @@
                 document.getElementById('settings-panel').style.display = 'none';
                 window._mobileMode = true;
             });
+        }
+
+        // ── Service Worker Registration ──
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.warn('SW registration failed:', err));
+            });
+        }
+
+        // ── Touch UX: Prevent accidental zoom/scroll ──
+        const menuSelectors = '#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal';
+        document.addEventListener('touchmove', (e) => {
+            // Allow scrolling inside menus/inventory
+            if (e.target.closest(menuSelectors)) return;
+            e.preventDefault();
+        }, { passive: false });
+
+        // Prevent double-tap zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // Prevent gesture-based zoom (iOS Safari)
+        if (/iP(hone|od|ad)/.test(navigator.userAgent)) {
+            document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+            document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+            document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
         }
     </script>
 </body>

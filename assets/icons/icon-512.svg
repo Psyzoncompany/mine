@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Grass block icon - Minecraft style -->
+  <!-- Top face (green grass) -->
+  <polygon points="256,64 472,172 256,280 40,172" fill="#5B8C32"/>
+  <polygon points="256,64 472,172 256,280 40,172" fill="url(#grassNoise512)" opacity="0.3"/>
+  <!-- Left face (brown dirt) -->
+  <polygon points="40,172 256,280 256,448 40,340" fill="#8B5E3C"/>
+  <polygon points="40,172 256,280 256,448 40,340" fill="#734D2E" opacity="0.3"/>
+  <!-- Right face (brown dirt, lighter) -->
+  <polygon points="472,172 256,280 256,448 472,340" fill="#A0693D"/>
+  <!-- Grass edge on left face -->
+  <polygon points="40,172 256,280 256,300 40,192" fill="#4A7A28"/>
+  <!-- Grass edge on right face -->
+  <polygon points="472,172 256,280 256,300 472,192" fill="#6B9E38"/>
+  <!-- Pixel details for texture -->
+  <defs>
+    <pattern id="grassNoise512" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="16" height="16" fill="#4A7A28" opacity="0.4"/>
+      <rect x="16" y="16" width="16" height="16" fill="#6B9E38" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <!-- Dirt pixel details on left face -->
+  <rect x="80" y="260" width="28" height="28" fill="#734D2E" opacity="0.4" transform="skewY(26.5) translate(0,-100)"/>
+  <rect x="120" y="310" width="24" height="24" fill="#9E7050" opacity="0.3" transform="skewY(26.5) translate(0,-100)"/>
+  <rect x="70" y="340" width="20" height="20" fill="#C4854A" opacity="0.2" transform="skewY(26.5) translate(0,-100)"/>
+  <!-- Dirt pixel details on right face -->
+  <rect x="310" y="260" width="28" height="28" fill="#C4854A" opacity="0.3" transform="skewY(-26.5) translate(0,50)"/>
+  <rect x="370" y="300" width="24" height="24" fill="#8B5E3C" opacity="0.3" transform="skewY(-26.5) translate(0,50)"/>
+  <rect x="340" y="350" width="20" height="20" fill="#734D2E" opacity="0.2" transform="skewY(-26.5) translate(0,50)"/>
+</svg>
