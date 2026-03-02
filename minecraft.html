@@ -177,11 +177,9 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
+            align-items: center;
             gap: 2px;
-            background: rgba(40, 40, 40, 0.85);
-            /* HUD Background mais fechado */
-            padding: 4px;
-            border: 2px solid #111;
+            z-index: 100;
         }
 
         .slot {
@@ -1062,7 +1060,7 @@
     <div id="water-overlay"></div>
     <div id="crosshair"></div>
 
-    <div id="hotbar" style="display:flex; align-items:center;">
+    <div id="hotbar">
         <div class="hotbar-arrow" id="hotbar-arrow-left" style="display:none;">
             <svg width="12" height="16" viewBox="0 0 12 16" fill="white"><polygon points="10,0 2,8 10,16"/></svg>
         </div>
@@ -1179,7 +1177,7 @@
 
     <!-- Fornalha Menú -->
     <div id="furnace-menu" style="display: none; background: #c6c6c6; border-top: 3px solid #fff; border-left: 3px solid #fff; border-bottom: 3px solid #555; border-right: 3px solid #555; padding: 7px; font-family: 'Press Start 2P', monospace; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55); z-index: 100;">
-        <button id="btn-close-furnace" class="btn-close-menu">✕</button>
+        <button id="btn-close-furnace" class="btn-close-menu">X</button>
         <h2 style="font-size: 16px; margin: 0 0 10px 0; color: #404040; text-shadow: none;">Fornalha</h2>
         <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 10px;">
             <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -1209,7 +1207,7 @@
     </div>
 
     <div id="inventory-menu">
-        <button id="btn-close-inventory" class="btn-close-menu">✕</button>
+        <button id="btn-close-inventory" class="btn-close-menu">X</button>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 id="craft-title" style="font-size: 16px; margin: 0; color: #404040; text-shadow: none;">Crafting</h2>
             <button id="btn-recipe-book"
@@ -1230,7 +1228,9 @@
                 <div class="inv-slot craft-3x3" id="craft-in-7" style="display:none;"><span class="qty"></span></div>
                 <div class="inv-slot craft-3x3" id="craft-in-8" style="display:none;"><span class="qty"></span></div>
             </div>
-            <div class="crafting-arrow">➔</div>
+            <div class="crafting-arrow">
+                <svg width="22" height="15" viewBox="0 0 22 15" fill="#373737"><polygon points="0,6 15,6 15,0 22,7.5 15,15 15,9 0,9"/></svg>
+            </div>
             <div class="inv-slot result-slot" id="craft-out"><span class="qty"></span></div>
         </div>
 
@@ -1389,6 +1389,7 @@
         window._soundManager = soundManager; // Expõe para os mobs usarem sons ambientes
         let playerHP = 20;
         let gameMode = 'survival'; // 'survival' ou 'creative'
+        window._creativeFlying = false;
         let playerOxygen = 15; // 15s de fôlego máximo
         let lastDrownDamage = 0;
         let timeInWater = 0;
@@ -2940,7 +2941,18 @@
                 }
                 teclas.w = true;
             }
-            if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'Space') teclas.space = true; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') teclas.shift = true;
+            if (e.code === 'KeyS') teclas.s = true; if (e.code === 'KeyA') teclas.a = true; if (e.code === 'KeyD') teclas.d = true; if (e.code === 'ControlLeft' || e.code === 'ControlRight') teclas.ctrl = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') teclas.shift = true;
+            if (e.code === 'Space') {
+                if (!teclas.space && gameMode === 'creative') {
+                    const now = performance.now();
+                    if (!window._lastSpaceTap) window._lastSpaceTap = 0;
+                    if (now - window._lastSpaceTap < 350) {
+                        window._creativeFlying = !window._creativeFlying;
+                    }
+                    window._lastSpaceTap = now;
+                }
+                teclas.space = true;
+            }
 
             if (e.key >= '1' && e.key <= '9') {
                 uiBuilder.selectedHotbarIndex = parseInt(e.key) - 1;
