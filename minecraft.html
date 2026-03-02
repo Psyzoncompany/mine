@@ -251,6 +251,7 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            padding: calc(8px + env(safe-area-inset-top, 0px)) calc(8px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(8px + env(safe-area-inset-left, 0px));
         }
 
         #menu-background {
@@ -270,7 +271,12 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 400px;
+            max-width: min(92vw, 720px);
+            max-height: min(86vh, 520px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
 
         .mc-button {
@@ -371,11 +377,13 @@
             left: 50%;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55);
-            z-index: 100;
+            z-index: 200;
             max-width: 95vw;
             max-height: 80vh;
             overflow-y: auto;
             overflow-x: hidden;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Overlay escuro ao abrir inventário (via box-shadow acima) */
@@ -432,6 +440,11 @@
         .inv-slot:hover {
             background-color: rgba(255,255,255,0.35);
             cursor: pointer;
+        }
+
+        .inv-slot.tap-selected {
+            box-shadow: 0 0 0 2px #fff inset, 0 0 6px 2px rgba(255,255,100,0.7);
+            background-color: rgba(255,255,200,0.4);
         }
 
         .inv-slot .qty {
@@ -765,6 +778,9 @@
             max-height: 80vh;
             overflow-y: auto;
             overflow-x: hidden;
+            z-index: 200;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
         }
 
         #settings-panel h2 {
@@ -896,6 +912,61 @@
         }
         .hotbar-inv-btn:active {
             background-color: #aaa;
+        }
+
+        /* ── Game Mode Selector Modal ── */
+        #gamemode-selector {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            padding: calc(8px + env(safe-area-inset-top, 0px)) calc(8px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(8px + env(safe-area-inset-left, 0px));
+        }
+        #gamemode-selector.open {
+            display: flex;
+        }
+        #gamemode-selector-panel {
+            background: #c6c6c6;
+            border-top: 3px solid #fff;
+            border-left: 3px solid #fff;
+            border-bottom: 3px solid #555;
+            border-right: 3px solid #555;
+            padding: 16px;
+            max-width: min(90vw, 400px);
+            max-height: min(60vh, 300px);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        #gamemode-selector-panel h2 {
+            font-size: 13px;
+            color: #404040;
+            text-shadow: none;
+            margin: 0;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* ── Creative Catalog Button in Inventory ── */
+        #btn-creative-blocks {
+            display: none;
+            margin: 0 0 0 8px;
+            padding: 4px 8px;
+            font-size: 10px;
+            background: #5a8f5a;
+            color: #fff;
+            border: 2px solid #3b5e3b;
+            border-bottom: 4px solid #3b5e3b;
+            font-family: 'Press Start 2P', monospace;
+            cursor: pointer;
+        }
+        #btn-creative-blocks:active {
+            transform: translateY(2px);
+            border-bottom: 2px solid #3b5e3b;
         }
 
         /* ── HUD Wrapper (global scale container for hudScaler.js) ── */
@@ -1071,6 +1142,25 @@
                 height: clamp(26px, 7vw, 32px);
             }
         }
+
+        /* ── Landscape mobile: compact menu ── */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #menu-content h1 {
+                font-size: clamp(12px, 3vh, 18px) !important;
+                margin-bottom: clamp(4px, 1vh, 10px) !important;
+            }
+            .mc-button {
+                height: clamp(28px, 7vh, 36px);
+                font-size: clamp(9px, 2vh, 12px);
+                margin: clamp(2px, 0.5vh, 4px) 0;
+            }
+            #menu-content .instructions {
+                font-size: 7px !important;
+                padding: 6px !important;
+                margin-top: 8px !important;
+                line-height: 1.4 !important;
+            }
+        }
     </style>
 
     <script type="importmap">
@@ -1213,13 +1303,13 @@
     </div>
     
     <!-- Menu Criativo -->
-    <div id="creative-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#c6c6c6; border-top:3px solid #fff; border-left:3px solid #fff; border-bottom:3px solid #555; border-right:3px solid #555; padding:15px; z-index:100; width:90%; max-width:600px; max-height:80vh;">
+    <div id="creative-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#c6c6c6; border-top:3px solid #fff; border-left:3px solid #fff; border-bottom:3px solid #555; border-right:3px solid #555; padding:15px; z-index:200; width:94vw; max-width:600px; max-height:82vh; overflow:hidden; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 style="font-size:14px; margin:0; color:#404040; font-family:'Press Start 2P',monospace;">Modo Criativo</h2>
             <button onclick="document.getElementById('creative-menu').style.display='none'; controles.lock();" style="padding:5px 10px; font-size:12px; cursor:pointer; background:#8b8b8b; border-top:2px solid #fff; border-left:2px solid #fff; border-bottom:2px solid #555; border-right:2px solid #555;">X</button>
         </div>
         <p style="font-size:10px; color:#666; margin:5px 0 10px; font-family:sans-serif;">Clique em um item para adicionar 64 ao inventário</p>
-        <div id="creative-grid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
+        <div id="creative-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(clamp(48px, 8vw, 72px), 1fr)); gap:8px; flex:1; overflow-y:auto; padding:5px; touch-action:pan-y; -webkit-overflow-scrolling:touch;"></div>
     </div>
     
     <style>
@@ -1257,7 +1347,7 @@
     </style>
 
     <!-- Fornalha Menú -->
-    <div id="furnace-menu" style="display: none; background: #c6c6c6; border-top: 3px solid #fff; border-left: 3px solid #fff; border-bottom: 3px solid #555; border-right: 3px solid #555; padding: 7px; font-family: 'Press Start 2P', monospace; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55); z-index: 100;">
+    <div id="furnace-menu" style="display: none; background: #c6c6c6; border-top: 3px solid #fff; border-left: 3px solid #fff; border-bottom: 3px solid #555; border-right: 3px solid #555; padding: 7px; font-family: 'Press Start 2P', monospace; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55); z-index: 200;">
         <button id="btn-close-furnace" class="btn-close-menu">X</button>
         <h2 style="font-size: 16px; margin: 0 0 10px 0; color: #404040; text-shadow: none;">Fornalha</h2>
         <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 10px;">
@@ -1291,8 +1381,11 @@
         <button id="btn-close-inventory" class="btn-close-menu">X</button>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 id="craft-title" style="font-size: 16px; margin: 0; color: #404040; text-shadow: none;">Crafting</h2>
-            <button id="btn-recipe-book"
-                style="margin:0; padding:4px 8px; font-size:10px; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">Receitas</button>
+            <div style="display:flex; gap:4px; align-items:center;">
+                <button id="btn-creative-blocks">Blocos</button>
+                <button id="btn-recipe-book"
+                    style="margin:0; padding:4px 8px; font-size:10px; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">Receitas</button>
+            </div>
         </div>
 
         <div class="crafting-area">
@@ -1339,9 +1432,13 @@
 
     <!-- Modal do Livro de Receitas -->
     <div id="recipe-book-modal"
-        style="display:none; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#e0d0b0; border:4px solid #404040; padding:20px; z-index:100; color:#404040; font-family:'Press Start 2P', monospace; width:90%; max-width:400px; box-shadow:0 0 0 100vw rgba(0,0,0,0.5);">
-        <h3 style="margin-top:0;">Receitas</h3>
-        <div style="max-height:300px; overflow-y:auto; font-size:10px; line-height:2;">
+        style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#e0d0b0; border:4px solid #404040; z-index:250; color:#404040; font-family:'Press Start 2P', monospace; width:94vw; max-width:420px; max-height:82vh; box-shadow:0 0 0 100vw rgba(0,0,0,0.5); padding:0; overflow:hidden; flex-direction:column;">
+        <div style="padding:12px 16px 8px; border-bottom:2px solid #999; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+            <h3 style="margin:0; font-size:12px;">Receitas</h3>
+            <button id="btn-close-recipe-top"
+                style="padding:6px 10px; font-size:12px; background:#8b8b8b; color:#fff; border-top:2px solid #d4d4d4; border-left:2px solid #d4d4d4; border-bottom:2px solid #373737; border-right:2px solid #373737; cursor:pointer; margin:0;">X</button>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:12px 16px; font-size:10px; line-height:2; touch-action:pan-y; -webkit-overflow-scrolling:touch;">
             <p><b>Tabua de Madeira:</b> 1 Mad.</p>
             <p><b>Graveto:</b> 2 Tabuas (verticais)</p>
             <p><b>Bancada:</b> 4 Tabuas (2x2 na Grade ou 4 em linha)</p>
@@ -1350,11 +1447,25 @@
             <p><b>Picareta/Machado de Pedra:</b> Igual a Mad. mas usando <b>Pedra</b> inves de Tabua!</p>
             <p><b>Picareta/Machado de Ferro:</b> Igual mas com <b>Min. Ferro</b> (3x3 na Bancada)</p>
             <p><b>Picareta/Machado de Diamante:</b> Igual mas com <b>Min. Diamante</b></p>
-            <p><b>Pa (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
+            <p><b>Pá (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
+            <p><b>Fornalha:</b> 8 Pedregulhos ou Pedras (quadrado 3x3 com centro vazio)</p>
+            <p><b>Bloco de Carvão:</b> 9 Carvões (3x3)</p>
             <p><b>Dica:</b> Interaja (Clique Dir) com a Bancada para grades 3x3!</p>
         </div>
-        <button id="btn-close-recipe"
-            style="margin-top:10px; padding:10px; width:100%; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816;">Fechar</button>
+        <div style="padding:8px 16px 12px; border-top:2px solid #999; flex-shrink:0;">
+            <button id="btn-close-recipe"
+                style="padding:10px; width:100%; background:#6b4d31; color:#ffda75; border:2px solid #3b2816; border-bottom:4px solid #3b2816; font-family:'Press Start 2P',monospace; font-size:10px; cursor:pointer; margin:0;">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Game Mode Selector Modal -->
+    <div id="gamemode-selector">
+        <div id="gamemode-selector-panel">
+            <h2>Selecionar Modo</h2>
+            <button class="mc-button" id="btn-select-survival" style="width:90%; max-width:280px;">Sobrevivência</button>
+            <button class="mc-button" id="btn-select-creative" style="width:90%; max-width:280px;">Criativo</button>
+            <button class="mc-button" id="btn-cancel-gamemode" style="width:70%; max-width:200px; font-size:10px; margin-top:4px;">Cancelar</button>
+        </div>
     </div>
 
     <!-- 📱 CONTROLES MOBILE -->
@@ -1472,8 +1583,9 @@
             const inventoryOpen = inventoryMenu.style.display === 'flex';
             const creativeOpen = document.getElementById('creative-menu').style.display === 'flex';
             const furnaceOpen = furnaceMenu.style.display === 'block';
+            const gamemodeOpen = document.getElementById('gamemode-selector').classList.contains('open');
 
-            if (!inventoryOpen && !creativeOpen && !furnaceOpen) {
+            if (!inventoryOpen && !creativeOpen && !furnaceOpen && !gamemodeOpen) {
                 menu.style.display = 'flex';
             }
         });
@@ -1482,7 +1594,7 @@
         soundManager.preload(); // Pré-carrega sons críticos
         window._soundManager = soundManager; // Expõe para os mobs usarem sons ambientes
         let playerHP = 20;
-        let gameMode = 'survival'; // 'survival' ou 'creative'
+        let gameMode = localStorage.getItem('meucraft_gamemode') || 'survival'; // 'survival' ou 'creative'
         window._creativeFlying = false;
         let playerOxygen = 15; // 15s de fôlego máximo
         let lastDrownDamage = 0;
@@ -1528,6 +1640,16 @@
 
         function callRenderUI() {
             uiBuilder.renderUI(playerHP, atualizarMao, playerOxygen, playerFood, playerXP, playerXPLevel);
+            // Creative mode: hide health/hunger bars
+            const hudBottom = document.getElementById('hud-bottom');
+            const creativeBlocksBtn = document.getElementById('btn-creative-blocks');
+            if (gameMode === 'creative') {
+                if (hudBottom) hudBottom.style.display = 'none';
+                if (creativeBlocksBtn) creativeBlocksBtn.style.display = 'inline-block';
+            } else {
+                if (hudBottom) hudBottom.style.display = '';
+                if (creativeBlocksBtn) creativeBlocksBtn.style.display = 'none';
+            }
         }
 
         // Ganha XP e sobe de nível quando preencher a barra
@@ -1575,6 +1697,7 @@
             };
         }
         window.addEventListener('playerDamage', (e) => {
+            if (gameMode === 'creative') return; // Invulnerable in creative mode
             playerHP -= e.detail.amount;
             callRenderUI();
             const flash = document.getElementById('damage-flash');
@@ -2975,7 +3098,16 @@
                 { id: 'pa', nome: 'Pá Madeira' },
                 { id: 'pa_pedra', nome: 'Pá Pedra' },
                 { id: 'pa_ferro', nome: 'Pá Ferro' },
-                { id: 'pa_diamante', nome: 'Pá Diamante' }
+                { id: 'pa_diamante', nome: 'Pá Diamante' },
+                { id: 22, nome: 'Fornalha' },
+                { id: 23, nome: 'Bloco Carvão' },
+                { id: 'carvao', nome: 'Carvão' },
+                { id: 'barra_ferro', nome: 'Barra Ferro' },
+                { id: 'barra_ouro', nome: 'Barra Ouro' },
+                { id: 'carne_vaca_assada', nome: 'Bife' },
+                { id: 'carne_porco_assada', nome: 'Porco Assado' },
+                { id: 'frango_assado', nome: 'Frango Assado' },
+                { id: 'carneirinho_assado', nome: 'Mutton Assado' }
             ];
             
             allItems.forEach(item => {
@@ -3006,18 +3138,31 @@
 
         document.getElementById('btn-recipe-book').addEventListener('click', () => {
             const modal = document.getElementById('recipe-book-modal');
-            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
         });
 
         document.getElementById('btn-close-recipe').addEventListener('click', () => {
             document.getElementById('recipe-book-modal').style.display = 'none';
         });
 
+        const btnCloseRecipeTop = document.getElementById('btn-close-recipe-top');
+        if (btnCloseRecipeTop) {
+            btnCloseRecipeTop.addEventListener('click', () => {
+                document.getElementById('recipe-book-modal').style.display = 'none';
+            });
+        }
+
         document.getElementById('btn-close-inventory').addEventListener('click', () => {
             inventoryMenu.style.display = 'none';
             uiBuilder.mouseSlot = null;
             updateMouseIcon();
             callRenderUI();
+        });
+
+        // ── Creative Blocks Button (inside inventory) ──
+        document.getElementById('btn-creative-blocks').addEventListener('click', () => {
+            inventoryMenu.style.display = 'none';
+            window.openCreativeInventory();
         });
 
         document.getElementById('btn-close-furnace').addEventListener('click', () => {
@@ -3063,16 +3208,9 @@
                 }
             }
             if (e.key.toLowerCase() === 'y') {
-                // Alternar modo de jogo
-                if (gameMode === 'survival') {
-                    gameMode = 'creative';
-                    playerHP = 20;
-                    console.log('Modo Criativo ativado!');
-                } else {
-                    gameMode = 'survival';
-                    console.log('Modo Survival ativado!');
-                }
-                window.openCreativeInventory();
+                // Open game mode selector
+                document.getElementById('gamemode-selector').classList.add('open');
+                controles.unlock();
             }
         });
 
@@ -4109,23 +4247,36 @@
             });
         }
 
-        // ── Creative Mode Button (Pause Menu) ──
+        // ── Creative Mode Button (Pause Menu) → Opens Game Mode Selector ──
         document.getElementById('btn-creative-mode').addEventListener('click', () => {
-            if (gameMode === 'survival') {
-                gameMode = 'creative';
+            document.getElementById('gamemode-selector').classList.add('open');
+            menu.style.display = 'none';
+        });
+
+        // ── Game Mode Selector Buttons ──
+        function applyGameMode(mode) {
+            gameMode = mode;
+            localStorage.setItem('meucraft_gamemode', mode);
+            document.getElementById('gamemode-selector').classList.remove('open');
+            if (mode === 'creative') {
                 playerHP = 20;
                 console.log('Modo Criativo ativado!');
             } else {
-                gameMode = 'survival';
                 console.log('Modo Survival ativado!');
             }
-            menu.style.display = 'none';
+            callRenderUI();
             if (isMobile) {
                 window._mobileMode = true;
             } else {
                 controles.lock();
             }
-            window.openCreativeInventory();
+        }
+
+        document.getElementById('btn-select-survival').addEventListener('click', () => applyGameMode('survival'));
+        document.getElementById('btn-select-creative').addEventListener('click', () => applyGameMode('creative'));
+        document.getElementById('btn-cancel-gamemode').addEventListener('click', () => {
+            document.getElementById('gamemode-selector').classList.remove('open');
+            menu.style.display = 'flex';
         });
 
         // ── Hotbar "..." Inventory Button (Mobile) ──
@@ -4234,12 +4385,15 @@
                 if (menu.style.display === 'flex') {
                     menu.style.display = 'none';
                     document.getElementById('settings-panel').style.display = 'none';
+                    document.getElementById('gamemode-selector').classList.remove('open');
                     window._mobileMode = true;
                 } else {
                     inventoryMenu.style.display = 'none';
                     furnaceMenu.style.display = 'none';
                     document.getElementById('creative-menu').style.display = 'none';
                     document.getElementById('settings-panel').style.display = 'none';
+                    document.getElementById('gamemode-selector').classList.remove('open');
+                    document.getElementById('recipe-book-modal').style.display = 'none';
                     menu.style.display = 'flex';
                     window._mobileMode = false;
                 }
@@ -4276,7 +4430,7 @@
 
             gameCanvas.addEventListener('touchstart', (e) => {
                 if (!window._mobileMode) return;
-                const uiOpen = inventoryMenu.style.display === 'flex' || furnaceMenu.style.display === 'block' || document.getElementById('creative-menu').style.display !== 'none';
+                const uiOpen = inventoryMenu.style.display === 'flex' || furnaceMenu.style.display === 'block' || document.getElementById('creative-menu').style.display !== 'none' || document.getElementById('gamemode-selector').classList.contains('open') || document.getElementById('recipe-book-modal').style.display === 'flex';
                 if (uiOpen) return;
                 e.preventDefault();
                 if (activeTouchId !== null) return;
@@ -4361,17 +4515,133 @@
                 }
             });
 
-            // TOUCH NO INVENTÁRIO (suporte para mover itens com o dedo)
+            // TOUCH NO INVENTÁRIO — TAP-TO-MOVE system for mobile
+            let tapSelectedSlotEl = null;
+            let tapSelectedInfo = null;
+
+            function clearTapSelection() {
+                if (tapSelectedSlotEl) {
+                    tapSelectedSlotEl.classList.remove('tap-selected');
+                }
+                tapSelectedSlotEl = null;
+                tapSelectedInfo = null;
+            }
+
+            function handleInventoryTap(slotEl) {
+                if (!slotEl) return;
+                const info = getSlotInfo(slotEl.id);
+                if (!info) return;
+
+                const targetSlot = info.array[info.index];
+
+                // If we have a selected slot already
+                if (tapSelectedSlotEl && tapSelectedInfo) {
+                    const srcSlot = tapSelectedInfo.array[tapSelectedInfo.index];
+
+                    // Tapping the same slot => deselect
+                    if (slotEl === tapSelectedSlotEl) {
+                        clearTapSelection();
+                        return;
+                    }
+
+                    // Source was a craft output
+                    if (tapSelectedInfo.isOutput && srcSlot) {
+                        if (tapSelectedInfo.array === uiBuilder.furnaceOutput) {
+                            // Move furnace output to target
+                            if (!targetSlot) {
+                                info.array[info.index] = { ...srcSlot };
+                                tapSelectedInfo.array[tapSelectedInfo.index] = null;
+                            } else if (targetSlot.id === srcSlot.id) {
+                                const space = uiBuilder.STACK_MAX - targetSlot.count;
+                                if (space >= srcSlot.count) {
+                                    targetSlot.count += srcSlot.count;
+                                    tapSelectedInfo.array[tapSelectedInfo.index] = null;
+                                }
+                            }
+                        } else {
+                            // Craft output: collect crafted item
+                            if (!targetSlot) {
+                                info.array[info.index] = { ...srcSlot };
+                            } else if (targetSlot.id === srcSlot.id) {
+                                const space = uiBuilder.STACK_MAX - targetSlot.count;
+                                if (space >= srcSlot.count) {
+                                    targetSlot.count += srcSlot.count;
+                                }
+                            } else {
+                                clearTapSelection();
+                                return;
+                            }
+                            // Consume crafting ingredients
+                            for (let i = 0; i < 9; i++) {
+                                if (uiBuilder.craftInput[i]) {
+                                    uiBuilder.craftInput[i].count--;
+                                    if (uiBuilder.craftInput[i].count <= 0) uiBuilder.craftInput[i] = null;
+                                }
+                            }
+                            uiBuilder.craftOutput = null;
+                            checkCrafting();
+                        }
+                        clearTapSelection();
+                        callRenderUI();
+                        return;
+                    }
+
+                    // Don't move INTO an output slot
+                    if (info.isOutput) {
+                        clearTapSelection();
+                        return;
+                    }
+
+                    // Move / swap
+                    if (!srcSlot) {
+                        // Source was empty (shouldn't happen, but safe)
+                        clearTapSelection();
+                        return;
+                    }
+
+                    if (!targetSlot) {
+                        // Move to empty slot
+                        info.array[info.index] = { ...srcSlot };
+                        tapSelectedInfo.array[tapSelectedInfo.index] = null;
+                    } else if (targetSlot.id === srcSlot.id) {
+                        // Stack
+                        const space = uiBuilder.STACK_MAX - targetSlot.count;
+                        const transfer = Math.min(space, srcSlot.count);
+                        targetSlot.count += transfer;
+                        srcSlot.count -= transfer;
+                        if (srcSlot.count <= 0) tapSelectedInfo.array[tapSelectedInfo.index] = null;
+                    } else {
+                        // Swap
+                        const temp = { ...targetSlot };
+                        info.array[info.index] = { ...srcSlot };
+                        tapSelectedInfo.array[tapSelectedInfo.index] = temp;
+                    }
+
+                    clearTapSelection();
+                    checkCrafting();
+                    callRenderUI();
+                    return;
+                }
+
+                // No selection yet: select this slot if it has an item
+                if (targetSlot || (info.isOutput && info.array[info.index])) {
+                    clearTapSelection();
+                    tapSelectedSlotEl = slotEl;
+                    tapSelectedInfo = info;
+                    slotEl.classList.add('tap-selected');
+                }
+            }
+
             [inventoryMenu, furnaceMenu].forEach(menuEl => {
                 menuEl.addEventListener('touchstart', (e) => {
                     const slotEl = e.target.closest('.inv-slot, .slot');
-                    if (!slotEl) return;
+                    if (!slotEl) {
+                        // Tapped outside any slot => cancel selection
+                        clearTapSelection();
+                        return;
+                    }
                     e.preventDefault();
-                    const touch = e.changedTouches[0];
-                    slotEl.dispatchEvent(new MouseEvent('mousedown', {
-                        bubbles: true, cancelable: true, button: 0,
-                        clientX: touch.clientX, clientY: touch.clientY
-                    }));
+                    handleInventoryTap(slotEl);
                 }, { passive: false });
             });
 
@@ -4393,7 +4663,7 @@
         }
 
         // ── Touch UX: Prevent accidental zoom/scroll ──
-        const menuSelectors = '#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal';
+        const menuSelectors = '#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal, #gamemode-selector';
         document.addEventListener('touchmove', (e) => {
             // Allow scrolling inside menus/inventory
             if (e.target.closest(menuSelectors)) return;
