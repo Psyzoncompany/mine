@@ -1290,6 +1290,14 @@
                 <label><input type="radio" name="interactionMode" value="touchAnywhere"> Toque na Tela (Bedrock)</label>
             </div>
         </div>
+        <!-- Render Distance (Chunks) -->
+        <div class="settings-group">
+            <label>Distancia de Renderizacao (Chunks)</label>
+            <div class="slider-row">
+                <input type="range" id="setting-render-distance" min="2" max="6" step="1" value="2">
+                <span class="slider-val" id="render-distance-val">2</span>
+            </div>
+        </div>
         <!-- Render Resolution -->
         <div class="settings-group">
             <label>Resolucao de Renderizacao</label>
@@ -2279,12 +2287,94 @@
         });
 
         // 💡 ILUMINAÇÃO
-        cena.add(new THREE.AmbientLight(0xcce0ff, 0.4)); // Luz ambiente mais suave
+        const luzAmbiente = new THREE.AmbientLight(0xcce0ff, 0.4); // Luz ambiente mais suave
+        cena.add(luzAmbiente);
         const luzSol = new THREE.DirectionalLight(0xfff5b6, 1.0); // Sol mais quente
         luzSol.position.set(20, 50, 20); luzSol.castShadow = true;
         luzSol.shadow.camera.left = -30; luzSol.shadow.camera.right = 30; luzSol.shadow.camera.top = 30; luzSol.shadow.camera.bottom = -30;
         luzSol.shadow.camera.near = 0.5; luzSol.shadow.camera.far = 100; luzSol.shadow.mapSize.width = 1024; luzSol.shadow.mapSize.height = 1024; luzSol.shadow.bias = -0.001;
         cena.add(luzSol); cena.add(luzSol.target);
+
+        // 🌞🌙 CICLO DIA/NOITE (Minecraft-like)
+        const DURACAO_DIA_TOTAL = 600; // 600 segundos = 10 minutos para ciclo completo (dia+noite)
+        const RAIO_ORBITAL = 120; // Distância visual do sol/lua ao jogador
+        // Transição dia/noite: offset e range controlam o quão rápido escurece/clareia
+        const TRANSICAO_OFFSET = 0.2;
+        const TRANSICAO_RANGE = 0.7;
+        let tempoMundo = DURACAO_DIA_TOTAL * 0.15; // Começa de manhã (15% do ciclo)
+
+        // Sol visual
+        const solGeo = new THREE.SphereGeometry(8, 16, 16);
+        const solMat = new THREE.MeshBasicMaterial({ color: 0xffee55, fog: false });
+        const solMesh = new THREE.Mesh(solGeo, solMat);
+        cena.add(solMesh);
+
+        // Lua visual
+        const luaGeo = new THREE.SphereGeometry(6, 16, 16);
+        const luaMat = new THREE.MeshBasicMaterial({ color: 0xd4d4e8, fog: false });
+        const luaMesh = new THREE.Mesh(luaGeo, luaMat);
+        cena.add(luaMesh);
+
+        function atualizarCicloDiaNoite(delta) {
+            tempoMundo += delta;
+            if (tempoMundo >= DURACAO_DIA_TOTAL) tempoMundo -= DURACAO_DIA_TOTAL;
+
+            // Ângulo do sol: 0=nascer, PI/2=meio-dia, PI=pôr-do-sol, 3PI/2=meia-noite
+            const angulo = (tempoMundo / DURACAO_DIA_TOTAL) * Math.PI * 2;
+            const altSol = Math.sin(angulo); // -1 a 1 (positivo = dia)
+
+            // Posicionar sol e lua
+            const sx = Math.cos(angulo) * RAIO_ORBITAL + camera.position.x;
+            const sy = Math.sin(angulo) * RAIO_ORBITAL + camera.position.y;
+            const sz = camera.position.z;
+            solMesh.position.set(sx, sy, sz);
+            luaMesh.position.set(-sx + 2 * camera.position.x, -sy + 2 * camera.position.y, sz);
+
+            // Fator dia: 1 = meio-dia, 0 = meia-noite, transição suave
+            const fatorDia = Math.max(0, Math.min(1, (altSol + TRANSICAO_OFFSET) / TRANSICAO_RANGE));
+
+            // Cores do céu
+            const corDia = new THREE.Color(0x78A7FF);
+            const corNascer = new THREE.Color(0xFFA54F);
+            const corNoite = new THREE.Color(0x0a0a2e);
+
+            let corCeuAtual;
+            if (fatorDia > 0.6) {
+                // Dia pleno
+                corCeuAtual = corDia.clone();
+            } else if (fatorDia > 0.3) {
+                // Nascer/Pôr-do-sol
+                const t = (fatorDia - 0.3) / 0.3;
+                corCeuAtual = corNascer.clone().lerp(corDia, t);
+            } else {
+                // Noite
+                const t = fatorDia / 0.3;
+                corCeuAtual = corNoite.clone().lerp(corNascer, t);
+            }
+
+            if (!cabecaSubmersa) {
+                cena.background = corCeuAtual;
+                cena.fog.color.copy(corCeuAtual);
+            }
+
+            // Intensidade da luz
+            luzSol.intensity = 0.15 + fatorDia * 0.85;
+            luzAmbiente.intensity = 0.08 + fatorDia * 0.32;
+            luzSol.color.setHex(fatorDia > 0.4 ? 0xfff5b6 : 0xffa54f);
+            luzAmbiente.color.setHex(fatorDia > 0.3 ? 0xcce0ff : 0x334466);
+
+            // Visibilidade sol/lua
+            solMesh.visible = altSol > -0.15;
+            luaMesh.visible = altSol < 0.15;
+
+            // Posição do directional light segue o sol
+            luzSol.position.set(
+                camera.position.x + Math.cos(angulo) * 30,
+                camera.position.y + Math.max(Math.sin(angulo), 0.1) * 50,
+                camera.position.z + 20
+            );
+            luzSol.target.position.copy(camera.position);
+        }
 
         // 🎨 TEXTURAS DOS BLOCOS & UI — carregadas do resource pack java/
         const texLoader = new THREE.TextureLoader();
@@ -2645,10 +2735,10 @@
         const mundo = new Map();
         const chunksGerados = new Set();
         const chunksVisuais = new Map();
-        const TAMANHO_CHUNK = 16;
-        const DISTANCIA_RENDER = 2;  // 2 chunks = 25 chunks (5x5), como antes
-        const DISTANCIA_DETALHE = 2;  // Todos com textura HD nesse range
-        const DISTANCIA_MOB = 2;      // Mobs dentro de 2 chunks
+        let TAMANHO_CHUNK = 16;
+        let DISTANCIA_RENDER = settingsManager.get('renderDistance');  // Dynamic from settings
+        let DISTANCIA_DETALHE = Math.min(2, DISTANCIA_RENDER);  // Detail within render range
+        let DISTANCIA_MOB = 2;      // Mobs dentro de 2 chunks
         let chunkAtualX = -999, chunkAtualZ = -999;
         const noise = new ImprovedNoise();
         let seedX = Math.random() * 10000;
@@ -2941,6 +3031,10 @@
             cena.add(grupo); chunksVisuais.set(id, grupo);
         }
 
+        // Fila de chunks pendentes para carregamento suave
+        let chunkFilaPendente = [];
+        const CHUNKS_POR_FRAME = 2; // Número de chunks construídos por frame
+
         function atualizarChunks() {
             const px = Math.floor(camera.position.x / TAMANHO_CHUNK); const pz = Math.floor(camera.position.z / TAMANHO_CHUNK);
             if (px !== chunkAtualX || pz !== chunkAtualZ || chunksVisuais.size === 0) {
@@ -2954,14 +3048,19 @@
                     }
                 }
 
-                // Constrói visuais: próximos com textura, distantes com LOD
+                // Monta fila de chunks que precisam ser construídos (ordenado por distância)
+                chunkFilaPendente = [];
                 for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
                     for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
-                        const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
-                        const isLOD = dist > DISTANCIA_DETALHE;
-                        construirChunkVisual(cx, cz, isLOD);
+                        const id = obterIdChunk(cx, cz);
+                        if (!chunksVisuais.has(id)) {
+                            const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
+                            chunkFilaPendente.push({ cx, cz, dist });
+                        }
                     }
                 }
+                // Ordena: mais perto primeiro
+                chunkFilaPendente.sort((a, b) => a.dist - b.dist);
 
                 // Limpeza de chunks fora do range
                 for (const [id, grupo] of chunksVisuais.entries()) {
@@ -2978,8 +3077,6 @@
                     a.mesh.visible = mobDist <= DISTANCIA_MOB;
                 });
 
-                document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size}`;
-
                 if (!window.playerSpawned && chunksVisuais.size > 0) {
                     for (let y = 55; y >= -15; y--) {
                         const tipo = mundo.get(`0,${y},0`);
@@ -2991,6 +3088,19 @@
                         }
                     }
                 }
+            }
+
+            // Carregamento suave: constrói poucos chunks por frame
+            if (chunkFilaPendente.length > 0) {
+                const construirAgora = Math.min(CHUNKS_POR_FRAME, chunkFilaPendente.length);
+                for (let i = 0; i < construirAgora; i++) {
+                    const { cx, cz, dist } = chunkFilaPendente.shift();
+                    const isLOD = dist > DISTANCIA_DETALHE;
+                    construirChunkVisual(cx, cz, isLOD);
+                }
+                document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size} (${chunkFilaPendente.length} restantes)`;
+            } else {
+                document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size}`;
             }
         }
 
@@ -3011,7 +3121,7 @@
         let naAgua = false;
         let cabecaSubmersa = false;
         const waterOverlay = document.getElementById('water-overlay');
-        const fogNormal = { color: corCeu, near: 20, far: 60 };
+        const fogNormal = { color: corCeu, near: 20, far: DISTANCIA_RENDER * TAMANHO_CHUNK };
         const fogAgua = { color: 0x3F76E4, near: 1, far: 18 };
 
         function checarPlayerNaAgua(delta = 0) {
@@ -3676,7 +3786,7 @@
             if ((controles.isLocked || window._mobileMode)) {
                 atualizarChunks(); const delta = relogio.getDelta();
 
-                luzSol.position.set(camera.position.x + 20, camera.position.y + 40, camera.position.z + 20); luzSol.target.position.copy(camera.position);
+                atualizarCicloDiaNoite(delta);
 
                 raycaster.setFromCamera(centroTela, camera);
                 const objs = Array.from(chunksVisuais.values()).flatMap(g => g.children);
@@ -3694,6 +3804,8 @@
                 if (!noChao) velocidadeAndar = (teclas.ctrl ? 8 : 5); // Mantém sprint no ar (um pouco menor)
                 if (naAgua) velocidadeAndar = 2.5; // Na água = 50% velocidade
                 if (teclas.shift && noChao) velocidadeAndar = 2.0;
+                // Voar no criativo = dobro da velocidade de andar
+                if (gameMode === 'creative' && window._creativeFlying) velocidadeAndar = (teclas.ctrl ? 20 : 10);
                 velocidadeAndar *= delta;
 
                 // Abaixar câmera quando estiver no shift (sneak) - offset único, não cumulativo
@@ -4303,6 +4415,10 @@
                 l.classList.toggle('active', r.checked);
             });
 
+            // Sync render distance slider
+            document.getElementById('setting-render-distance').value = settingsManager.get('renderDistance');
+            document.getElementById('render-distance-val').textContent = settingsManager.get('renderDistance');
+
             if (!isMobile) { controles.unlock(); }
         }
 
@@ -4319,6 +4435,18 @@
             const val = parseFloat(e.target.value);
             settingsManager.set('sensitivity', val);
             document.getElementById('sensitivity-val').textContent = val.toFixed(1);
+        });
+
+        // Render Distance setting
+        document.getElementById('setting-render-distance').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            settingsManager.set('renderDistance', val);
+            document.getElementById('render-distance-val').textContent = val;
+            DISTANCIA_RENDER = val;
+            DISTANCIA_DETALHE = Math.min(2, val);
+            fogNormal.far = val * TAMANHO_CHUNK;
+            // Forçar atualização de chunks ao mudar distância
+            chunkAtualX = -999; chunkAtualZ = -999;
         });
 
         document.querySelectorAll('#movement-type-group input[type="radio"]').forEach(radio => {

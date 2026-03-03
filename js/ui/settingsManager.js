@@ -6,6 +6,7 @@ export class SettingsManager {
             sensitivity: 1.0,
             movementType: 'buttons', // 'buttons' | 'joystick'
             interactionMode: 'crosshair', // 'crosshair' | 'touchAnywhere'
+            renderDistance: 2, // chunks radius (2–6)
         };
         this.settings = { ...this.defaults };
         this.load();
