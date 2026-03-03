@@ -1664,6 +1664,11 @@
             4: { id: 4, nome: "Mad.", svgBase: urlTransparente, type: "block" },
             5: { id: 5, nome: "Folha", svgBase: urlTransparente, type: "block" },
             7: { id: 7, nome: "Areia", svgBase: urlTransparente, type: "block" },
+            31: { id: 31, nome: "Granito", svgBase: urlTransparente, type: "block" },
+            32: { id: 32, nome: "Diorito", svgBase: urlTransparente, type: "block" },
+            33: { id: 33, nome: "Andesito", svgBase: urlTransparente, type: "block" },
+            34: { id: 34, nome: "Ardosia", svgBase: urlTransparente, type: "block" },
+            35: { id: 35, nome: "Min. Cobre", svgBase: urlTransparente, type: "block" },
             "pa": { id: "pa", nome: "Pá", svgBase: svgPa, type: "tool" },
             "pa_pedra": { id: "pa_pedra", nome: "Pá Pd", svgBase: "url('java/textures/item/stone_shovel.png')", type: "tool" },
             "pa_ferro": { id: "pa_ferro", nome: "Pá Fe", svgBase: "url('java/textures/item/iron_shovel.png')", type: "tool" },
@@ -2442,6 +2447,12 @@
         const texSpruceLado = carregarTextura('java/textures/block/spruce_log.png');
         const texSpruceTopo = carregarTextura('java/textures/block/spruce_log_top.png');
         const texSpruceFolhas = carregarTextura('java/textures/block/spruce_leaves.png');
+        const texGranite = carregarTextura('java/textures/block/granite.png');
+        const texDiorite = carregarTextura('java/textures/block/diorite.png');
+        const texAndesite = carregarTextura('java/textures/block/andesite.png');
+        const texDeepslate = carregarTextura('java/textures/block/deepslate.png');
+        const texDeepslateTopo = carregarTextura('java/textures/block/deepslate_top.png');
+        const texCopperOre = carregarTextura('java/textures/block/copper_ore.png');
 
         const matSpruceLado = new THREE.MeshLambertMaterial({ map: texSpruceLado });
         const matSpruceTopo = new THREE.MeshLambertMaterial({ map: texSpruceTopo });
@@ -2551,7 +2562,12 @@
             27: new THREE.MeshBasicMaterial({ map: texLava, color: 0xff6600 }), // Lava
             28: new THREE.MeshLambertMaterial({ map: texBedrock }), // Bedrock
             29: [matSpruceLado, matSpruceLado, matSpruceTopo, matSpruceTopo, matSpruceLado, matSpruceLado], // Spruce log
-            30: new THREE.MeshLambertMaterial({ map: texSpruceFolhas, transparent: true, alphaTest: 0.5, color: 0x3d6b2f }) // Spruce leaves
+            30: new THREE.MeshLambertMaterial({ map: texSpruceFolhas, transparent: true, alphaTest: 0.5, color: 0x3d6b2f }), // Spruce leaves
+            31: new THREE.MeshLambertMaterial({ map: texGranite }), // Granite
+            32: new THREE.MeshLambertMaterial({ map: texDiorite }), // Diorite
+            33: new THREE.MeshLambertMaterial({ map: texAndesite }), // Andesite
+            34: [new THREE.MeshLambertMaterial({ map: texDeepslate }), new THREE.MeshLambertMaterial({ map: texDeepslate }), new THREE.MeshLambertMaterial({ map: texDeepslateTopo }), new THREE.MeshLambertMaterial({ map: texDeepslateTopo }), new THREE.MeshLambertMaterial({ map: texDeepslate }), new THREE.MeshLambertMaterial({ map: texDeepslate })], // Deepslate
+            35: new THREE.MeshLambertMaterial({ map: texCopperOre }) // Copper ore
         };
 
         // Geometria especial para água
@@ -2583,7 +2599,12 @@
             Ferro: `url('java/textures/block/iron_ore.png')`,
             Ouro: `url('java/textures/block/gold_ore.png')`,
             Diamante: `url('java/textures/block/diamond_ore.png')`,
-            Pedregulho: `url('java/textures/block/cobblestone.png')`
+            Pedregulho: `url('java/textures/block/cobblestone.png')`,
+            Granito: `url('java/textures/block/granite.png')`,
+            Diorito: `url('java/textures/block/diorite.png')`,
+            Andesito: `url('java/textures/block/andesite.png')`,
+            Ardosia: `url('java/textures/block/deepslate.png')`,
+            Cobre: `url('java/textures/block/copper_ore.png')`
         });
         callRenderUI();
 
@@ -2791,7 +2812,12 @@
             27: new THREE.MeshBasicMaterial({ color: 0xff4400 }),    // Lava
             28: new THREE.MeshLambertMaterial({ color: 0x333333 }), // Bedrock
             29: new THREE.MeshLambertMaterial({ color: 0x4a3020 }), // Spruce log
-            30: new THREE.MeshLambertMaterial({ color: 0x2d5a20 })  // Spruce leaves
+            30: new THREE.MeshLambertMaterial({ color: 0x2d5a20 }),  // Spruce leaves
+            31: new THREE.MeshLambertMaterial({ color: 0x9a6c5b }), // Granite
+            32: new THREE.MeshLambertMaterial({ color: 0xd0d0d0 }), // Diorite
+            33: new THREE.MeshLambertMaterial({ color: 0x8a8a8a }), // Andesite
+            34: new THREE.MeshLambertMaterial({ color: 0x4a4a4a }), // Deepslate
+            35: new THREE.MeshLambertMaterial({ color: 0xc87850 })  // Copper ore
         };
 
         // Fila de chunks para gerar progressivamente (evita travar)
@@ -3315,7 +3341,12 @@
                 { id: 'carne_vaca_assada', nome: 'Bife' },
                 { id: 'carne_porco_assada', nome: 'Porco Assado' },
                 { id: 'frango_assado', nome: 'Frango Assado' },
-                { id: 'carneirinho_assado', nome: 'Mutton Assado' }
+                { id: 'carneirinho_assado', nome: 'Mutton Assado' },
+                { id: 31, nome: 'Granito' },
+                { id: 32, nome: 'Diorito' },
+                { id: 33, nome: 'Andesito' },
+                { id: 34, nome: 'Ardosia' },
+                { id: 35, nome: 'Min.Cobre' }
             ];
             
             allItems.forEach(item => {
@@ -3935,7 +3966,7 @@
                         const def = uiBuilder.itemDefs[slotAtivo.id] || { type: "unknown" };
                         if (def.type === "tool") {
                             const toolId = slotAtivo.id;
-                            const blocosPicareta = [3, 10, 11, 12, 13, 14, 24, 28]; // Pedra, Ores, Pedregulho, Sandstone, Bedrock
+                            const blocosPicareta = [3, 10, 11, 12, 13, 14, 24, 28, 31, 32, 33, 34, 35]; // Pedra, Ores, Pedregulho, Sandstone, Bedrock, Granite, Diorite, Andesite, Deepslate, Copper Ore
                             const blocosMachado = [4, 5, 8, 16, 17, 29, 30]; // Madeira, Folhas, Tábua, Logs, Spruce
                             const blocosPa = [1, 2, 7, 25, 26]; // Grama, Terra, Areia, Snow, Gravel
 
@@ -4033,7 +4064,7 @@
                             }
                             soundManager.playSound('pop', { blockType: tipoBlocoQuebrando });
                             // XP por blocos quebrados (pedra dá mais XP)
-                            const xpPorBloco = { 3: 2, 7: 1, 10: 4, 11: 6, 12: 10, 13: 20, 14: 2 }; // Minérios dão mais XP
+                            const xpPorBloco = { 3: 2, 7: 1, 10: 4, 11: 6, 12: 10, 13: 20, 14: 2, 31: 2, 32: 2, 33: 2, 34: 3, 35: 8 }; // Minérios dão mais XP
                             ganharXP(xpPorBloco[tipoBlocoQuebrando] || 1);
 
                             recriarChunkVisual(x, z);

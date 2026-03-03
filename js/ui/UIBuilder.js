@@ -108,6 +108,11 @@ export class UIBuilder {
         this.itemDefs[12].svgBase = matList.Ouro;
         this.itemDefs[13].svgBase = matList.Diamante;
         this.itemDefs[14].svgBase = matList.Pedregulho;
+        if (this.itemDefs[31]) this.itemDefs[31].svgBase = matList.Granito;
+        if (this.itemDefs[32]) this.itemDefs[32].svgBase = matList.Diorito;
+        if (this.itemDefs[33]) this.itemDefs[33].svgBase = matList.Andesito;
+        if (this.itemDefs[34]) this.itemDefs[34].svgBase = matList.Ardosia;
+        if (this.itemDefs[35]) this.itemDefs[35].svgBase = matList.Cobre;
     }
 
     // Busca primeiro slot que tenha o mesmo item e não esteja cheio. Depois busca slot vazio.
