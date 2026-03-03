@@ -19,6 +19,7 @@ export class WorldGenerator {
         this.seedX = Math.random() * 10000;
         this.seedZ = Math.random() * 10000;
 
+        this.heightMap = new Map(); // Armazena a altura máxima (Y) para cada x,z
         this.materiais = {};
         this.animais = [];
         this.geometriaBloco = new THREE.BoxGeometry(1, 1, 1);
@@ -35,14 +36,25 @@ export class WorldGenerator {
     gerarArvore(x, y, z) {
         const altura = Math.floor(Math.random() * 3) + 4;
         for (let i = 0; i < altura; i++) {
-            if (!this.mundo.has(`${x},${y + i},${z}`)) this.mundo.set(`${x},${y + i},${z}`, 4);
+            if (!this.mundo.has(`${x},${y + i},${z}`)) {
+                this.mundo.set(`${x},${y + i},${z}`, 4);
+                // Update heightmap
+                const hKey = `${x},${z}`;
+                const cm = this.heightMap.get(hKey);
+                if (cm === undefined || (y + i) > cm) this.heightMap.set(hKey, y + i);
+            }
         }
         for (let fx = -2; fx <= 2; fx++) {
             for (let fz = -2; fz <= 2; fz++) {
                 for (let fy = altura - 2; fy <= altura + 1; fy++) {
                     const dist = Math.abs(fx) + Math.abs(fy - altura) + Math.abs(fz);
-                    if (dist < 4 && !this.mundo.has(`${x + fx},${y + fy},${z + fz}`)) {
-                        this.mundo.set(`${x + fx},${y + fy},${z + fz}`, 5);
+                    const tx = x + fx; const ty = y + fy; const tz = z + fz;
+                    if (dist < 4 && !this.mundo.has(`${tx},${ty},${tz}`)) {
+                        this.mundo.set(`${tx},${ty},${tz}`, 5);
+                        // Update heightmap
+                        const hKey = `${tx},${tz}`;
+                        const cm = this.heightMap.get(hKey);
+                        if (cm === undefined || ty > cm) this.heightMap.set(hKey, ty);
                     }
                 }
             }
@@ -97,6 +109,13 @@ export class WorldGenerator {
                     // Se preencher um buraco e não tiver nada pode colocar água se for nivel baixo
                     if (!this.mundo.has(`${x},${y},${z}`)) {
                         this.mundo.set(`${x},${y},${z}`, tipo);
+                        
+                        // Atualiza heightmap (considerando apenas a geração inicial por enquanto)
+                        const hKey = `${x},${z}`;
+                        const currentMax = this.heightMap.get(hKey);
+                        if (currentMax === undefined || y > currentMax) {
+                            this.heightMap.set(hKey, y);
+                        }
                     }
                 }
                 
@@ -167,13 +186,80 @@ export class WorldGenerator {
         for (let tipo in blocosChunk) {
             const pos = blocosChunk[tipo];
             if (pos.length === 0) continue;
-            const mat = this.materiais[tipo] || this.materiais[3]; // Fallback para pedra
+            const mat = this.materiais[tipo] || this.materiais[3];
+
+            // Special handling for water (only top plane)
+            // Lógica de iluminação Voxel (Sunlight simples)
+            if (tipo == 6) {
+                const waterGeo = new THREE.PlaneGeometry(1, 1); 
+                waterGeo.rotateX(-Math.PI / 2); // horizontal
+                const waterMesh = new THREE.InstancedMesh(waterGeo, mat instanceof Array ? mat[2] : mat, pos.length);
+                const matriz = new THREE.Matrix4();
+                
+                const c = new THREE.Color();
+                
+                pos.forEach((p, index) => {
+                    matriz.setPosition(p.x, p.y + 0.45, p.z);
+                    waterMesh.setMatrixAt(index, matriz);
+                    
+                    // Water light logic: 
+                    const hKey = `${p.x},${p.z}`;
+                    const maxY = this.heightMap.get(hKey);
+                    let light = 1.0;
+                    if (maxY !== undefined && maxY > p.y) {
+                         light = 0.4;
+                    }
+                    c.setScalar(light);
+                    waterMesh.setColorAt(index, c);
+                });
+                
+                waterMesh.instanceColor.needsUpdate = true;
+                waterMesh.castShadow = false;
+                waterMesh.receiveShadow = true;
+                grupo.add(waterMesh);
+                continue;
+            }
+
             const instancedMesh = new THREE.InstancedMesh(this.geometriaBloco, mat, pos.length);
             const matriz = new THREE.Matrix4();
+            const c = new THREE.Color();
+            
             pos.forEach((p, index) => {
                 matriz.setPosition(p.x, p.y, p.z);
                 instancedMesh.setMatrixAt(index, matriz);
+                
+                // Calcular luz Baseada em Coluna (SkyLight Vertical)
+                const hKey = `${p.x},${p.z}`;
+                const maxY = this.heightMap.get(hKey);
+                
+                let light = 1.0; // Sun default
+                
+                if (maxY !== undefined && p.y < maxY) {
+                     // Bloco está abaixo do topo -> Sombra
+                     // Verificar se algum lado está exposto ao sol
+                     let exposed = false;
+                     // Vizinhos laterais
+                     const neighbors = [
+                        [p.x+1, p.z], [p.x-1, p.z], [p.x, p.z+1], [p.x, p.z-1]
+                     ];
+                     
+                     for(let n of neighbors) {
+                         const nH = this.heightMap.get(`${n[0]},${n[1]}`);
+                         // Se a coluna vizinha é mais baixa que o bloco atual, então a lateral recebe sol
+                         if (nH === undefined || nH <= p.y) {
+                             exposed = true; 
+                             break;
+                         }
+                     }
+                     // Penumbra (perto da entrada) vs Caverna profunda
+                     // Como não temos FloodFill ainda, usamos 0.6 para exposto lateralmente e 0.15 para coberto total
+                     light = exposed ? 0.6 : 0.15; 
+                }
+                
+                c.setScalar(light);
+                instancedMesh.setColorAt(index, c);
             });
+            instancedMesh.instanceColor.needsUpdate = true;
             instancedMesh.castShadow = true;
             instancedMesh.receiveShadow = true;
             grupo.add(instancedMesh);

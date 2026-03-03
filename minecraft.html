@@ -1568,6 +1568,9 @@
         renderizador.shadowMap.enabled = true;
         renderizador.shadowMap.type = THREE.PCFSoftShadowMap;
         renderizador.autoClear = false; // Multi-pass para HUD
+        renderizador.toneMapping = THREE.ACESFilmicToneMapping;
+        renderizador.toneMappingExposure = 1.0;
+        renderizador.outputColorSpace = THREE.SRGBColorSpace;
         document.body.appendChild(renderizador.domElement);
 
         const controles = new PointerLockControls(camera, document.body);
@@ -2382,13 +2385,60 @@
         // Set de blocos que são plantas (transparentes, sem colisão, formato X)
         const PLANT_IDS = new Set([18, 19, 20, 21]);
 
+        // Material de Água Animado (Shaders)
+        const matAgua = new THREE.MeshLambertMaterial({ map: texAgua, color: 0x3f76e4, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide });
+        matAgua.onBeforeCompile = function (shader) {
+            shader.uniforms.uTime = { value: 0 };
+            matAgua.userData.shader = shader; // salta referência pro loop
+
+            shader.vertexShader = `
+                uniform float uTime;
+                varying vec3 vWorldPos;
+                ` + shader.vertexShader;
+            
+            // Adiciona ondulações usando Y
+            shader.vertexShader = shader.vertexShader.replace(
+                `#include <begin_vertex>`,
+                `
+                vec3 transformed = vec3( position );
+                vec4 worldPositionA = instanceMatrix * vec4(position, 1.0);
+                
+                // Ondas baseadas somente no topo do bloco de água
+                if(position.y > 0.4) {
+                    float wave = sin(worldPositionA.x * 2.5 + uTime * 3.0) * 0.08 + 
+                                 cos(worldPositionA.z * 2.5 + uTime * 2.0) * 0.08;
+                    transformed.y += wave;
+                }
+                vWorldPos = worldPositionA.xyz;
+                `
+            );
+
+            shader.fragmentShader = `
+                uniform float uTime;
+                varying vec3 vWorldPos;
+                ` + shader.fragmentShader;
+            
+            // Movimenta a textura da água suavemente e calcula um UV mundi
+            shader.fragmentShader = shader.fragmentShader.replace(
+                `#include <map_fragment>`,
+                `
+                vec2 uvOffset = vec2(
+                    mod(vWorldPos.x + uTime * 0.2, 1.0), 
+                    mod(vWorldPos.z + uTime * 0.2, 1.0)
+                );
+                vec4 texelColor = texture2D(map, uvOffset);
+                diffuseColor *= texelColor;
+                `
+            );
+        };
+
         const materiais = {
             1: [matGramaLado, matGramaLado, matGramaTopo, matTerra, matGramaLado, matGramaLado],
             2: matTerra,
             3: new THREE.MeshLambertMaterial({ map: texPedra }),
             4: [matMadeira, matMadeira, matMadeiraTopo, matMadeiraTopo, matMadeira, matMadeira],
             5: new THREE.MeshLambertMaterial({ map: texFolhas, transparent: true, alphaTest: 0.5, color: 0x48b518 }),
-            6: new THREE.MeshLambertMaterial({ map: texAgua, color: 0x3f76e4, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }),
+            6: matAgua,
             7: new THREE.MeshLambertMaterial({ map: texAreia }),
             8: new THREE.MeshLambertMaterial({ map: texTabua }),
             9: [matBancadaLado, matBancadaLado, matBancadaTopo, matTabua, matBancadaFrente, matBancadaFrente],
@@ -4129,6 +4179,10 @@
                     `Chunks: ${chunksVisuais.size}<br>` +
                     `Seed: ${worldGenV2.seed}<br>` +
                     `[F3] toggle`;
+            }
+
+            if (matAgua.userData && matAgua.userData.shader) {
+                matAgua.userData.shader.uniforms.uTime.value = relogio.getElapsedTime();
             }
 
             renderizador.clear();
