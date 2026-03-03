@@ -9,11 +9,12 @@ const BLOCK_SAND = 7;
 const MAX_TERRAIN_BLOCK_ID = 7; // block IDs <= 7 are natural terrain
 
 export class VillageGenerator {
-    constructor(noise, seedX, seedZ) {
+    constructor(noise, seedX, seedZ, worldGen) {
         this.noise = noise;
         this.seedX = seedX;
         this.seedZ = seedZ;
-        this.CELL_SIZE = 48; // chunks per cell (768 blocks)
+        this.worldGen = worldGen || null;
+        this.CELL_SIZE = 24; // chunks per cell (384 blocks)
         this.VILLAGE_RADIUS = 40;
         this.generatedVillages = new Map();
     }
@@ -65,7 +66,7 @@ export class VillageGenerator {
         const offsetZ = this._seededRandom(cellX, cellZ, 259.0);
 
         // Village center in world coordinates (keep away from cell edges)
-        const margin = 8; // chunks margin from cell edge
+        const margin = 4; // chunks margin from cell edge
         const rangeChunks = this.CELL_SIZE - margin * 2;
         const villageCX = cellX * this.CELL_SIZE + margin + Math.floor(offsetX * rangeChunks);
         const villageCZ = cellZ * this.CELL_SIZE + margin + Math.floor(offsetZ * rangeChunks);
@@ -73,9 +74,9 @@ export class VillageGenerator {
         const centerX = villageCX * 16 + 8;
         const centerZ = villageCZ * 16 + 8;
 
-        // Determine if this cell actually has a village (~60% spawn rate per cell)
+        // Determine if this cell actually has a village (~85% spawn rate per cell)
         const spawnChance = this._seededRandom(cellX, cellZ, 419.0);
-        if (spawnChance > 0.6) {
+        if (spawnChance > 0.85) {
             this.generatedVillages.set(key, null);
             return null;
         }
@@ -86,6 +87,10 @@ export class VillageGenerator {
         }
 
         const biome = this.getBiomeAt(centerX, centerZ);
+        if (!biome) {
+            this.generatedVillages.set(key, null);
+            return null;
+        }
         const radius = this.VILLAGE_RADIUS;
 
         const village = { centerX, centerZ, biome, radius };
@@ -94,6 +99,14 @@ export class VillageGenerator {
     }
 
     getBiomeAt(x, z) {
+        if (this.worldGen) {
+            const biome = this.worldGen.getBiomeAt(x, z);
+            // Map WorldGeneratorV2 biome names to village biome variants
+            if (biome === 'forest') return 'plains';
+            if (biome === 'mountains') return 'plains';
+            if (biome === 'ocean' || biome === 'beach') return null;
+            return biome;
+        }
         const tempNoise = this.noise.noise(
             x / 300 + this.seedX + 1000,
             0,
@@ -128,6 +141,9 @@ export class VillageGenerator {
     }
 
     getTerrainHeight(x, z) {
+        if (this.worldGen) {
+            return this.worldGen.getHeightAt(x, z);
+        }
         let alt = 0;
         alt += this.noise.noise(x / 100 + this.seedX, 0, z / 100 + this.seedZ) * 20;
         alt += this.noise.noise(x / 40 + this.seedX, 0, z / 40 + this.seedZ) * 8;
@@ -137,7 +153,8 @@ export class VillageGenerator {
 
     isValidVillageLocation(x, z) {
         const height = this.getTerrainHeight(x, z);
-        if (height <= 0) return false;
+        const minHeight = this.worldGen ? this.worldGen.seaLevel + 1 : 1;
+        if (height < minHeight) return false;
 
         // Check terrain slope across the village area
         const sampleDist = 16;
@@ -147,8 +164,8 @@ export class VillageGenerator {
         ];
         for (const [dx, dz] of offsets) {
             const sampleH = this.getTerrainHeight(x + dx, z + dz);
-            if (sampleH <= 0) return false;
-            if (Math.abs(sampleH - height) > 6) return false;
+            if (sampleH < minHeight) return false;
+            if (Math.abs(sampleH - height) > 8) return false;
         }
         return true;
     }

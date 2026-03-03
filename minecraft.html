@@ -2756,7 +2756,7 @@
         });
 
         // 🏘️ VILLAGE GENERATION SYSTEM
-        const villageGenerator = new VillageGenerator(noise, seedX, seedZ);
+        const villageGenerator = new VillageGenerator(noise, seedX, seedZ, worldGenV2);
         const villagerAI = new VillagerAI();
         const golemSystem = new GolemSystem();
         const generatedVillageChunks = new Set();
