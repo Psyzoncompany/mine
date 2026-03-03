@@ -2297,7 +2297,11 @@
 
         // 🌞🌙 CICLO DIA/NOITE (Minecraft-like)
         const DURACAO_DIA_TOTAL = 600; // 600 segundos = 10 minutos para ciclo completo (dia+noite)
-        let tempoMundo = DURACAO_DIA_TOTAL * 0.15; // Começa de manhã
+        const RAIO_ORBITAL = 120; // Distância visual do sol/lua ao jogador
+        // Transição dia/noite: offset e range controlam o quão rápido escurece/clareia
+        const TRANSICAO_OFFSET = 0.2;
+        const TRANSICAO_RANGE = 0.7;
+        let tempoMundo = DURACAO_DIA_TOTAL * 0.15; // Começa de manhã (15% do ciclo)
 
         // Sol visual
         const solGeo = new THREE.SphereGeometry(8, 16, 16);
@@ -2318,17 +2322,16 @@
             // Ângulo do sol: 0=nascer, PI/2=meio-dia, PI=pôr-do-sol, 3PI/2=meia-noite
             const angulo = (tempoMundo / DURACAO_DIA_TOTAL) * Math.PI * 2;
             const altSol = Math.sin(angulo); // -1 a 1 (positivo = dia)
-            const orbitR = 120; // raio orbital
 
             // Posicionar sol e lua
-            const sx = Math.cos(angulo) * orbitR + camera.position.x;
-            const sy = Math.sin(angulo) * orbitR + camera.position.y;
+            const sx = Math.cos(angulo) * RAIO_ORBITAL + camera.position.x;
+            const sy = Math.sin(angulo) * RAIO_ORBITAL + camera.position.y;
             const sz = camera.position.z;
             solMesh.position.set(sx, sy, sz);
             luaMesh.position.set(-sx + 2 * camera.position.x, -sy + 2 * camera.position.y, sz);
 
             // Fator dia: 1 = meio-dia, 0 = meia-noite, transição suave
-            const fatorDia = Math.max(0, Math.min(1, (altSol + 0.2) / 0.7));
+            const fatorDia = Math.max(0, Math.min(1, (altSol + TRANSICAO_OFFSET) / TRANSICAO_RANGE));
 
             // Cores do céu
             const corDia = new THREE.Color(0x78A7FF);
