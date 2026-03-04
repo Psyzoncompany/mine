@@ -1481,7 +1481,7 @@
             <p><b>Pá (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
             <p><b>Fornalha:</b> 8 Pedregulhos ou Pedras (quadrado 3x3 com centro vazio)</p>
             <p><b>Bloco de Carvão:</b> 9 Carvões (3x3)</p>
-            <p><b>Tesoura:</b> 2 Barras de Ferro (diagonal)</p>
+            <p><b>Tesoura:</b> 2 Barras de Ferro (diagonal ou vertical)</p>
             <p><b>Dica:</b> Use a Tesoura (bot. dir.) em Ovelhas para tosar e obter Lã!</p>
             <p><b>Dica:</b> Interaja (Clique Dir) com a Bancada para grades 3x3!</p>
         </div>
@@ -2121,6 +2121,13 @@
                 uiBuilder.craftOutput = { id: "machado_diamante", count: 1 }; return;
             }
 
+            // 🐑 Tesoura (2 Barras de Ferro — diagonal ou vertical)
+            if (checkPattern(matrix, 2, 2, [[0, "barra_ferro"], ["barra_ferro", 0]]) ||
+                checkPattern(matrix, 2, 2, [["barra_ferro", 0], [0, "barra_ferro"]]) ||
+                checkPattern(matrix, 1, 2, [["barra_ferro"], ["barra_ferro"]])) {
+                uiBuilder.craftOutput = { id: "tesoura", count: 1 }; return;
+            }
+
             // --- RECEITAS DE SISTEMA NOVO ---
             // Fornalha (22) - 8 Pedregulhos ou Pedras (3 ou 14) num quadrado com centro vazio
             if (checkPattern(matrix, 3, 3, [[P, P, P], [P, 0, P], [P, P, P]]) || checkPattern(matrix, 3, 3, [[14, 14, 14], [14, 0, 14], [14, 14, 14]])) {
@@ -2135,14 +2142,6 @@
             // Desfazer Bloco de Carvão (23 -> 9 Carvão)
             if (checkPattern(matrix, 1, 1, [[23]])) {
                 uiBuilder.craftOutput = { id: "carvao", count: 9 }; return;
-            }
-
-            // 🐑 Tesoura (2 Barras de Ferro na diagonal)
-            if (checkPattern(matrix, 2, 2, [[0, "barra_ferro"], ["barra_ferro", 0]])) {
-                uiBuilder.craftOutput = { id: "tesoura", count: 1 }; return;
-            }
-            if (checkPattern(matrix, 2, 2, [["barra_ferro", 0], [0, "barra_ferro"]])) {
-                uiBuilder.craftOutput = { id: "tesoura", count: 1 }; return;
             }
         }
 

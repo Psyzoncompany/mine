@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meucraft-v1';
+const CACHE_NAME = 'meucraft-v2';
 
 const ESSENTIAL_ASSETS = [
   '/',
