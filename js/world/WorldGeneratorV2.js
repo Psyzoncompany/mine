@@ -629,7 +629,7 @@ export class WorldGeneratorV2 {
                             const below = mundo.get(`${wx},${y - 1},${wz}`);
                             if (below && below !== BLOCK.AIR && below !== BLOCK.WATER && below !== BLOCK.LAVA) {
                                 const puddleRoll = hash3D(wx, y, wz, this.seed + 999);
-                                if (puddleRoll < 0.008) { // ~0.8% chance for small puddle
+                                if (puddleRoll < 0.008) { // 0.8% chance for small puddle
                                     mundo.set(key, BLOCK.WATER);
                                 }
                             }
