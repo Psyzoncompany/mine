@@ -33,7 +33,7 @@ const BLOCK = Object.freeze({
 });
 
 const CHUNK_SIZE = 16;
-const Y_MIN = -15;
+const Y_MIN = -64;
 const Y_MAX = 50;
 
 // ─── Biome identifiers ──────────────────────────────────────────────
@@ -408,8 +408,8 @@ export class WorldGeneratorV2 {
      * @private
      */
     _stoneVariant(wx, y, wz) {
-        // Deepslate in deep areas
-        if (y <= -5) return BLOCK.DEEPSLATE;
+        // Deepslate in deep areas (below Y=0, like Minecraft)
+        if (y <= 0) return BLOCK.DEEPSLATE;
 
         const n = this.noise;
         // Granite patches
@@ -616,16 +616,23 @@ export class WorldGeneratorV2 {
                 }
             }
 
-            // Aquifer filling in caves
+            // Aquifer filling in caves – only lava in deep areas
+            // Small puddles in caves (very rare, single-block)
             if (this.enableAquifers) {
-                const localWater = this._aquiferLevel(wx, wz);
                 for (let y = Y_MIN + 1; y <= Math.min(height, Y_MAX); y++) {
                     const key = `${wx},${y},${wz}`;
                     if (!mundo.has(key)) { // air pocket (cave)
-                        if (y < -12) {
+                        if (y < -50) {
                             mundo.set(key, BLOCK.LAVA);
-                        } else if (y <= localWater && y < -4) {
-                            mundo.set(key, BLOCK.WATER);
+                        } else {
+                            // Small puddles only: rare single-block water on cave floor
+                            const below = mundo.get(`${wx},${y - 1},${wz}`);
+                            if (below && below !== BLOCK.AIR && below !== BLOCK.WATER && below !== BLOCK.LAVA) {
+                                const puddleRoll = hash3D(wx, y, wz, this.seed + 999);
+                                if (puddleRoll < 0.008) { // 0.8% chance for small puddle
+                                    mundo.set(key, BLOCK.WATER);
+                                }
+                            }
                         }
                     }
                 }

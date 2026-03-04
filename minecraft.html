@@ -1669,10 +1669,12 @@
             33: { id: 33, nome: "Andesito", svgBase: urlTransparente, type: "block" },
             34: { id: 34, nome: "Ardosia", svgBase: urlTransparente, type: "block" },
             35: { id: 35, nome: "Min.Cobre", svgBase: urlTransparente, type: "block" },
+            25: { id: 25, nome: "Neve", svgBase: "url('java/textures/block/snow.png')", type: "block" },
             "pa": { id: "pa", nome: "Pá", svgBase: svgPa, type: "tool" },
             "pa_pedra": { id: "pa_pedra", nome: "Pá Pd", svgBase: "url('java/textures/item/stone_shovel.png')", type: "tool" },
             "pa_ferro": { id: "pa_ferro", nome: "Pá Fe", svgBase: "url('java/textures/item/iron_shovel.png')", type: "tool" },
-            "pa_diamante": { id: "pa_diamante", nome: "Pá Di", svgBase: "url('java/textures/item/diamond_shovel.png')", type: "tool" }
+            "pa_diamante": { id: "pa_diamante", nome: "Pá Di", svgBase: "url('java/textures/item/diamond_shovel.png')", type: "tool" },
+            "tesoura": { id: "tesoura", nome: "Tesoura", svgBase: "url('java/textures/item/shears.png')", type: "tool" }
         };
 
         // Instanciação movida para o topo.
@@ -2887,7 +2889,7 @@
             if (distChunk <= DISTANCIA_MOB && Math.random() < 0.4) {
                 const ax = cx * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
                 const az = cz * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
-                for (let y = 55; y >= -15; y--) {
+                for (let y = 55; y >= -64; y--) {
                     const tipo = mundo.get(`${ax},${y},${az}`);
                     if (tipo && tipo !== 5 && tipo !== 6 && tipo !== 30) {
                         // Verifica se acima do bloco sólido tem água - não spawnar em rio/lago
@@ -3004,7 +3006,7 @@
             for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
                 for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
                     const x = cx * TAMANHO_CHUNK + lx; const z = cz * TAMANHO_CHUNK + lz;
-                    for (let y = -15; y < yMax; y++) {
+                    for (let y = -64; y < yMax; y++) {
                         const tipo = mundo.get(`${x},${y},${z}`);
                         if (tipo) {
                             if (!blocoExposto(x, y, z, tipo)) continue;
@@ -3067,9 +3069,9 @@
                 document.getElementById('loading').innerText = "Carregando área...";
                 chunkAtualX = px; chunkAtualZ = pz;
 
-                // Gera dados de todos os chunks
-                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
-                    for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
+                // Gera dados de todos os chunks (+1 buffer para vizinhos de borda / cavernas pré-renderizadas)
+                for (let cx = px - DISTANCIA_RENDER - 1; cx <= px + DISTANCIA_RENDER + 1; cx++) {
+                    for (let cz = pz - DISTANCIA_RENDER - 1; cz <= pz + DISTANCIA_RENDER + 1; cz++) {
                         gerarDadosChunk(cx, cz);
                     }
                 }
@@ -3079,9 +3081,16 @@
                 for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
                     for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
                         const id = obterIdChunk(cx, cz);
+                        const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
                         if (!chunksVisuais.has(id)) {
-                            const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
                             chunkFilaPendente.push({ cx, cz, dist });
+                        } else {
+                            // Rebuild LOD chunks that are now within detail range
+                            const grupo = chunksVisuais.get(id);
+                            if (grupo.userData.isLOD && dist <= DISTANCIA_DETALHE) {
+                                cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
+                                chunkFilaPendente.push({ cx, cz, dist });
+                            }
                         }
                     }
                 }
@@ -3104,9 +3113,11 @@
                 });
 
                 if (!window.playerSpawned && chunksVisuais.size > 0) {
-                    for (let y = 55; y >= -15; y--) {
+                    // Blocos de chão válidos para spawn (não árvores, água, lava ou plantas)
+                    const GROUND_BLOCKS = new Set([1, 2, 3, 7, 24, 25, 26, 28, 31, 32, 33, 34]); // Grama, Terra, Pedra, Areia, Sandstone, Neve, Gravel, Bedrock, Granite, Diorite, Andesite, Deepslate
+                    for (let y = 55; y >= -64; y--) {
                         const tipo = mundo.get(`0,${y},0`);
-                        if (tipo && tipo !== 6 && tipo !== 27) { // Não spawna na água nem lava
+                        if (tipo && GROUND_BLOCKS.has(tipo)) { // Só spawna em blocos de chão sólidos
                             camera.position.set(0, y + 2.12, 0);
                             window.playerSpawned = true;
                             velocidadeY = 0;
@@ -3333,6 +3344,7 @@
                 { id: 'pa_pedra', nome: 'Pá Pedra' },
                 { id: 'pa_ferro', nome: 'Pá Ferro' },
                 { id: 'pa_diamante', nome: 'Pá Diamante' },
+                { id: 'tesoura', nome: 'Tesoura' },
                 { id: 22, nome: 'Fornalha' },
                 { id: 23, nome: 'Bloco Carvão' },
                 { id: 'carvao', nome: 'Carvão' },
@@ -3346,7 +3358,8 @@
                 { id: 32, nome: 'Diorito' },
                 { id: 33, nome: 'Andesito' },
                 { id: 34, nome: 'Ardosia' },
-                { id: 35, nome: 'Min.Cobre' }
+                { id: 35, nome: 'Min.Cobre' },
+                { id: 25, nome: 'Neve' }
             ];
             
             allItems.forEach(item => {
@@ -4054,12 +4067,17 @@
                             agendarUpdateFluido(x, y, z-1);
 
                             // Logs rotados (16, 17) dropam como madeira normal (4)
-                            // Grama curta (18) não dropa nada; Folhas (5, 30) não dropam nada; Bedrock (28) não dropa
+                            // Grama curta (18), flores (19,20,21), Folhas (5, 30) só dropam com tesoura; Bedrock (28) não dropa
                             let tipoDropar = (tipoBlocoQuebrando === 16 || tipoBlocoQuebrando === 17) ? 4 : tipoBlocoQuebrando;
                             if (tipoBlocoQuebrando === 29) tipoDropar = 29; // Spruce log dropa como si mesmo
                             if (tipoBlocoQuebrando === 10) tipoDropar = "carvao"; // Minério de Carvão dropa Carvão (item)
                             
-                            if (tipoBlocoQuebrando !== 18 && tipoBlocoQuebrando !== 28 && tipoBlocoQuebrando !== 30) {
+                            // Blocos que só dropam com tesoura (grama, flores, folhas)
+                            const SHEAR_ONLY_BLOCKS = new Set([5, 18, 19, 20, 21, 30]);
+                            const holdingShears = slotAtivo && slotAtivo.id === 'tesoura';
+                            const isShearBlock = SHEAR_ONLY_BLOCKS.has(tipoBlocoQuebrando);
+                            
+                            if (tipoBlocoQuebrando !== 28 && !(isShearBlock && !holdingShears)) {
                                 droparItem(x, y, z, tipoDropar);
                             }
                             soundManager.playSound('pop', { blockType: tipoBlocoQuebrando });
@@ -4138,7 +4156,12 @@
                         if (checarColisao(camera.position.x, posAntiga.y, posAntiga.z)) {
                             camera.position.x = posAntiga.x;
                             if (naAgua && (teclas.space || moveX !== 0 || moveZ !== 0)) {
-                                velocidadeY = 0.12;
+                                // Na água pode subir até 2 blocos na frente
+                                if (!checarColisao(camera.position.x + velX, posAntiga.y + 2.1, posAntiga.z)) {
+                                    velocidadeY = 0.25; camera.position.y += 0.15; noChao = false;
+                                } else {
+                                    velocidadeY = 0.12;
+                                }
                             } else if (noChao && !checarColisao(camera.position.x + velX, posAntiga.y + 1.1, posAntiga.z)) {
                                 velocidadeY = 0.2; camera.position.y += 0.1; noChao = false;
                             }
@@ -4161,7 +4184,12 @@
                         if (checarColisao(camera.position.x, posAntiga.y, camera.position.z)) {
                             camera.position.z = posAntiga.z;
                             if (naAgua && (teclas.space || moveX !== 0 || moveZ !== 0)) {
-                                velocidadeY = 0.12;
+                                // Na água pode subir até 2 blocos na frente
+                                if (!checarColisao(camera.position.x, posAntiga.y + 2.1, posAntiga.z + velZ)) {
+                                    velocidadeY = 0.25; camera.position.y += 0.15; noChao = false;
+                                } else {
+                                    velocidadeY = 0.12;
+                                }
                             } else if (noChao && !checarColisao(camera.position.x, posAntiga.y + 1.1, posAntiga.z + velZ)) {
                                 velocidadeY = 0.2; camera.position.y += 0.1; noChao = false;
                             }

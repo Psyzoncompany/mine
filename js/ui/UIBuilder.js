@@ -28,6 +28,7 @@ export class UIBuilder {
             12: { id: 12, nome: "Min.Ouro", svgBase: this.urlTransparente, type: "block" },
             13: { id: 13, nome: "Min.Diamante", svgBase: this.urlTransparente, type: "block" },
             14: { id: 14, nome: "Pedregulho", svgBase: this.urlTransparente, type: "block" },
+            25: { id: 25, nome: "Neve", svgBase: "url('java/textures/block/snow.png')", type: "block" },
             15: { id: 15, nome: "Grav.", svgBase: this.svgGraveto, type: "item" }, // Graveto
             18: { id: 18, nome: "Grama C.", svgBase: "url('java/textures/block/short_grass.png')", type: "item" },
             19: { id: 19, nome: "Papoula", svgBase: "url('java/textures/block/poppy.png')", type: "item" },
@@ -45,6 +46,7 @@ export class UIBuilder {
             "pa_pedra": { id: "pa_pedra", nome: "Pá Pd", svgBase: "url('java/textures/item/stone_shovel.png')", type: "tool" },
             "pa_ferro": { id: "pa_ferro", nome: "Pá Fe", svgBase: "url('java/textures/item/iron_shovel.png')", type: "tool" },
             "pa_diamante": { id: "pa_diamante", nome: "Pá Di", svgBase: "url('java/textures/item/diamond_shovel.png')", type: "tool" },
+            "tesoura": { id: "tesoura", nome: "Tesoura", svgBase: "url('java/textures/item/shears.png')", type: "tool" },
             
             // Novos Itens (Fornalha e Comida)
             22: { id: 22, nome: "Fornalha", svgBase: "url('java/textures/block/furnace_front.png')", type: "block" },
