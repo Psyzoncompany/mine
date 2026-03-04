@@ -33,12 +33,16 @@ export class MiningSystem {
         15: 0.1,  // short grass (instant)
         22: 1.4,  // furnace
         30: 0.1,  // flower
-        31: 0.1,  // dandelion
+        31: 1.4,  // granite
+        32: 1.4,  // diorite
+        33: 1.4,  // andesite
+        34: 2.0,  // deepslate
+        35: 2.0,  // copper ore
     };
 
     // Tool speed multipliers: { toolCategory: { blockType: multiplier } }
     static TOOL_SPEED = {
-        pickaxe: { 3: 3, 10: 3, 11: 4, 12: 4, 13: 5, 22: 3 },
+        pickaxe: { 3: 3, 10: 3, 11: 4, 12: 4, 13: 5, 22: 3, 31: 3, 32: 3, 33: 3, 34: 4, 35: 4 },
         axe: { 4: 3, 5: 3, 9: 3, 14: 3 },
         shovel: { 1: 3, 2: 3, 7: 3 }
     };

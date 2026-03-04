@@ -25,6 +25,11 @@ const BLOCK = Object.freeze({
     BEDROCK:      28,
     SPRUCE_LOG:   29,
     SPRUCE_LEAVES:30,
+    GRANITE:      31,
+    DIORITE:      32,
+    ANDESITE:     33,
+    DEEPSLATE:    34,
+    COPPER_ORE:   35,
 });
 
 const CHUNK_SIZE = 16;
@@ -356,7 +361,7 @@ export class WorldGeneratorV2 {
     _aquiferLevel(wx, wz) {
         const n = this.noise;
         const o = this._offsets;
-        return this.seaLevel - 5 + n.noise((wx + o.cave1.x) / 80, 0, (wz + o.cave1.z) / 80) * 4 * 2;
+        return this.seaLevel - 12 + n.noise((wx + o.cave1.x) / 80, 0, (wz + o.cave1.z) / 80) * 3;
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -369,10 +374,11 @@ export class WorldGeneratorV2 {
      * (e.g. -5 → terrainHeight - 5).
      */
     static ORE_TABLE = [
-        [BLOCK.COAL_ORE,    Y_MIN,  -5,  0.70,  8],
-        [BLOCK.IRON_ORE,    Y_MIN,  15,  0.72,  7],
-        [BLOCK.GOLD_ORE,    Y_MIN,   0,  0.75,  6],
-        [BLOCK.DIAMOND_ORE, Y_MIN,  -5,  0.78,  5],
+        [BLOCK.COAL_ORE,    Y_MIN,  -3,  0.55,  9],
+        [BLOCK.IRON_ORE,    Y_MIN,  20,  0.60,  8],
+        [BLOCK.COPPER_ORE,  Y_MIN,  25,  0.62,  8],
+        [BLOCK.GOLD_ORE,    Y_MIN,   5,  0.65,  7],
+        [BLOCK.DIAMOND_ORE, Y_MIN,  -3,  0.72,  5],
     ];
 
     /** @private */
@@ -389,6 +395,34 @@ export class WorldGeneratorV2 {
             if (val > threshold) return type;
         }
         return BLOCK.STONE; // unchanged
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Pass 6b – Stone variety (granite, diorite, andesite, deepslate)
+    // ═════════════════════════════════════════════════════════════════
+
+    /**
+     * Returns a stone variant for underground variety patches.
+     * Deepslate replaces stone below Y = -5.
+     * Granite, diorite, andesite appear as scattered patches.
+     * @private
+     */
+    _stoneVariant(wx, y, wz) {
+        // Deepslate in deep areas
+        if (y <= -5) return BLOCK.DEEPSLATE;
+
+        const n = this.noise;
+        // Granite patches
+        const g = Math.abs(fbm3D(n, (wx + this.seedX + 5000) / 16, (y + 5000) / 16, (wz + this.seedZ + 5000) / 16, 2));
+        if (g > 0.55) return BLOCK.GRANITE;
+        // Diorite patches
+        const d = Math.abs(fbm3D(n, (wx + this.seedX + 9000) / 16, (y + 9000) / 16, (wz + this.seedZ + 9000) / 16, 2));
+        if (d > 0.55) return BLOCK.DIORITE;
+        // Andesite patches
+        const a = Math.abs(fbm3D(n, (wx + this.seedX + 13000) / 16, (y + 13000) / 16, (wz + this.seedZ + 13000) / 16, 2));
+        if (a > 0.55) return BLOCK.ANDESITE;
+
+        return BLOCK.STONE;
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -588,9 +622,9 @@ export class WorldGeneratorV2 {
                 for (let y = Y_MIN + 1; y <= Math.min(height, Y_MAX); y++) {
                     const key = `${wx},${y},${wz}`;
                     if (!mundo.has(key)) { // air pocket (cave)
-                        if (y < -10) {
+                        if (y < -12) {
                             mundo.set(key, BLOCK.LAVA);
-                        } else if (y <= localWater) {
+                        } else if (y <= localWater && y < -4) {
                             mundo.set(key, BLOCK.WATER);
                         }
                     }
@@ -610,6 +644,19 @@ export class WorldGeneratorV2 {
                     const ore = this._oreAt(wx, y, wz, height);
                     if (ore !== BLOCK.STONE) mundo.set(key, ore);
                 }
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────
+        // Pass 6b: Stone variety (granite, diorite, andesite, deepslate)
+        // ──────────────────────────────────────────────────────────
+        for (let idx = 0; idx < columns.length; idx++) {
+            const { wx, wz, height } = columns[idx];
+            for (let y = Y_MIN; y <= Math.min(height - 3, Y_MAX); y++) {
+                const key = `${wx},${y},${wz}`;
+                if (mundo.get(key) !== BLOCK.STONE) continue;
+                const variant = this._stoneVariant(wx, y, wz);
+                if (variant !== BLOCK.STONE) mundo.set(key, variant);
             }
         }
 
