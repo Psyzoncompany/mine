@@ -1481,6 +1481,8 @@
             <p><b>Pá (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
             <p><b>Fornalha:</b> 8 Pedregulhos ou Pedras (quadrado 3x3 com centro vazio)</p>
             <p><b>Bloco de Carvão:</b> 9 Carvões (3x3)</p>
+            <p><b>Tesoura:</b> 2 Barras de Ferro (diagonal)</p>
+            <p><b>Dica:</b> Use a Tesoura (bot. dir.) em Ovelhas para tosar e obter Lã!</p>
             <p><b>Dica:</b> Interaja (Clique Dir) com a Bancada para grades 3x3!</p>
         </div>
         <div style="padding:8px 16px 12px; border-top:2px solid #999; flex-shrink:0;">
@@ -2134,6 +2136,14 @@
             if (checkPattern(matrix, 1, 1, [[23]])) {
                 uiBuilder.craftOutput = { id: "carvao", count: 9 }; return;
             }
+
+            // 🐑 Tesoura (2 Barras de Ferro na diagonal)
+            if (checkPattern(matrix, 2, 2, [[0, "barra_ferro"], ["barra_ferro", 0]])) {
+                uiBuilder.craftOutput = { id: "tesoura", count: 1 }; return;
+            }
+            if (checkPattern(matrix, 2, 2, [["barra_ferro", 0], [0, "barra_ferro"]])) {
+                uiBuilder.craftOutput = { id: "tesoura", count: 1 }; return;
+            }
         }
 
         document.addEventListener('mousedown', (e) => {
@@ -2535,6 +2545,24 @@
             );
         };
 
+        // 🐑 Texturas de Lã (16 cores)
+        const texWhiteWool = carregarTextura('java/textures/block/white_wool.png');
+        const texOrangeWool = carregarTextura('java/textures/block/orange_wool.png');
+        const texMagentaWool = carregarTextura('java/textures/block/magenta_wool.png');
+        const texLightBlueWool = carregarTextura('java/textures/block/light_blue_wool.png');
+        const texYellowWool = carregarTextura('java/textures/block/yellow_wool.png');
+        const texLimeWool = carregarTextura('java/textures/block/lime_wool.png');
+        const texPinkWool = carregarTextura('java/textures/block/pink_wool.png');
+        const texGrayWool = carregarTextura('java/textures/block/gray_wool.png');
+        const texLightGrayWool = carregarTextura('java/textures/block/light_gray_wool.png');
+        const texCyanWool = carregarTextura('java/textures/block/cyan_wool.png');
+        const texPurpleWool = carregarTextura('java/textures/block/purple_wool.png');
+        const texBlueWool = carregarTextura('java/textures/block/blue_wool.png');
+        const texBrownWool = carregarTextura('java/textures/block/brown_wool.png');
+        const texGreenWool = carregarTextura('java/textures/block/green_wool.png');
+        const texRedWool = carregarTextura('java/textures/block/red_wool.png');
+        const texBlackWool = carregarTextura('java/textures/block/black_wool.png');
+
         const materiais = {
             1: [matGramaLado, matGramaLado, matGramaTopo, matTerra, matGramaLado, matGramaLado],
             2: matTerra,
@@ -2569,7 +2597,24 @@
             32: new THREE.MeshLambertMaterial({ map: texDiorite }), // Diorite
             33: new THREE.MeshLambertMaterial({ map: texAndesite }), // Andesite
             34: [new THREE.MeshLambertMaterial({ map: texDeepslate }), new THREE.MeshLambertMaterial({ map: texDeepslate }), new THREE.MeshLambertMaterial({ map: texDeepslateTopo }), new THREE.MeshLambertMaterial({ map: texDeepslateTopo }), new THREE.MeshLambertMaterial({ map: texDeepslate }), new THREE.MeshLambertMaterial({ map: texDeepslate })], // Deepslate
-            35: new THREE.MeshLambertMaterial({ map: texCopperOre }) // Copper ore
+            35: new THREE.MeshLambertMaterial({ map: texCopperOre }), // Copper ore
+            // 🐑 Blocos de Lã (16 cores) — IDs 40-55
+            40: new THREE.MeshLambertMaterial({ map: texWhiteWool }),      // Lã Branca
+            41: new THREE.MeshLambertMaterial({ map: texOrangeWool }),     // Lã Laranja
+            42: new THREE.MeshLambertMaterial({ map: texMagentaWool }),    // Lã Magenta
+            43: new THREE.MeshLambertMaterial({ map: texLightBlueWool }), // Lã Azul Claro
+            44: new THREE.MeshLambertMaterial({ map: texYellowWool }),     // Lã Amarela
+            45: new THREE.MeshLambertMaterial({ map: texLimeWool }),       // Lã Lima
+            46: new THREE.MeshLambertMaterial({ map: texPinkWool }),       // Lã Rosa
+            47: new THREE.MeshLambertMaterial({ map: texGrayWool }),       // Lã Cinza
+            48: new THREE.MeshLambertMaterial({ map: texLightGrayWool }), // Lã Cinza Claro
+            49: new THREE.MeshLambertMaterial({ map: texCyanWool }),       // Lã Ciano
+            50: new THREE.MeshLambertMaterial({ map: texPurpleWool }),     // Lã Roxa
+            51: new THREE.MeshLambertMaterial({ map: texBlueWool }),       // Lã Azul
+            52: new THREE.MeshLambertMaterial({ map: texBrownWool }),      // Lã Marrom
+            53: new THREE.MeshLambertMaterial({ map: texGreenWool }),      // Lã Verde
+            54: new THREE.MeshLambertMaterial({ map: texRedWool }),        // Lã Vermelha
+            55: new THREE.MeshLambertMaterial({ map: texBlackWool })       // Lã Preta
         };
 
         // Geometria especial para água
@@ -2606,7 +2651,23 @@
             Diorito: `url('java/textures/block/diorite.png')`,
             Andesito: `url('java/textures/block/andesite.png')`,
             Ardosia: `url('java/textures/block/deepslate.png')`,
-            Cobre: `url('java/textures/block/copper_ore.png')`
+            Cobre: `url('java/textures/block/copper_ore.png')`,
+            LaBranca: `url('java/textures/block/white_wool.png')`,
+            LaLaranja: `url('java/textures/block/orange_wool.png')`,
+            LaMagenta: `url('java/textures/block/magenta_wool.png')`,
+            LaAzulClaro: `url('java/textures/block/light_blue_wool.png')`,
+            LaAmarela: `url('java/textures/block/yellow_wool.png')`,
+            LaLima: `url('java/textures/block/lime_wool.png')`,
+            LaRosa: `url('java/textures/block/pink_wool.png')`,
+            LaCinza: `url('java/textures/block/gray_wool.png')`,
+            LaCinzaClaro: `url('java/textures/block/light_gray_wool.png')`,
+            LaCiano: `url('java/textures/block/cyan_wool.png')`,
+            LaRoxa: `url('java/textures/block/purple_wool.png')`,
+            LaAzul: `url('java/textures/block/blue_wool.png')`,
+            LaMarrom: `url('java/textures/block/brown_wool.png')`,
+            LaVerde: `url('java/textures/block/green_wool.png')`,
+            LaVermelha: `url('java/textures/block/red_wool.png')`,
+            LaPreta: `url('java/textures/block/black_wool.png')`
         });
         callRenderUI();
 
@@ -2819,7 +2880,24 @@
             32: new THREE.MeshLambertMaterial({ color: 0xd0d0d0 }), // Diorite
             33: new THREE.MeshLambertMaterial({ color: 0x8a8a8a }), // Andesite
             34: new THREE.MeshLambertMaterial({ color: 0x4a4a4a }), // Deepslate
-            35: new THREE.MeshLambertMaterial({ color: 0xc87850 })  // Copper ore
+            35: new THREE.MeshLambertMaterial({ color: 0xc87850 }),  // Copper ore
+            // 🐑 Lã LOD (16 cores)
+            40: new THREE.MeshLambertMaterial({ color: 0xe8e8e8 }), // Lã Branca
+            41: new THREE.MeshLambertMaterial({ color: 0xf09020 }), // Lã Laranja
+            42: new THREE.MeshLambertMaterial({ color: 0xc050c0 }), // Lã Magenta
+            43: new THREE.MeshLambertMaterial({ color: 0x6090d0 }), // Lã Azul Claro
+            44: new THREE.MeshLambertMaterial({ color: 0xf0d020 }), // Lã Amarela
+            45: new THREE.MeshLambertMaterial({ color: 0x60c020 }), // Lã Lima
+            46: new THREE.MeshLambertMaterial({ color: 0xf0a0b0 }), // Lã Rosa
+            47: new THREE.MeshLambertMaterial({ color: 0x505050 }), // Lã Cinza
+            48: new THREE.MeshLambertMaterial({ color: 0x989898 }), // Lã Cinza Claro
+            49: new THREE.MeshLambertMaterial({ color: 0x109090 }), // Lã Ciano
+            50: new THREE.MeshLambertMaterial({ color: 0x8020a0 }), // Lã Roxa
+            51: new THREE.MeshLambertMaterial({ color: 0x3050a0 }), // Lã Azul
+            52: new THREE.MeshLambertMaterial({ color: 0x6a4030 }), // Lã Marrom
+            53: new THREE.MeshLambertMaterial({ color: 0x406020 }), // Lã Verde
+            54: new THREE.MeshLambertMaterial({ color: 0xa02020 }), // Lã Vermelha
+            55: new THREE.MeshLambertMaterial({ color: 0x202020 })  // Lã Preta
         };
 
         // Fila de chunks para gerar progressivamente (evita travar)
@@ -2999,7 +3077,7 @@
             const id = obterIdChunk(cx, cz); if (chunksVisuais.has(id)) return;
             const grupo = new THREE.Group();
             grupo.userData.isLOD = !!isLOD;
-            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [], 24: [], 25: [], 26: [], 27: [], 28: [], 29: [], 30: [] };
+            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [], 24: [], 25: [], 26: [], 27: [], 28: [], 29: [], 30: [], 40: [], 41: [], 42: [], 43: [], 44: [], 45: [], 46: [], 47: [], 48: [], 49: [], 50: [], 51: [], 52: [], 53: [], 54: [], 55: [] };
             const blocosAgua = [];
             const blocosPlantas = { 18: [], 19: [], 20: [], 21: [] };
             const yMax = 55;
@@ -3359,7 +3437,24 @@
                 { id: 33, nome: 'Andesito' },
                 { id: 34, nome: 'Ardosia' },
                 { id: 35, nome: 'Min.Cobre' },
-                { id: 25, nome: 'Neve' }
+                { id: 25, nome: 'Neve' },
+                // 🐑 Lãs
+                { id: 40, nome: 'Lã Branca' },
+                { id: 41, nome: 'Lã Laranja' },
+                { id: 42, nome: 'Lã Magenta' },
+                { id: 43, nome: 'Lã Azul C.' },
+                { id: 44, nome: 'Lã Amarela' },
+                { id: 45, nome: 'Lã Lima' },
+                { id: 46, nome: 'Lã Rosa' },
+                { id: 47, nome: 'Lã Cinza' },
+                { id: 48, nome: 'Lã Cinza C.' },
+                { id: 49, nome: 'Lã Ciano' },
+                { id: 50, nome: 'Lã Roxa' },
+                { id: 51, nome: 'Lã Azul' },
+                { id: 52, nome: 'Lã Marrom' },
+                { id: 53, nome: 'Lã Verde' },
+                { id: 54, nome: 'Lã Vermelha' },
+                { id: 55, nome: 'Lã Preta' }
             ];
             
             allItems.forEach(item => {
@@ -3652,6 +3747,41 @@
                         balancarMao();
                     }
                     return;
+                }
+
+                // 🐑 TOSQUIA DE OVELHA — Botão direito com tesoura
+                if (slot && slot.id === 'tesoura') {
+                    raycaster.setFromCamera(centroTela, camera);
+                    const entityMeshes = [];
+                    for (const a of animais) {
+                        if (!a || !a.mesh || a.estado === 'morrer') continue;
+                        if (a.hitbox) { a.hitbox.visible = true; entityMeshes.push(a.hitbox); }
+                        entityMeshes.push(a.mesh);
+                    }
+                    const animalHits = raycaster.intersectObjects(entityMeshes, true);
+                    for (const a of animais) { if (a && a.hitbox) a.hitbox.visible = false; }
+                    
+                    if (animalHits.length > 0 && animalHits[0].distance <= 5.0) {
+                        const meshHit = animalHits[0].object;
+                        const animal = animais.find(a => {
+                            let isChild = false;
+                            a.mesh.traverse(child => { if (child === meshHit) isChild = true; });
+                            return isChild;
+                        });
+                        if (animal && animal.type === 'ovelha' && animal.tosquiar) {
+                            const woolId = animal.tosquiar();
+                            if (woolId !== null) {
+                                // Dropa 1-3 blocos de lã
+                                const qtd = Math.floor(Math.random() * 3) + 1;
+                                for (let j = 0; j < qtd; j++) {
+                                    droparItem(animal.mesh.position.x, animal.mesh.position.y + 0.5, animal.mesh.position.z, woolId);
+                                }
+                                soundManager.playSound('pop', {});
+                                balancarMao();
+                            }
+                            return;
+                        }
+                    }
                 }
 
                 raycaster.setFromCamera(centroTela, camera);
@@ -4120,6 +4250,11 @@
                                 for (let j = 0; j < qtd; j++) {
                                     droparItem(a.mesh.position.x, a.mesh.position.y + 0.5, a.mesh.position.z, foodType);
                                 }
+                            }
+                            
+                            // 🐑 Ovelha dropa lã ao morrer (se ainda não foi tosada)
+                            if (a.type === 'ovelha' && !a.tosada && a.woolColor) {
+                                droparItem(a.mesh.position.x, a.mesh.position.y + 0.5, a.mesh.position.z, a.woolColor.id);
                             }
                             
                             animais.splice(i, 1);
@@ -4792,6 +4927,19 @@
                     });
 
                     if (animal) {
+                        // 🐑 Mobile: Se segurando tesoura e tocou ovelha, tosar ao invés de atacar
+                        const slotM = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
+                        if (slotM && slotM.id === 'tesoura' && animal.type === 'ovelha' && animal.tosquiar) {
+                            const woolId = animal.tosquiar();
+                            if (woolId !== null) {
+                                const qtd = Math.floor(Math.random() * 3) + 1;
+                                for (let j = 0; j < qtd; j++) {
+                                    droparItem(animal.mesh.position.x, animal.mesh.position.y + 0.5, animal.mesh.position.z, woolId);
+                                }
+                                soundManager.playSound('pop', {});
+                            }
+                            return;
+                        }
                         const dirVector = new THREE.Vector3();
                         dirVector.subVectors(animal.mesh.position, camera.position);
                         dirVector.y = 0;

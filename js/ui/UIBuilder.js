@@ -62,6 +62,23 @@ export class UIBuilder {
             "carneirinho_assado": { id: "carneirinho_assado", nome: "Mutton Assado", svgBase: "url('java/textures/item/cooked_mutton.png')", type: "food", foodValue: 6 },
             "barra_ferro": { id: "barra_ferro", nome: "Barra Fer.", svgBase: "url('java/textures/item/iron_ingot.png')", type: "item" },
             "barra_ouro": { id: "barra_ouro", nome: "Barra Ouro", svgBase: "url('java/textures/item/gold_ingot.png')", type: "item" },
+            // 🐑 Blocos de Lã (16 cores)
+            40: { id: 40, nome: "Lã Branca", svgBase: "url('java/textures/block/white_wool.png')", type: "block" },
+            41: { id: 41, nome: "Lã Laranja", svgBase: "url('java/textures/block/orange_wool.png')", type: "block" },
+            42: { id: 42, nome: "Lã Magenta", svgBase: "url('java/textures/block/magenta_wool.png')", type: "block" },
+            43: { id: 43, nome: "Lã Azul C.", svgBase: "url('java/textures/block/light_blue_wool.png')", type: "block" },
+            44: { id: 44, nome: "Lã Amarela", svgBase: "url('java/textures/block/yellow_wool.png')", type: "block" },
+            45: { id: 45, nome: "Lã Lima", svgBase: "url('java/textures/block/lime_wool.png')", type: "block" },
+            46: { id: 46, nome: "Lã Rosa", svgBase: "url('java/textures/block/pink_wool.png')", type: "block" },
+            47: { id: 47, nome: "Lã Cinza", svgBase: "url('java/textures/block/gray_wool.png')", type: "block" },
+            48: { id: 48, nome: "Lã Cinza C.", svgBase: "url('java/textures/block/light_gray_wool.png')", type: "block" },
+            49: { id: 49, nome: "Lã Ciano", svgBase: "url('java/textures/block/cyan_wool.png')", type: "block" },
+            50: { id: 50, nome: "Lã Roxa", svgBase: "url('java/textures/block/purple_wool.png')", type: "block" },
+            51: { id: 51, nome: "Lã Azul", svgBase: "url('java/textures/block/blue_wool.png')", type: "block" },
+            52: { id: 52, nome: "Lã Marrom", svgBase: "url('java/textures/block/brown_wool.png')", type: "block" },
+            53: { id: 53, nome: "Lã Verde", svgBase: "url('java/textures/block/green_wool.png')", type: "block" },
+            54: { id: 54, nome: "Lã Vermelha", svgBase: "url('java/textures/block/red_wool.png')", type: "block" },
+            55: { id: 55, nome: "Lã Preta", svgBase: "url('java/textures/block/black_wool.png')", type: "block" },
         };
 
         this.furnaceRecipes = {
@@ -115,6 +132,25 @@ export class UIBuilder {
         if (this.itemDefs[33]) this.itemDefs[33].svgBase = matList.Andesito;
         if (this.itemDefs[34]) this.itemDefs[34].svgBase = matList.Ardosia;
         if (this.itemDefs[35]) this.itemDefs[35].svgBase = matList.Cobre;
+        // Lã
+        if (matList.LaBranca) {
+            this.itemDefs[40].svgBase = matList.LaBranca;
+            this.itemDefs[41].svgBase = matList.LaLaranja;
+            this.itemDefs[42].svgBase = matList.LaMagenta;
+            this.itemDefs[43].svgBase = matList.LaAzulClaro;
+            this.itemDefs[44].svgBase = matList.LaAmarela;
+            this.itemDefs[45].svgBase = matList.LaLima;
+            this.itemDefs[46].svgBase = matList.LaRosa;
+            this.itemDefs[47].svgBase = matList.LaCinza;
+            this.itemDefs[48].svgBase = matList.LaCinzaClaro;
+            this.itemDefs[49].svgBase = matList.LaCiano;
+            this.itemDefs[50].svgBase = matList.LaRoxa;
+            this.itemDefs[51].svgBase = matList.LaAzul;
+            this.itemDefs[52].svgBase = matList.LaMarrom;
+            this.itemDefs[53].svgBase = matList.LaVerde;
+            this.itemDefs[54].svgBase = matList.LaVermelha;
+            this.itemDefs[55].svgBase = matList.LaPreta;
+        }
     }
 
     // Busca primeiro slot que tenha o mesmo item e não esteja cheio. Depois busca slot vazio.
