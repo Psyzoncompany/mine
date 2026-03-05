@@ -20,6 +20,7 @@ export class UIBuilder {
             3: { id: 3, nome: "Pedra", svgBase: this.urlTransparente, type: "block" },
             4: { id: 4, nome: "Mad.", svgBase: this.urlTransparente, type: "block" },
             5: { id: 5, nome: "Folha", svgBase: this.urlTransparente, type: "block" },
+            6: { id: 6, nome: "Agua", svgBase: "url('java/textures/block/water_still.png')", type: "block" },
             7: { id: 7, nome: "Areia", svgBase: this.urlTransparente, type: "block" }, // Added Areia
             8: { id: 8, nome: "Tábua", svgBase: this.urlTransparente, type: "block" }, // Tábua de Madeira
             9: { id: 9, nome: "Bancada", svgBase: this.urlTransparente, type: "block" }, // Crafting Table
@@ -29,6 +30,11 @@ export class UIBuilder {
             13: { id: 13, nome: "Min.Diamante", svgBase: this.urlTransparente, type: "block" },
             14: { id: 14, nome: "Pedregulho", svgBase: this.urlTransparente, type: "block" },
             25: { id: 25, nome: "Neve", svgBase: "url('java/textures/block/snow.png')", type: "block" },
+            31: { id: 31, nome: "Granito", svgBase: "url('java/textures/block/granite.png')", type: "block" },
+            32: { id: 32, nome: "Diorito", svgBase: "url('java/textures/block/diorite.png')", type: "block" },
+            33: { id: 33, nome: "Andesito", svgBase: "url('java/textures/block/andesite.png')", type: "block" },
+            34: { id: 34, nome: "Ardosia", svgBase: "url('java/textures/block/deepslate.png')", type: "block" },
+            35: { id: 35, nome: "Min.Cobre", svgBase: "url('java/textures/block/copper_ore.png')", type: "block" },
             15: { id: 15, nome: "Grav.", svgBase: this.svgGraveto, type: "item" }, // Graveto
             18: { id: 18, nome: "Grama C.", svgBase: "url('java/textures/block/short_grass.png')", type: "item" },
             19: { id: 19, nome: "Papoula", svgBase: "url('java/textures/block/poppy.png')", type: "item" },
@@ -139,6 +145,7 @@ export class UIBuilder {
         this.itemDefs[3].svgBase = matList.Pedra;
         this.itemDefs[4].svgBase = matList.Madeira;
         this.itemDefs[5].svgBase = matList.Folhas;
+        if (matList.Agua) this.itemDefs[6].svgBase = matList.Agua;
         this.itemDefs[7].svgBase = matList.Areia;
         this.itemDefs[8].svgBase = matList.Tabua;
         this.itemDefs[9].svgBase = matList.Bancada;
