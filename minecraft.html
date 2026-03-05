@@ -1583,7 +1583,7 @@
         const cena = new THREE.Scene();
         const corCeu = 0x78A7FF; // Azul mais parecido com o do Minecraft
         cena.background = new THREE.Color(corCeu);
-        cena.fog = new THREE.Fog(corCeu, 20, 60);
+        cena.fog = new THREE.Fog(corCeu, 20, 200);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderizador = new THREE.WebGLRenderer({ antialias: false });
@@ -2602,7 +2602,7 @@
                 // Intensidade da neblina
                 uFogColor: { value: new THREE.Color(corCeu) },
                 uFogNear: { value: 20.0 },
-                uFogFar: { value: 60.0 }
+                uFogFar: { value: 200.0 }
             },
             vertexShader: `
                 // Uniforms
@@ -3372,6 +3372,8 @@
                 pos.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); instancedMesh.setMatrixAt(index, matriz); });
                 if (!isLOD) { instancedMesh.castShadow = true; instancedMesh.receiveShadow = true; }
                 instancedMesh.renderOrder = 0;
+                instancedMesh.frustumCulled = false;
+                instancedMesh.computeBoundingSphere();
                 grupo.add(instancedMesh);
             }
             // 🌿 Plantas (geometria em X)
@@ -3384,6 +3386,8 @@
                 instancedPlanta.castShadow = true;
                 instancedPlanta.receiveShadow = true;
                 instancedPlanta.renderOrder = 0;
+                instancedPlanta.frustumCulled = false;
+                instancedPlanta.computeBoundingSphere();
                 grupo.add(instancedPlanta);
             }
             // Água depois (renderOrder alto para transparência correta)
@@ -3395,6 +3399,8 @@
                 aguaMesh.renderOrder = 1;
                 aguaMesh.castShadow = false;
                 aguaMesh.receiveShadow = false;
+                aguaMesh.frustumCulled = false;
+                aguaMesh.computeBoundingSphere();
                 grupo.add(aguaMesh);
             }
             cena.add(grupo); chunksVisuais.set(id, grupo);
@@ -3501,6 +3507,7 @@
         const waterOverlay = document.getElementById('water-overlay');
         const fogNormal = { color: corCeu, near: 20, far: DISTANCIA_RENDER * TAMANHO_CHUNK };
         const fogAgua = { color: 0x3F76E4, near: 1, far: 18 };
+        const fogCaverna = { color: 0x1a1a2e, near: 1, far: 40 };
 
         function checarPlayerNaAgua(delta = 0) {
             // Checa pés do player
@@ -3571,7 +3578,7 @@
                 waterOverlay.classList.remove('active');
             }
 
-            // Fog subaquático e FOV
+            // Fog subaquatico, subterraneo e FOV
             if (cabecaSubmersa) {
                 cena.fog.color.setHex(fogAgua.color);
                 cena.fog.near = fogAgua.near;
@@ -3582,10 +3589,23 @@
                     camera.updateProjectionMatrix();
                 }
             } else {
-                cena.fog.color.setHex(fogNormal.color);
-                cena.fog.near = fogNormal.near;
-                cena.fog.far = fogNormal.far;
-                cena.background = new THREE.Color(corCeu);
+                // Detectar se o jogador esta no subterraneo
+                const bx = Math.floor(camera.position.x);
+                const bz = Math.floor(camera.position.z);
+                const alturaTerreno = worldGenV2.getHeightAt(bx, bz);
+                const playerSubterraneo = camera.position.y < alturaTerreno - 2;
+
+                if (playerSubterraneo) {
+                    cena.fog.color.setHex(fogCaverna.color);
+                    cena.fog.near = fogCaverna.near;
+                    cena.fog.far = fogCaverna.far;
+                    cena.background = new THREE.Color(fogCaverna.color);
+                } else {
+                    cena.fog.color.setHex(fogNormal.color);
+                    cena.fog.near = fogNormal.near;
+                    cena.fog.far = fogNormal.far;
+                    cena.background = new THREE.Color(corCeu);
+                }
                 if (camera.fov !== 75) {
                     camera.fov = 75;
                     camera.updateProjectionMatrix();
@@ -4783,12 +4803,21 @@
                 const bx = Math.floor(px), bz = Math.floor(pz);
                 const biome = worldGenV2.getBiomeAt(bx, bz);
                 const h = worldGenV2.getHeightAt(bx, bz);
+                const renderInfo = renderizador.info.render;
+                const totalTriangles = renderInfo.triangles || 0;
+                const totalCalls = renderInfo.calls || 0;
+                let totalMeshes = 0;
+                chunksVisuais.forEach(g => { totalMeshes += g.children.length; });
                 debugEl.innerHTML =
                     `XYZ: ${px.toFixed(1)} / ${py.toFixed(1)} / ${pz.toFixed(1)}<br>` +
                     `Chunk: ${wcx}, ${wcz}<br>` +
                     `Biome: ${biome}<br>` +
                     `Height: ${h}<br>` +
-                    `Chunks: ${chunksVisuais.size}<br>` +
+                    `Chunks: ${chunksVisuais.size} (${chunkFilaPendente.length} pending)<br>` +
+                    `Meshes: ${totalMeshes} | Triangles: ${totalTriangles}<br>` +
+                    `Draw calls: ${totalCalls}<br>` +
+                    `Near/Far: ${camera.near} / ${camera.far}<br>` +
+                    `Fog: ${cena.fog.near.toFixed(0)} - ${cena.fog.far.toFixed(0)}<br>` +
                     `Seed: ${worldGenV2.seed}<br>` +
                     `[F3] toggle`;
             }
@@ -4797,6 +4826,9 @@
             matAgua.uniforms.uTime.value = relogio.getElapsedTime();
             matAgua.uniforms.uCameraPos.value.copy(camera.position);
             matAgua.uniforms.uSunDir.value.copy(luzSol.position).normalize();
+            matAgua.uniforms.uFogNear.value = cena.fog.near;
+            matAgua.uniforms.uFogFar.value = cena.fog.far;
+            matAgua.uniforms.uFogColor.value.copy(cena.fog.color);
 
             renderizador.clear();
             renderizador.render(cena, camera);
