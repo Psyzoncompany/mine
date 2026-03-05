@@ -47,6 +47,11 @@ export class RedstoneSystem {
         this._scheduleRecompute();
     }
 
+    /** Recompute all Redstone state from scratch (use after world load). */
+    recomputeAll() {
+        this._recompute();
+    }
+
     /** Toggle lever at (x,y,z). Returns new state (true = ON). */
     toggleLever(x, y, z) {
         const key = `${x},${y},${z}`;
@@ -60,7 +65,7 @@ export class RedstoneSystem {
             return false;
         }
         this._recompute();
-        this.recriarChunkVisual(x, y, z);
+        this.recriarChunkVisual(x, z);
         return this.mundo.get(key) === RS.LEVER_ON;
     }
 
@@ -207,7 +212,7 @@ export class RedstoneSystem {
         // ── Phase 4: Rebuild changed chunks ─────────────────────────
         for (const chunkKey of changedChunks) {
             const [cx, cz] = chunkKey.split(',').map(Number);
-            this.recriarChunkVisual(cx * this.CHUNK_SIZE, 0, cz * this.CHUNK_SIZE);
+            this.recriarChunkVisual(cx * this.CHUNK_SIZE, cz * this.CHUNK_SIZE);
         }
     }
 

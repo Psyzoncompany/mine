@@ -1910,7 +1910,7 @@
                 chunkAtualZ = -999;
 
                 // Recompute Redstone state after world load
-                setTimeout(() => redstoneSystem.notifyChange(0, 0, 0), 500);
+                setTimeout(() => redstoneSystem.recomputeAll(), 500);
 
                 callRenderUI();
 
@@ -3609,7 +3609,7 @@
                 // Redstone
                 { id: 56, nome: 'Min.Redstone' },
                 { id: 57, nome: 'Bloco Redstone' },
-                { id: 58, nome: 'Po Redstone' },
+                { id: 58, nome: 'Po Redstone (bloco)' },
                 { id: 59, nome: 'Tocha Redstone' },
                 { id: 61, nome: 'Lampada Redstone' },
                 { id: 63, nome: 'Alavanca' },

@@ -83,7 +83,7 @@ export class UIBuilder {
             // ── Redstone ──────────────────────────────────────────────────────
             56: { id: 56, nome: "Min.Redstone", svgBase: "url('java/textures/block/redstone_ore.png')", type: "block" },
             57: { id: 57, nome: "Bloco Redstone", svgBase: "url('java/textures/block/redstone_block.png')", type: "block" },
-            58: { id: 58, nome: "Po Redstone", svgBase: "url('java/textures/item/redstone.png')", type: "block" },
+            58: { id: 58, nome: "Po Redstone (bloco)", svgBase: "url('java/textures/item/redstone.png')", type: "block" },
             59: { id: 59, nome: "Tocha Redstone", svgBase: "url('java/textures/block/redstone_torch.png')", type: "block" },
             60: { id: 60, nome: "Tocha Redstone (apag.)", svgBase: "url('java/textures/block/redstone_torch_off.png')", type: "block" },
             61: { id: 61, nome: "Lampada Redstone", svgBase: "url('java/textures/block/redstone_lamp.png')", type: "block" },
