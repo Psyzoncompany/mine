@@ -1855,6 +1855,11 @@
                 // Limpa mundo atual
                 mundo.clear();
                 chunksGerados.clear();
+                chunkDataLOD.clear();
+                chunkVisualLOD.clear();
+                chunkTargetLOD.clear();
+                chunkTaskMap.clear();
+                chunkDataLRU.clear();
 
                 // Remove todos os chunks visuais
                 chunksVisuais.forEach((grupo) => {
@@ -1893,6 +1898,8 @@
                 if (saveData.chunksGerados) {
                     for (const c of saveData.chunksGerados) {
                         chunksGerados.add(c);
+                        chunkDataLOD.set(c, LOD_FULL);
+                        cachearChunkFull(c);
                     }
                 }
 
@@ -3079,11 +3086,31 @@
         const mundo = new Map();
         const chunksGerados = new Set();
         const chunksVisuais = new Map();
+        const chunkDataLOD = new Map();
+        const chunkVisualLOD = new Map();
+        const chunkTargetLOD = new Map();
+        const chunkTaskMap = new Map();
+        const chunkDataLRU = new Map();
         let TAMANHO_CHUNK = 16;
         let DISTANCIA_RENDER = settingsManager.get('renderDistance');  // Dynamic from settings
         let DISTANCIA_DETALHE = Math.min(2, DISTANCIA_RENDER);  // Detail within render range
         let DISTANCIA_MOB = 2;      // Mobs dentro de 2 chunks
         let chunkAtualX = -999, chunkAtualZ = -999;
+        const WORLD_Y_MIN = -64;
+        const WORLD_Y_MAX = 50;
+        const WORLD_RENDER_Y_MAX = 55;
+        const LOD_NONE = 0;
+        const LOD_TOP = 1;
+        const LOD_FULL = 2;
+        const chunkStreamingConfig = {
+            neighborRadiusTop: 1,
+            neighborRadiusNone: 4,
+            topOnlyDepth: 8,
+            edgePreloadDistance: 2,
+            maxWorkMsPerFrame: 4,
+            maxChunkTasksPerTick: 2,
+            cacheSizeChunks: 128
+        };
         const noise = new ImprovedNoise();
         let seedX = Math.random() * 10000;
         let seedZ = Math.random() * 10000;
@@ -3173,6 +3200,158 @@
         let filaChunks = [];
 
         function obterIdChunk(cx, cz) { return `${cx},${cz}`; }
+        function getChunkId(x, z) {
+            const cx = Math.floor(x / TAMANHO_CHUNK);
+            const cz = Math.floor(z / TAMANHO_CHUNK);
+            return obterIdChunk(cx, cz);
+        }
+        function normalizarLocalChunk(v) {
+            return ((v % TAMANHO_CHUNK) + TAMANHO_CHUNK) % TAMANHO_CHUNK;
+        }
+        function analisarBordasChunk(playerPos) {
+            const localX = normalizarLocalChunk(Math.floor(playerPos.x));
+            const localZ = normalizarLocalChunk(Math.floor(playerPos.z));
+            const distToWest = localX;
+            const distToEast = (TAMANHO_CHUNK - 1) - localX;
+            const distToNorth = localZ;
+            const distToSouth = (TAMANHO_CHUNK - 1) - localZ;
+            return { localX, localZ, distToWest, distToEast, distToNorth, distToSouth };
+        }
+        function parseChunkId(chunkId) {
+            const [cx, cz] = chunkId.split(',').map(Number);
+            return { cx, cz };
+        }
+        function tocarLRUChunk(chunkId) {
+            if (!chunkDataLRU.has(chunkId)) return;
+            const val = chunkDataLRU.get(chunkId);
+            chunkDataLRU.delete(chunkId);
+            chunkDataLRU.set(chunkId, val);
+        }
+        function cachearChunkFull(chunkId) {
+            chunkDataLRU.delete(chunkId);
+            chunkDataLRU.set(chunkId, Date.now());
+            while (chunkDataLRU.size > chunkStreamingConfig.cacheSizeChunks) {
+                const oldest = chunkDataLRU.keys().next().value;
+                if (!oldest) break;
+                chunkDataLRU.delete(oldest);
+                if (chunkVisualLOD.get(oldest) !== LOD_NONE) continue;
+                const { cx, cz } = parseChunkId(oldest);
+                for (const key of Array.from(mundo.keys())) {
+                    const [x, , z] = key.split(',').map(Number);
+                    if (Math.floor(x / TAMANHO_CHUNK) === cx && Math.floor(z / TAMANHO_CHUNK) === cz) {
+                        mundo.delete(key);
+                    }
+                }
+                chunksGerados.delete(oldest);
+                chunkDataLOD.set(oldest, LOD_NONE);
+            }
+        }
+        function enqueueChunkTask(chunkId, targetLOD, priority) {
+            const existente = chunkTaskMap.get(chunkId);
+            if (existente && existente.targetLOD === targetLOD && existente.priority >= priority) return;
+            chunkTaskMap.set(chunkId, { chunkId, targetLOD, priority, createdAt: performance.now() });
+        }
+        function setChunkLOD(chunkId, targetLOD, priority = 0) {
+            const atual = chunkTargetLOD.has(chunkId) ? chunkTargetLOD.get(chunkId) : LOD_NONE;
+            if (atual === targetLOD) return;
+            chunkTargetLOD.set(chunkId, targetLOD);
+            enqueueChunkTask(chunkId, targetLOD, priority);
+        }
+        function unloadChunkResources(chunkId, level = LOD_NONE) {
+            const grupo = chunksVisuais.get(chunkId);
+            if (grupo) {
+                cena.remove(grupo);
+                chunksVisuais.delete(chunkId);
+            }
+            if (level === LOD_NONE) {
+                animais = animais.filter(a => {
+                    if (a.chunkId !== chunkId) return true;
+                    if (a.mesh) cena.remove(a.mesh);
+                    return false;
+                });
+            }
+            chunkVisualLOD.set(chunkId, level);
+            if (level === LOD_NONE) {
+                const target = chunkTargetLOD.get(chunkId);
+                if (target === undefined || target <= LOD_TOP) {
+                    chunkDataLRU.delete(chunkId);
+                }
+            }
+        }
+        function processarFilaChunkTasks() {
+            if (chunkTaskMap.size === 0) return;
+            const inicio = performance.now();
+            const tarefas = Array.from(chunkTaskMap.values()).sort((a, b) => {
+                if (a.priority !== b.priority) return b.priority - a.priority;
+                return a.createdAt - b.createdAt;
+            });
+            let processadas = 0;
+            for (const tarefa of tarefas) {
+                if (processadas >= chunkStreamingConfig.maxChunkTasksPerTick) break;
+                if ((performance.now() - inicio) >= chunkStreamingConfig.maxWorkMsPerFrame) break;
+                chunkTaskMap.delete(tarefa.chunkId);
+                const { cx, cz } = parseChunkId(tarefa.chunkId);
+                if (tarefa.targetLOD === LOD_NONE) {
+                    unloadChunkResources(tarefa.chunkId, LOD_NONE);
+                } else {
+                    gerarDadosChunk(cx, cz, tarefa.targetLOD);
+                    const visualAtual = chunkVisualLOD.get(tarefa.chunkId) || LOD_NONE;
+                    if (visualAtual !== tarefa.targetLOD) {
+                        unloadChunkResources(tarefa.chunkId, LOD_NONE);
+                        construirChunkVisual(cx, cz, tarefa.targetLOD);
+                        chunkVisualLOD.set(tarefa.chunkId, tarefa.targetLOD);
+                    }
+                }
+                processadas++;
+            }
+        }
+        function updateChunkStreaming(playerPos) {
+            const px = Math.floor(playerPos.x / TAMANHO_CHUNK);
+            const pz = Math.floor(playerPos.z / TAMANHO_CHUNK);
+            const desiredLOD = new Map();
+
+            const raioTop = Math.max(1, chunkStreamingConfig.neighborRadiusTop);
+            const raioNone = Math.max(raioTop + 1, chunkStreamingConfig.neighborRadiusNone);
+            for (let cx = px - raioNone; cx <= px + raioNone; cx++) {
+                for (let cz = pz - raioNone; cz <= pz + raioNone; cz++) {
+                    const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
+                    const id = obterIdChunk(cx, cz);
+                    let lod = LOD_NONE;
+                    if (dist === 0) lod = LOD_FULL;
+                    else if (dist <= raioTop) lod = LOD_TOP;
+                    desiredLOD.set(id, lod);
+                }
+            }
+
+            const bordas = analisarBordasChunk(playerPos);
+            const preload = chunkStreamingConfig.edgePreloadDistance;
+            const addFull = (cx, cz) => desiredLOD.set(obterIdChunk(cx, cz), LOD_FULL);
+            if (bordas.distToWest <= preload) addFull(px - 1, pz);
+            if (bordas.distToEast <= preload) addFull(px + 1, pz);
+            if (bordas.distToNorth <= preload) addFull(px, pz - 1);
+            if (bordas.distToSouth <= preload) addFull(px, pz + 1);
+            if (bordas.distToWest <= preload && bordas.distToNorth <= preload) addFull(px - 1, pz - 1);
+            if (bordas.distToWest <= preload && bordas.distToSouth <= preload) addFull(px - 1, pz + 1);
+            if (bordas.distToEast <= preload && bordas.distToNorth <= preload) addFull(px + 1, pz - 1);
+            if (bordas.distToEast <= preload && bordas.distToSouth <= preload) addFull(px + 1, pz + 1);
+
+            desiredLOD.forEach((lod, chunkId) => {
+                const atualTarget = chunkTargetLOD.has(chunkId) ? chunkTargetLOD.get(chunkId) : LOD_NONE;
+                if (atualTarget === lod) return;
+                const prioridade = lod === LOD_FULL ? 100 : (lod === LOD_TOP ? 50 : 10);
+                setChunkLOD(chunkId, lod, prioridade);
+            });
+
+            for (const [chunkId] of chunkTargetLOD.entries()) {
+                if (desiredLOD.has(chunkId)) continue;
+                setChunkLOD(chunkId, LOD_NONE, 5);
+            }
+        }
+        window.getChunkId = getChunkId;
+        window.setChunkLOD = setChunkLOD;
+        window.enqueueChunkTask = enqueueChunkTask;
+        window.updateChunkStreaming = updateChunkStreaming;
+        window.unloadChunkResources = unloadChunkResources;
 
         // 🔴 SISTEMA DE REDSTONE
         const redstoneSystem = new RedstoneSystem(mundo, (x, z) => recriarChunkVisual(x, z));
@@ -3228,18 +3407,28 @@
             animais.push(animal);
         }
 
-        function gerarDadosChunk(cx, cz) {
-            const id = obterIdChunk(cx, cz); if (chunksGerados.has(id)) return; chunksGerados.add(id);
-
-            // 🌍 WorldGen V2 – Generate all terrain, caves, ores, water, vegetation
-            worldGenV2.generateChunk(mundo, cx, cz);
+        function gerarDadosChunk(cx, cz, targetLOD = LOD_FULL) {
+            const id = obterIdChunk(cx, cz);
+            const lodAtualDados = chunkDataLOD.get(id) || LOD_NONE;
+            if (lodAtualDados >= targetLOD) {
+                tocarLRUChunk(id);
+                return;
+            }
+            if (targetLOD === LOD_TOP) {
+                worldGenV2.generateChunk(mundo, cx, cz, { topOnlyDepth: chunkStreamingConfig.topOnlyDepth });
+            } else {
+                worldGenV2.generateChunk(mundo, cx, cz);
+            }
+            chunksGerados.add(id);
+            chunkDataLOD.set(id, targetLOD);
+            if (targetLOD === LOD_FULL) cachearChunkFull(id);
 
             // Mobs só em chunks próximos
             const distChunk = Math.abs(cx - chunkAtualX) + Math.abs(cz - chunkAtualZ);
-            if (distChunk <= DISTANCIA_MOB && Math.random() < 0.4) {
+            if (targetLOD === LOD_FULL && distChunk <= DISTANCIA_MOB && Math.random() < 0.4) {
                 const ax = cx * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
                 const az = cz * TAMANHO_CHUNK + Math.floor(Math.random() * TAMANHO_CHUNK);
-                for (let y = 55; y >= -64; y--) {
+                for (let y = WORLD_RENDER_Y_MAX; y >= WORLD_Y_MIN; y--) {
                     const tipo = mundo.get(`${ax},${y},${az}`);
                     if (tipo && tipo !== 5 && tipo !== 6 && tipo !== 30) {
                         // Verifica se acima do bloco sólido tem água - não spawnar em rio/lago
@@ -3261,7 +3450,7 @@
 
             // 🏘️ Village generation for this chunk area
             const villageKey = `village_${cx},${cz}`;
-            if (!generatedVillageChunks.has(villageKey)) {
+            if (targetLOD === LOD_FULL && !generatedVillageChunks.has(villageKey)) {
                 generatedVillageChunks.add(villageKey);
                 const village = villageGenerator.getVillageAt(cx, cz);
                 if (village) {
@@ -3345,18 +3534,22 @@
         }
         const geometriaPlanta = criarGeometriaPlantaX();
 
-        function construirChunkVisual(cx, cz, isLOD) {
+        function construirChunkVisual(cx, cz, lod = LOD_FULL) {
             const id = obterIdChunk(cx, cz); if (chunksVisuais.has(id)) return;
             const grupo = new THREE.Group();
-            grupo.userData.isLOD = !!isLOD;
+            const isLOD = lod === LOD_TOP;
+            grupo.userData.isLOD = isLOD;
+            grupo.userData.lod = lod;
             const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [], 24: [], 25: [], 26: [], 27: [], 28: [], 29: [], 30: [], 40: [], 41: [], 42: [], 43: [], 44: [], 45: [], 46: [], 47: [], 48: [], 49: [], 50: [], 51: [], 52: [], 53: [], 54: [], 55: [], 56: [], 57: [], 61: [], 62: [], 69: [], 70: [], 71: [], 72: [] };
             const blocosAgua = [];
             const blocosPlantas = { 18: [], 19: [], 20: [], 21: [], 58: [], 59: [], 60: [], 63: [], 64: [], 65: [], 66: [], 67: [], 68: [] };
-            const yMax = 55;
+            const yMax = WORLD_RENDER_Y_MAX;
             for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
                 for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
                     const x = cx * TAMANHO_CHUNK + lx; const z = cz * TAMANHO_CHUNK + lz;
-                    for (let y = -64; y < yMax; y++) {
+                    const alturaSuperficie = worldGenV2.getHeightAt(x, z);
+                    const minYColuna = (lod === LOD_TOP) ? Math.max(WORLD_Y_MIN, alturaSuperficie - chunkStreamingConfig.topOnlyDepth) : WORLD_Y_MIN;
+                    for (let y = minYColuna; y < yMax; y++) {
                         const tipo = mundo.get(`${x},${y},${z}`);
                         if (tipo) {
                             if (!blocoExposto(x, y, z, tipo)) continue;
@@ -3409,52 +3602,11 @@
             cena.add(grupo); chunksVisuais.set(id, grupo);
         }
 
-        // Fila de chunks pendentes para carregamento suave
-        let chunkFilaPendente = [];
-        const CHUNKS_POR_FRAME = 2; // Número de chunks construídos por frame
-
         function atualizarChunks() {
             const px = Math.floor(camera.position.x / TAMANHO_CHUNK); const pz = Math.floor(camera.position.z / TAMANHO_CHUNK);
             if (px !== chunkAtualX || pz !== chunkAtualZ || chunksVisuais.size === 0) {
                 document.getElementById('loading').innerText = "Carregando área...";
                 chunkAtualX = px; chunkAtualZ = pz;
-
-                // Gera dados de todos os chunks (+1 buffer para vizinhos de borda / cavernas pré-renderizadas)
-                for (let cx = px - DISTANCIA_RENDER - 1; cx <= px + DISTANCIA_RENDER + 1; cx++) {
-                    for (let cz = pz - DISTANCIA_RENDER - 1; cz <= pz + DISTANCIA_RENDER + 1; cz++) {
-                        gerarDadosChunk(cx, cz);
-                    }
-                }
-
-                // Monta fila de chunks que precisam ser construídos (ordenado por distância)
-                chunkFilaPendente = [];
-                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
-                    for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
-                        const id = obterIdChunk(cx, cz);
-                        const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
-                        if (!chunksVisuais.has(id)) {
-                            chunkFilaPendente.push({ cx, cz, dist });
-                        } else {
-                            // Rebuild LOD chunks that are now within detail range
-                            const grupo = chunksVisuais.get(id);
-                            if (grupo.userData.isLOD && dist <= DISTANCIA_DETALHE) {
-                                cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
-                                chunkFilaPendente.push({ cx, cz, dist });
-                            }
-                        }
-                    }
-                }
-                // Ordena: mais perto primeiro
-                chunkFilaPendente.sort((a, b) => a.dist - b.dist);
-
-                // Limpeza de chunks fora do range
-                for (const [id, grupo] of chunksVisuais.entries()) {
-                    const [cx, cz] = id.split(',').map(Number);
-                    if (Math.abs(cx - px) > DISTANCIA_RENDER || Math.abs(cz - pz) > DISTANCIA_RENDER) {
-                        cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
-                        animais = animais.filter(a => { if (a.chunkId === id) { cena.remove(a.mesh); return false; } return true; });
-                    }
-                }
 
                 // Esconde/mostra mobs baseado na distância
                 animais.forEach(a => {
@@ -3462,38 +3614,37 @@
                     a.mesh.visible = mobDist <= DISTANCIA_MOB;
                 });
 
-                if (!window.playerSpawned && chunksVisuais.size > 0) {
-                    // Blocos de chão válidos para spawn (não árvores, água, lava ou plantas)
-                    const GROUND_BLOCKS = new Set([1, 2, 3, 7, 24, 25, 26, 28, 31, 32, 33, 34]); // Grama, Terra, Pedra, Areia, Sandstone, Neve, Gravel, Bedrock, Granite, Diorite, Andesite, Deepslate
-                    for (let y = 55; y >= -64; y--) {
-                        const tipo = mundo.get(`0,${y},0`);
-                        if (tipo && GROUND_BLOCKS.has(tipo)) { // Só spawna em blocos de chão sólidos
-                            camera.position.set(0, y + 2.12, 0);
-                            window.playerSpawned = true;
-                            velocidadeY = 0;
-                            break;
-                        }
+            }
+
+            chunkStreamingConfig.neighborRadiusNone = Math.max(3, DISTANCIA_RENDER);
+            updateChunkStreaming(camera.position);
+            processarFilaChunkTasks();
+            if (!window.playerSpawned && chunksVisuais.size > 0) {
+                // Blocos de chão válidos para spawn (não árvores, água, lava ou plantas)
+                const GROUND_BLOCKS = new Set([1, 2, 3, 7, 24, 25, 26, 28, 31, 32, 33, 34]); // Grama, Terra, Pedra, Areia, Sandstone, Neve, Gravel, Bedrock, Granite, Diorite, Andesite, Deepslate
+                for (let y = WORLD_RENDER_Y_MAX; y >= WORLD_Y_MIN; y--) {
+                    const tipo = mundo.get(`0,${y},0`);
+                    if (tipo && GROUND_BLOCKS.has(tipo)) { // Só spawna em blocos de chão sólidos
+                        camera.position.set(0, y + 2.12, 0);
+                        window.playerSpawned = true;
+                        velocidadeY = 0;
+                        break;
                     }
                 }
             }
-
-            // Carregamento suave: constrói poucos chunks por frame
-            if (chunkFilaPendente.length > 0) {
-                const construirAgora = Math.min(CHUNKS_POR_FRAME, chunkFilaPendente.length);
-                for (let i = 0; i < construirAgora; i++) {
-                    const { cx, cz, dist } = chunkFilaPendente.shift();
-                    const isLOD = dist > DISTANCIA_DETALHE;
-                    construirChunkVisual(cx, cz, isLOD);
-                }
-                document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size} (${chunkFilaPendente.length} restantes)`;
-            } else {
-                document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size}`;
-            }
+            document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size} (${chunkTaskMap.size} tarefas)`;
         }
 
         function recriarChunkVisual(x, z) {
             const cx = Math.floor(x / TAMANHO_CHUNK); const cz = Math.floor(z / TAMANHO_CHUNK); const id = obterIdChunk(cx, cz);
-            if (chunksVisuais.has(id)) { const grupo = chunksVisuais.get(id); cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id); construirChunkVisual(cx, cz); }
+            if (chunksVisuais.has(id)) {
+                const grupo = chunksVisuais.get(id);
+                const lod = grupo.userData && grupo.userData.lod ? grupo.userData.lod : LOD_FULL;
+                cena.remove(grupo);
+                chunksVisuais.delete(id);
+                construirChunkVisual(cx, cz, lod);
+                chunkVisualLOD.set(id, lod);
+            }
         }
 
         // 🏃‍♂️ CONTROLES
