@@ -2447,6 +2447,10 @@
             if (!cabecaSubmersa) {
                 cena.background = corCeuAtual;
                 cena.fog.color.copy(corCeuAtual);
+                // Atualiza cores do shader de agua para acompanhar ciclo dia/noite
+                matAgua.uniforms.uFogColor.value.copy(corCeuAtual);
+                matAgua.uniforms.uSkyColor.value.copy(corCeuAtual);
+                matAgua.uniforms.uSunColor.value.copy(luzSol.color);
             }
 
             // Intensidade da luz
@@ -2575,52 +2579,159 @@
         // Redstone IDs that are flat/plant-like: dust(58), torches(59,60), lever(63,64), repeater(65,66), comparator(67,68)
         const REDSTONE_FLAT_IDS = new Set([58, 59, 60, 63, 64, 65, 66, 67, 68]);
 
-        // Material de Água Animado (Shaders)
-        const matAgua = new THREE.MeshLambertMaterial({ map: texAgua, color: 0x3f76e4, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide });
-        matAgua.onBeforeCompile = function (shader) {
-            shader.uniforms.uTime = { value: 0 };
-            matAgua.userData.shader = shader; // salta referência pro loop
-
-            shader.vertexShader = `
+        // ── Sistema de Agua Realista (Custom ShaderMaterial) ──────────────────
+        // Shader de agua otimizado para mobile com ondas procedurais,
+        // reflexo fake do ceu, specular highlight, e transparencia com profundidade.
+        const matAgua = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0.0 },
+                // Cor base da agua (azul natural)
+                uWaterColor: { value: new THREE.Color(0x1a6eb5) },
+                // Cor profunda da agua (mais escura)
+                uDeepColor: { value: new THREE.Color(0x0a3a6b) },
+                // Cor do ceu para reflexo fake
+                uSkyColor: { value: new THREE.Color(0x78A7FF) },
+                // Direcao da luz do sol (normalizada)
+                uSunDir: { value: new THREE.Vector3(0.5, 0.7, 0.3).normalize() },
+                // Cor da luz solar para specular
+                uSunColor: { value: new THREE.Color(0xfff5b6) },
+                // Textura da agua (usada como detalhe de ruido)
+                uWaterTex: { value: texAgua },
+                // Posicao da camera para calculos Fresnel
+                uCameraPos: { value: new THREE.Vector3() },
+                // Intensidade da neblina
+                uFogColor: { value: new THREE.Color(corCeu) },
+                uFogNear: { value: 20.0 },
+                uFogFar: { value: 60.0 }
+            },
+            vertexShader: `
+                // Uniforms
                 uniform float uTime;
+
+                // Varyings passados para o fragment shader
                 varying vec3 vWorldPos;
-                ` + shader.vertexShader;
-            
-            // Adiciona ondulações usando Y
-            shader.vertexShader = shader.vertexShader.replace(
-                `#include <begin_vertex>`,
-                `
-                vec3 transformed = vec3( position );
-                vec4 worldPositionA = instanceMatrix * vec4(position, 1.0);
-                
-                // Ondas baseadas somente no topo do bloco de água
-                if(position.y > 0.4) {
-                    float wave = sin(worldPositionA.x * 2.5 + uTime * 3.0) * 0.08 + 
-                                 cos(worldPositionA.z * 2.5 + uTime * 2.0) * 0.08;
-                    transformed.y += wave;
+                varying vec3 vNormal;
+                varying float vWaveHeight;
+
+                // Funcao de onda procedural com multiplas camadas
+                // Combina ondas senoidais em diferentes frequencias para aspecto natural
+                float waveHeight(vec2 pos, float time) {
+                    float h = 0.0;
+                    // Onda primaria - lenta e ampla
+                    h += sin(pos.x * 1.8 + time * 1.5) * 0.06;
+                    h += cos(pos.y * 2.0 + time * 1.2) * 0.05;
+                    // Onda secundaria - mais rapida e menor (pos.y = coordenada z do mundo)
+                    h += sin(pos.x * 3.5 + pos.y * 2.8 + time * 2.5) * 0.03;
+                    // Onda terciaria - detalhe fino
+                    h += cos(pos.x * 5.0 - pos.y * 4.0 + time * 3.0) * 0.015;
+                    return h;
                 }
-                vWorldPos = worldPositionA.xyz;
-                `
-            );
 
-            shader.fragmentShader = `
+                void main() {
+                    // Calcula posicao no mundo usando instanceMatrix (para InstancedMesh)
+                    vec4 worldPos = instanceMatrix * vec4(position, 1.0);
+                    vec3 pos = position;
+
+                    // Aplica ondas somente na face superior do bloco (y > 0.4)
+                    if (position.y > 0.4) {
+                        float wave = waveHeight(worldPos.xz, uTime);
+                        pos.y += wave;
+                        vWaveHeight = wave;
+
+                        // Calcula normal aproximada usando derivadas finitas
+                        float eps = 0.1;
+                        float hL = waveHeight(worldPos.xz + vec2(-eps, 0.0), uTime);
+                        float hR = waveHeight(worldPos.xz + vec2(eps, 0.0), uTime);
+                        float hD = waveHeight(worldPos.xz + vec2(0.0, -eps), uTime);
+                        float hU = waveHeight(worldPos.xz + vec2(0.0, eps), uTime);
+                        vNormal = normalize(vec3(hL - hR, 2.0 * eps, hD - hU));
+                    } else {
+                        vWaveHeight = 0.0;
+                        // Normal padrao para faces laterais/inferiores
+                        vNormal = normalize((instanceMatrix * vec4(normal, 0.0)).xyz);
+                    }
+
+                    // Passa posicao no mundo para o fragment shader
+                    vWorldPos = (instanceMatrix * vec4(pos, 1.0)).xyz;
+
+                    // Posicao final no espaco de clip
+                    gl_Position = projectionMatrix * viewMatrix * instanceMatrix * vec4(pos, 1.0);
+                }
+            `,
+            fragmentShader: `
+                // Uniforms
                 uniform float uTime;
+                uniform vec3 uWaterColor;
+                uniform vec3 uDeepColor;
+                uniform vec3 uSkyColor;
+                uniform vec3 uSunDir;
+                uniform vec3 uSunColor;
+                uniform sampler2D uWaterTex;
+                uniform vec3 uCameraPos;
+                uniform vec3 uFogColor;
+                uniform float uFogNear;
+                uniform float uFogFar;
+
+                // Varyings recebidos do vertex shader
                 varying vec3 vWorldPos;
-                ` + shader.fragmentShader;
-            
-            // Movimenta a textura da água suavemente e calcula um UV mundi
-            shader.fragmentShader = shader.fragmentShader.replace(
-                `#include <map_fragment>`,
-                `
-                vec2 uvOffset = vec2(
-                    mod(vWorldPos.x + uTime * 0.2, 1.0), 
-                    mod(vWorldPos.z + uTime * 0.2, 1.0)
-                );
-                vec4 texelColor = texture2D(map, uvOffset);
-                diffuseColor *= texelColor;
-                `
-            );
-        };
+                varying vec3 vNormal;
+                varying float vWaveHeight;
+
+                void main() {
+                    // Direcao da camera ao fragmento
+                    vec3 viewDir = normalize(uCameraPos - vWorldPos);
+                    vec3 normal = normalize(vNormal);
+
+                    // ── Cor base com variacao de profundidade ──
+                    // Usa a posicao Y do mundo para variar entre cor rasa e profunda
+                    float depthFactor = clamp((vWorldPos.y + 2.0) * 0.3, 0.0, 1.0);
+                    vec3 baseColor = mix(uDeepColor, uWaterColor, depthFactor);
+
+                    // ── Textura de detalhe animada ──
+                    // Move UVs baseado na posicao do mundo para tiling continuo
+                    vec2 uv1 = vWorldPos.xz * 0.8 + uTime * vec2(0.03, 0.02);
+                    vec2 uv2 = vWorldPos.xz * 0.5 + uTime * vec2(-0.02, 0.04);
+                    float texDetail = texture2D(uWaterTex, fract(uv1)).r * 0.5 +
+                                      texture2D(uWaterTex, fract(uv2)).r * 0.5;
+                    // Mistura textura sutil com a cor base
+                    baseColor = mix(baseColor, baseColor * 1.3, texDetail * 0.2);
+
+                    // ── Efeito Fresnel (reflexo fake do ceu) ──
+                    // Superficies vistas de lado refletem mais (como agua real)
+                    float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0);
+                    fresnel = clamp(fresnel, 0.05, 0.6);
+                    vec3 reflectionColor = mix(uSkyColor, uSkyColor * 1.2, fresnel);
+                    baseColor = mix(baseColor, reflectionColor, fresnel);
+
+                    // ── Specular highlight (brilho do sol na agua) ──
+                    vec3 halfDir = normalize(uSunDir + viewDir);
+                    float spec = pow(max(dot(normal, halfDir), 0.0), 64.0);
+                    baseColor += uSunColor * spec * 0.4;
+
+                    // ── Ondulacao sutil na cor (simula refracao leve) ──
+                    float distortion = sin(vWorldPos.x * 4.0 + uTime * 2.0) *
+                                       cos(vWorldPos.z * 3.5 + uTime * 1.5) * 0.03;
+                    baseColor += distortion;
+
+                    // ── Transparencia ──
+                    // Mais transparente nas bordas rasas, mais opaco em areas profundas
+                    float alpha = mix(0.55, 0.8, 1.0 - depthFactor);
+                    // Variacao suave com as ondas
+                    alpha += vWaveHeight * 0.5;
+                    alpha = clamp(alpha, 0.4, 0.85);
+
+                    // ── Fog (neblina) para integrar com o ambiente ──
+                    float fogDist = length(uCameraPos - vWorldPos);
+                    float fogFactor = smoothstep(uFogNear, uFogFar, fogDist);
+                    baseColor = mix(baseColor, uFogColor, fogFactor);
+
+                    gl_FragColor = vec4(baseColor, alpha);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
 
         // 🐑 Texturas de Lã (16 cores)
         const texWhiteWool = carregarTextura('java/textures/block/white_wool.png');
@@ -2762,6 +2873,7 @@
             Pedra: `url('java/textures/block/stone.png')`,
             Madeira: `url('java/textures/block/oak_log.png')`,
             Folhas: `url('java/textures/block/oak_leaves.png')`,
+            Agua: `url('java/textures/block/water_still.png')`,
             Areia: `url('java/textures/block/sand.png')`,
             Tabua: `url('java/textures/block/oak_planks.png')`,
             Bancada: `url('java/textures/block/crafting_table_side.png')`,
@@ -4681,9 +4793,10 @@
                     `[F3] toggle`;
             }
 
-            if (matAgua.userData && matAgua.userData.shader) {
-                matAgua.userData.shader.uniforms.uTime.value = relogio.getElapsedTime();
-            }
+            // Atualiza uniforms do shader de agua
+            matAgua.uniforms.uTime.value = relogio.getElapsedTime();
+            matAgua.uniforms.uCameraPos.value.copy(camera.position);
+            matAgua.uniforms.uSunDir.value.copy(luzSol.position).normalize();
 
             renderizador.clear();
             renderizador.render(cena, camera);
