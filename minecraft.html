@@ -3086,9 +3086,9 @@
         const mundo = new Map();
         const chunksGerados = new Set();
         const chunksVisuais = new Map();
-        const chunkDataLOD = new Map();
-        const chunkVisualLOD = new Map();
-        const chunkTargetLOD = new Map();
+        const chunkDataLOD = new Map();   // LOD dos dados gerados no mundo (Map de blocos)
+        const chunkVisualLOD = new Map(); // LOD atualmente renderizado em chunksVisuais
+        const chunkTargetLOD = new Map(); // LOD desejado pelo streaming para cada chunk
         const chunkTaskMap = new Map();
         const chunkDataLRU = new Map();
         let TAMANHO_CHUNK = 16;
@@ -3105,12 +3105,13 @@
         const chunkStreamingConfig = {
             neighborRadiusTop: 1,
             neighborRadiusNone: 4,
-            topOnlyDepth: 8,
+            topOnlyDepth: 8, // camadas superficiais abaixo da altura do terreno para LOD_TOP
             edgePreloadDistance: 2,
             maxWorkMsPerFrame: 4,
             maxChunkTasksPerTick: 2,
             cacheSizeChunks: 128
         };
+        const EVICTION_Y_BUFFER = 16;
         const noise = new ImprovedNoise();
         let seedX = Math.random() * 10000;
         let seedZ = Math.random() * 10000;
@@ -3229,17 +3230,21 @@
         }
         function cachearChunkFull(chunkId) {
             chunkDataLRU.delete(chunkId);
-            chunkDataLRU.set(chunkId, Date.now());
+            chunkDataLRU.set(chunkId, true);
             while (chunkDataLRU.size > chunkStreamingConfig.cacheSizeChunks) {
                 const oldest = chunkDataLRU.keys().next().value;
                 if (!oldest) break;
                 chunkDataLRU.delete(oldest);
                 if (chunkVisualLOD.get(oldest) !== LOD_NONE) continue;
                 const { cx, cz } = parseChunkId(oldest);
-                for (const key of Array.from(mundo.keys())) {
-                    const [x, , z] = key.split(',').map(Number);
-                    if (Math.floor(x / TAMANHO_CHUNK) === cx && Math.floor(z / TAMANHO_CHUNK) === cz) {
-                        mundo.delete(key);
+                const xBase = cx * TAMANHO_CHUNK;
+                const zBase = cz * TAMANHO_CHUNK;
+                const yMaxEvict = WORLD_RENDER_Y_MAX + EVICTION_Y_BUFFER;
+                for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
+                    for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
+                        for (let y = WORLD_Y_MIN; y <= yMaxEvict; y++) {
+                            mundo.delete(`${xBase + lx},${y},${zBase + lz}`);
+                        }
                     }
                 }
                 chunksGerados.delete(oldest);
@@ -3311,7 +3316,7 @@
             const desiredLOD = new Map();
 
             const raioTop = Math.max(1, chunkStreamingConfig.neighborRadiusTop);
-            const raioNone = Math.max(raioTop + 1, chunkStreamingConfig.neighborRadiusNone);
+            const raioNone = Math.max(raioTop + 1, chunkStreamingConfig.neighborRadiusNone, DISTANCIA_RENDER);
             for (let cx = px - raioNone; cx <= px + raioNone; cx++) {
                 for (let cz = pz - raioNone; cz <= pz + raioNone; cz++) {
                     const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
@@ -3616,7 +3621,6 @@
 
             }
 
-            chunkStreamingConfig.neighborRadiusNone = Math.max(3, DISTANCIA_RENDER);
             updateChunkStreaming(camera.position);
             processarFilaChunkTasks();
             if (!window.playerSpawned && chunksVisuais.size > 0) {

@@ -562,7 +562,10 @@ export class WorldGeneratorV2 {
      * @param {{topOnlyDepth?: number}} [options]
      */
     generateChunk(mundo, cx, cz, options = {}) {
-        const topOnlyDepth = Number.isFinite(options.topOnlyDepth) ? Math.max(0, options.topOnlyDepth) : null;
+        const maxTopOnlyDepth = Y_MAX - Y_MIN;
+        const topOnlyDepth = Number.isFinite(options.topOnlyDepth)
+            ? Math.min(maxTopOnlyDepth, Math.max(1, options.topOnlyDepth))
+            : null;
         const isTopOnly = topOnlyDepth !== null;
 
         // Pre-compute per-column data (biome params, height, biome id)
