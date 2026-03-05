@@ -3152,7 +3152,10 @@
         // A larger render distance needs a larger far plane.
         // Minimum far covers the full vertical extent of the world diagonally.
         function syncCameraFar() {
-            const horiz = DISTANCIA_RENDER * TAMANHO_CHUNK * 1.5; // generous horizontal
+            // 1.5× margin: the square render region's diagonal is sqrt(2)≈1.41,
+            // so 1.5 guarantees chunk corners near the render boundary stay in view.
+            const CAMERA_FAR_HORIZ_MARGIN = 1.5;
+            const horiz = DISTANCIA_RENDER * TAMANHO_CHUNK * CAMERA_FAR_HORIZ_MARGIN;
             camera.far = Math.max(300, Math.ceil(Math.sqrt(horiz * horiz + WORLD_Y_RANGE * WORLD_Y_RANGE)));
             camera.updateProjectionMatrix();
         }
@@ -5597,11 +5600,12 @@
                 clearTimeout(debugAutoHideTimer);
             }
 
+            const DEBUG_PANEL_AUTO_HIDE_MS = 5000;
             function scheduleAutoHide() {
                 clearTimeout(debugAutoHideTimer);
                 debugAutoHideTimer = setTimeout(() => {
                     closeDebugPanel();
-                }, 5000);
+                }, DEBUG_PANEL_AUTO_HIDE_MS);
             }
 
             btnDebug.addEventListener('click', () => {
@@ -5652,7 +5656,9 @@
                         }
                     });
                     if (!_box.isEmpty()) {
-                        _box.expandByScalar(0.5); // one-block margin
+                        // Expand by half a block so the outline sits just outside the blocks
+                        const AABB_HELPER_MARGIN = 0.5;
+                        _box.expandByScalar(AABB_HELPER_MARGIN);
                         const helper = new THREE.Box3Helper(_box.clone(), 0x00ff88);
                         helper.userData.isDebugHelper = true;
                         cena.add(helper);
