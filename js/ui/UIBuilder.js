@@ -79,6 +79,26 @@ export class UIBuilder {
             53: { id: 53, nome: "Lã Verde", svgBase: "url('java/textures/block/green_wool.png')", type: "block" },
             54: { id: 54, nome: "Lã Vermelha", svgBase: "url('java/textures/block/red_wool.png')", type: "block" },
             55: { id: 55, nome: "Lã Preta", svgBase: "url('java/textures/block/black_wool.png')", type: "block" },
+
+            // ── Redstone ──────────────────────────────────────────────────────
+            56: { id: 56, nome: "Min.Redstone", svgBase: "url('java/textures/block/redstone_ore.png')", type: "block" },
+            57: { id: 57, nome: "Bloco Redstone", svgBase: "url('java/textures/block/redstone_block.png')", type: "block" },
+            58: { id: 58, nome: "Po Redstone (bloco)", svgBase: "url('java/textures/item/redstone.png')", type: "block" },
+            59: { id: 59, nome: "Tocha Redstone", svgBase: "url('java/textures/block/redstone_torch.png')", type: "block" },
+            60: { id: 60, nome: "Tocha Redstone (apag.)", svgBase: "url('java/textures/block/redstone_torch_off.png')", type: "block" },
+            61: { id: 61, nome: "Lampada Redstone", svgBase: "url('java/textures/block/redstone_lamp.png')", type: "block" },
+            62: { id: 62, nome: "Lampada Ligada", svgBase: "url('java/textures/block/redstone_lamp_on.png')", type: "block" },
+            63: { id: 63, nome: "Alavanca", svgBase: "url('java/textures/block/lever.png')", type: "block" },
+            64: { id: 64, nome: "Alavanca (lig.)", svgBase: "url('java/textures/block/lever.png')", type: "block" },
+            65: { id: 65, nome: "Repetidor", svgBase: "url('java/textures/item/repeater.png')", type: "block" },
+            66: { id: 66, nome: "Repetidor (lig.)", svgBase: "url('java/textures/block/repeater_on.png')", type: "block" },
+            67: { id: 67, nome: "Comparador", svgBase: "url('java/textures/item/comparator.png')", type: "block" },
+            68: { id: 68, nome: "Comparador (lig.)", svgBase: "url('java/textures/block/comparator_on.png')", type: "block" },
+            69: { id: 69, nome: "Pistao", svgBase: "url('java/textures/block/piston_top.png')", type: "block" },
+            70: { id: 70, nome: "Pistao Pegajoso", svgBase: "url('java/textures/block/piston_top_sticky.png')", type: "block" },
+            71: { id: 71, nome: "Distribuidor", svgBase: "url('java/textures/block/dispenser_front.png')", type: "block" },
+            72: { id: 72, nome: "Dropador", svgBase: "url('java/textures/block/dropper_front.png')", type: "block" },
+            "redstone": { id: "redstone", nome: "Po Redstone", svgBase: "url('java/textures/item/redstone.png')", type: "item" },
         };
 
         this.furnaceRecipes = {
@@ -150,6 +170,26 @@ export class UIBuilder {
             this.itemDefs[53].svgBase = matList.LaVerde;
             this.itemDefs[54].svgBase = matList.LaVermelha;
             this.itemDefs[55].svgBase = matList.LaPreta;
+        }
+        // Redstone
+        if (matList.RedstoneOre) {
+            this.itemDefs[56].svgBase = matList.RedstoneOre;
+            this.itemDefs[57].svgBase = matList.RedstoneBlock;
+            this.itemDefs[58].svgBase = matList.RedstoneDust;
+            this.itemDefs[59].svgBase = matList.RedstoneTorchOn;
+            this.itemDefs[60].svgBase = matList.RedstoneTorchOff;
+            this.itemDefs[61].svgBase = matList.RedstoneLampOff;
+            this.itemDefs[62].svgBase = matList.RedstoneLampOn;
+            this.itemDefs[63].svgBase = matList.Lever;
+            this.itemDefs[64].svgBase = matList.Lever;
+            this.itemDefs[65].svgBase = matList.RepeaterOff;
+            this.itemDefs[66].svgBase = matList.RepeaterOn;
+            this.itemDefs[67].svgBase = matList.ComparatorOff;
+            this.itemDefs[68].svgBase = matList.ComparatorOn;
+            this.itemDefs[69].svgBase = matList.PistonTop;
+            this.itemDefs[70].svgBase = matList.PistonTopSticky;
+            this.itemDefs[71].svgBase = matList.DispenserFront;
+            this.itemDefs[72].svgBase = matList.DropperFront;
         }
     }
 

@@ -42,11 +42,29 @@ export class MiningSystem {
         40: 0.4, 41: 0.4, 42: 0.4, 43: 0.4, 44: 0.4, 45: 0.4, 46: 0.4, 47: 0.4,
         48: 0.4, 49: 0.4, 50: 0.4, 51: 0.4, 52: 0.4, 53: 0.4, 54: 0.4, 55: 0.4,
         25: 0.5,  // snow block
+        // Redstone
+        56: 3.0,  // redstone ore
+        57: 0.5,  // redstone block
+        58: 0,    // redstone dust (instant)
+        59: 0,    // redstone torch on (instant)
+        60: 0,    // redstone torch off (instant)
+        61: 0.3,  // redstone lamp off
+        62: 0.3,  // redstone lamp on
+        63: 0,    // lever (instant)
+        64: 0,    // lever on (instant)
+        65: 0,    // repeater off (instant)
+        66: 0,    // repeater on (instant)
+        67: 0,    // comparator off (instant)
+        68: 0,    // comparator on (instant)
+        69: 0.5,  // piston
+        70: 0.5,  // sticky piston
+        71: 3.5,  // dispenser
+        72: 3.5,  // dropper
     };
 
     // Tool speed multipliers: { toolCategory: { blockType: multiplier } }
     static TOOL_SPEED = {
-        pickaxe: { 3: 3, 10: 3, 11: 4, 12: 4, 13: 5, 22: 3, 31: 3, 32: 3, 33: 3, 34: 4, 35: 4 },
+        pickaxe: { 3: 3, 10: 3, 11: 4, 12: 4, 13: 5, 22: 3, 31: 3, 32: 3, 33: 3, 34: 4, 35: 4, 56: 3, 57: 3, 61: 3, 62: 3, 69: 3, 70: 3, 71: 3, 72: 3 },
         axe: { 4: 3, 5: 3, 9: 3, 14: 3 },
         shovel: { 1: 3, 2: 3, 7: 3, 25: 3 }
     };
