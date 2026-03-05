@@ -1,6 +1,17 @@
 import { CREATIVE_CATEGORIES, resolveItemsWithIcons, explainItemsDBExtension } from '../data/itemsDB.js';
 
 const RECENT_STORAGE_KEY = 'meucraft_creative_recent';
+const CREATIVE_MANUAL_CHECKLIST = [
+    'Abrir/fechar inventario criativo no PC (tecla E)',
+    'Abrir/fechar inventario criativo no mobile (botao ...)',
+    'Trocar abas de categoria e validar filtragem',
+    'Buscar item por nome e tags',
+    'Arrastar item do grid para hotbar 1..9',
+    'Arrastar item entre slots da hotbar',
+    'Selecionar item e posicionar bloco no mundo em modo criativo',
+    'Trocar itens rapidamente sem travar a UI',
+    'Validar scroll suave sem lag com lista extensa (virtualizacao)'
+];
 
 export class InventoryCreative {
     constructor({ uiBuilder, itemsDb, uiState, gameState, controls, inventoryMenu, menu, hotbarManager, onRenderUI, onUpdateHand, isMobileDevice, soundManager }) {
@@ -62,6 +73,7 @@ export class InventoryCreative {
         this.uiState.creativeCategory = this.uiState.creativeCategory || 'all';
 
         window.getCreativeItemsDBHelp = explainItemsDBExtension;
+        window.getCreativeManualChecklist = () => CREATIVE_MANUAL_CHECKLIST.slice();
     }
 
     init() {
