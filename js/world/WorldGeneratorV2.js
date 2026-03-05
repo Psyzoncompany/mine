@@ -554,12 +554,20 @@ export class WorldGeneratorV2 {
     // ═════════════════════════════════════════════════════════════════
 
     /**
-     * Generate all block data for chunk (cx, cz) into the provided mundo Map.
+     * Generate block data for chunk (cx, cz) into the provided mundo Map.
+     * Supports top-only generation to reduce deep-cave work for distant chunks.
      * @param {Map<string, number>} mundo - shared world block map
      * @param {number} cx - chunk X coordinate
      * @param {number} cz - chunk Z coordinate
+     * @param {{topOnlyDepth?: number}} [options]
      */
-    generateChunk(mundo, cx, cz) {
+    generateChunk(mundo, cx, cz, options = {}) {
+        const maxTopOnlyDepth = Y_MAX - Y_MIN;
+        const topOnlyDepth = Number.isFinite(options.topOnlyDepth)
+            ? Math.min(maxTopOnlyDepth, Math.max(1, options.topOnlyDepth))
+            : null;
+        const isTopOnly = topOnlyDepth !== null;
+
         // Pre-compute per-column data (biome params, height, biome id)
         const columns = new Array(CHUNK_SIZE * CHUNK_SIZE);
 
@@ -570,7 +578,8 @@ export class WorldGeneratorV2 {
                 const params = this._sampleBiomeNoise(wx, wz);
                 const biome  = this._classifyBiome(params);
                 const height = this._calcHeight(wx, wz, params);
-                columns[lx * CHUNK_SIZE + lz] = { wx, wz, biome, height };
+                const minY = isTopOnly ? Math.max(Y_MIN, height - topOnlyDepth) : Y_MIN;
+                columns[lx * CHUNK_SIZE + lz] = { wx, wz, biome, height, minY };
             }
         }
 
@@ -578,8 +587,8 @@ export class WorldGeneratorV2 {
         // Passes 2+3: Fill terrain & surface
         // ──────────────────────────────────────────────────────────
         for (let idx = 0; idx < columns.length; idx++) {
-            const { wx, wz, biome, height } = columns[idx];
-            for (let y = Y_MIN; y <= Math.min(height, Y_MAX); y++) {
+            const { wx, wz, biome, height, minY } = columns[idx];
+            for (let y = minY; y <= Math.min(height, Y_MAX); y++) {
                 const key = `${wx},${y},${wz}`;
                 if (mundo.has(key)) continue;
                 mundo.set(key, this._surfaceBlock(biome, y, height));
@@ -591,8 +600,8 @@ export class WorldGeneratorV2 {
         // ──────────────────────────────────────────────────────────
         if (this.enableCaves) {
             for (let idx = 0; idx < columns.length; idx++) {
-                const { wx, wz, height } = columns[idx];
-                for (let y = Y_MIN + 1; y <= Math.min(height, Y_MAX); y++) {
+                const { wx, wz, height, minY } = columns[idx];
+                for (let y = Math.max(minY, Y_MIN + 1); y <= Math.min(height, Y_MAX); y++) {
                     const key = `${wx},${y},${wz}`;
                     const block = mundo.get(key);
                     if (block === undefined) continue;
@@ -609,7 +618,7 @@ export class WorldGeneratorV2 {
         // Pass 5: Water & aquifers
         // ──────────────────────────────────────────────────────────
         for (let idx = 0; idx < columns.length; idx++) {
-            const { wx, wz, biome, height } = columns[idx];
+            const { wx, wz, biome, height, minY } = columns[idx];
 
             // Ocean / surface water: fill air above ocean floor up to sea level
             if (biome === BIOME.OCEAN || height < this.seaLevel) {
@@ -621,7 +630,7 @@ export class WorldGeneratorV2 {
             // Aquifer filling in caves – only lava in deep areas
             // Small puddles in caves (very rare, single-block)
             if (this.enableAquifers) {
-                for (let y = Y_MIN + 1; y <= Math.min(height, Y_MAX); y++) {
+                for (let y = Math.max(minY, Y_MIN + 1); y <= Math.min(height, Y_MAX); y++) {
                     const key = `${wx},${y},${wz}`;
                     if (!mundo.has(key)) { // air pocket (cave)
                         if (y < -50) {
@@ -646,8 +655,8 @@ export class WorldGeneratorV2 {
         // ──────────────────────────────────────────────────────────
         if (this.enableOres) {
             for (let idx = 0; idx < columns.length; idx++) {
-                const { wx, wz, height } = columns[idx];
-                for (let y = Y_MIN; y <= Math.min(height, Y_MAX); y++) {
+                const { wx, wz, height, minY } = columns[idx];
+                for (let y = minY; y <= Math.min(height, Y_MAX); y++) {
                     const key = `${wx},${y},${wz}`;
                     if (mundo.get(key) !== BLOCK.STONE) continue;
                     const ore = this._oreAt(wx, y, wz, height);
@@ -660,8 +669,8 @@ export class WorldGeneratorV2 {
         // Pass 6b: Stone variety (granite, diorite, andesite, deepslate)
         // ──────────────────────────────────────────────────────────
         for (let idx = 0; idx < columns.length; idx++) {
-            const { wx, wz, height } = columns[idx];
-            for (let y = Y_MIN; y <= Math.min(height - 3, Y_MAX); y++) {
+            const { wx, wz, height, minY } = columns[idx];
+            for (let y = minY; y <= Math.min(height - 3, Y_MAX); y++) {
                 const key = `${wx},${y},${wz}`;
                 if (mundo.get(key) !== BLOCK.STONE) continue;
                 const variant = this._stoneVariant(wx, y, wz);
@@ -672,11 +681,13 @@ export class WorldGeneratorV2 {
         // ──────────────────────────────────────────────────────────
         // Pass 7: Bedrock (executed before vegetation to ensure solidity)
         // ──────────────────────────────────────────────────────────
-        for (let idx = 0; idx < columns.length; idx++) {
-            const { wx, wz } = columns[idx];
-            for (let y = Y_MIN; y <= Y_MIN + 2; y++) {
-                if (this._bedrockAt(wx, y, wz)) {
-                    mundo.set(`${wx},${y},${wz}`, BLOCK.BEDROCK);
+        if (!isTopOnly) {
+            for (let idx = 0; idx < columns.length; idx++) {
+                const { wx, wz } = columns[idx];
+                for (let y = Y_MIN; y <= Y_MIN + 2; y++) {
+                    if (this._bedrockAt(wx, y, wz)) {
+                        mundo.set(`${wx},${y},${wz}`, BLOCK.BEDROCK);
+                    }
                 }
             }
         }
