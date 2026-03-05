@@ -1181,6 +1181,8 @@
         }
     </style>
 
+    <link rel="stylesheet" href="./js/ui/inventoryCreative.css">
+
     <script type="importmap">
         {
             "imports": {
@@ -1189,6 +1191,8 @@
                 "./systems/": "./js/systems/",
                 "./world/": "./js/world/",
                 "./ui/": "./js/ui/",
+                "./data/": "./js/data/",
+                "./input/": "./js/input/",
                 "./scripts/mobs/": "./js/scripts/mobs/",
                 "./items/": "./js/items/"
             }
@@ -1330,48 +1334,22 @@
     </div>
     
     <!-- Menu Criativo -->
-    <div id="creative-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#c6c6c6; border-top:3px solid #fff; border-left:3px solid #fff; border-bottom:3px solid #555; border-right:3px solid #555; padding:15px; z-index:200; width:94vw; max-width:600px; max-height:82vh; overflow:hidden; flex-direction:column;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="font-size:14px; margin:0; color:#404040; font-family:'Press Start 2P',monospace;">Modo Criativo</h2>
-            <button onclick="document.getElementById('creative-menu').style.display='none'; controles.lock();" style="padding:5px 10px; font-size:12px; cursor:pointer; background:#8b8b8b; border-top:2px solid #fff; border-left:2px solid #fff; border-bottom:2px solid #555; border-right:2px solid #555;">X</button>
+    <div id="creative-menu" data-ui="true">
+        <div class="creative-header">
+            <h2 class="creative-title">Modo Criativo</h2>
+            <button id="btn-close-creative" class="creative-close-btn" type="button">X</button>
         </div>
-        <p style="font-size:10px; color:#666; margin:5px 0 10px; font-family:sans-serif;">Clique em um item para adicionar 64 ao inventário</p>
-        <div id="creative-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(clamp(48px, 8vw, 72px), 1fr)); gap:8px; flex:1; overflow-y:auto; padding:5px; touch-action:pan-y; -webkit-overflow-scrolling:touch;"></div>
+        <div class="creative-toolbar">
+            <input id="creative-search" class="creative-search" type="text" placeholder="Pesquisar..." aria-label="Pesquisar item no inventario criativo">
+            <div id="creative-tabs" class="creative-tabs" role="tablist" aria-label="Categorias do inventario criativo"></div>
+        </div>
+        <div id="creative-grid" data-ui="true"></div>
+        <div id="creative-mobile-action" class="creative-mobile-action" data-ui="true">
+            <button id="creative-add-hotbar" class="creative-mobile-btn" type="button">Adicionar a Hotbar</button>
+            <button id="creative-remove-hotbar" class="creative-mobile-btn" type="button">Remover slot</button>
+        </div>
     </div>
-    
-    <style>
-        .creative-slot {
-            width: clamp(44px, 9vw, 64px); height: clamp(44px, 9vw, 64px);
-            background:#8b8b8b;
-            border-top:2px solid #d4d4d4;
-            border-left:2px solid #d4d4d4;
-            border-bottom:2px solid #373737;
-            border-right:2px solid #373737;
-            display:flex;
-            align-items:flex-end;
-            justify-content:center;
-            cursor:pointer;
-            background-size:70%;
-            background-repeat:no-repeat;
-            background-position:center;
-            image-rendering:pixelated;
-            position:relative;
-        }
-        .creative-slot:hover {
-            background-color:#aaa;
-            transform:scale(1.05);
-        }
-        .creative-label {
-            font-size:7px;
-            color:#fff;
-            text-shadow:1px 1px 0 #000;
-            font-family:'Press Start 2P',monospace;
-            padding:2px;
-            text-align:center;
-            width:100%;
-            background:rgba(0,0,0,0.5);
-        }
-    </style>
+    <div id="creative-tooltip" class="creative-tooltip" role="status" aria-live="polite"></div>
 
     <!-- Fornalha Menú -->
     <div id="furnace-menu" style="display: none; background: #c6c6c6; border-top: 3px solid #fff; border-left: 3px solid #fff; border-bottom: 3px solid #555; border-right: 3px solid #555; padding: 7px; font-family: 'Press Start 2P', monospace; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #000, 0 0 0 100vw rgba(0,0,0,0.55); z-index: 200;">
@@ -1572,12 +1550,17 @@
         import { CombatSystem } from './systems/combatSystem.js';
         import { MiningSystem } from './systems/miningSystem.js';
         import { InputRouter } from './systems/InputRouter.js';
+        import { InputManager } from './input/inputManager.js';
         import { VillageGenerator } from './world/villageGenerator.js';
         import { VillagerAI } from './world/villagerAI.js';
         import { GolemSystem } from './world/golemSystem.js';
         import { Villager } from './scripts/mobs/Villager.js';
         import { IronGolem } from './scripts/mobs/IronGolem.js';
         import { RedstoneSystem } from './systems/redstoneSystem.js';
+        import { ITEMS_DB } from './data/itemsDB.js';
+        import { uiState, gameState } from './ui/uiState.js';
+        import { HotbarManager } from './ui/hotbar.js';
+        import { InventoryCreative } from './ui/inventoryCreative.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -1615,7 +1598,7 @@
             furnaceMenu.style.display = 'block';
             menu.style.display = 'none';
             inventoryMenu.style.display = 'none';
-            document.getElementById('creative-menu').style.display = 'none';
+            if (window.closeCreativeInventory) window.closeCreativeInventory();
             controles.unlock();
             callRenderUI();
         };
@@ -1649,6 +1632,7 @@
         window._soundManager = soundManager; // Expõe para os mobs usarem sons ambientes
         let playerHP = 20;
         let gameMode = localStorage.getItem('meucraft_gamemode') || 'survival'; // 'survival' ou 'creative'
+        gameState.mode = gameMode;
         window._creativeFlying = false;
         let playerOxygen = 15; // 15s de fôlego máximo
         let lastDrownDamage = 0;
@@ -1712,6 +1696,31 @@
                 if (creativeBlocksBtn) creativeBlocksBtn.style.display = 'none';
             }
         }
+
+        const hotbarManager = new HotbarManager({
+            uiBuilder,
+            onUpdate: () => callRenderUI(),
+            onSelect: () => atualizarMao()
+        });
+
+        const creativeInventory = new InventoryCreative({
+            uiBuilder,
+            itemsDb: ITEMS_DB,
+            uiState,
+            gameState,
+            controls: controles,
+            inventoryMenu,
+            menu,
+            hotbarManager,
+            onRenderUI: () => callRenderUI(),
+            onUpdateHand: () => atualizarMao(),
+            isMobileDevice,
+            soundManager
+        });
+        creativeInventory.init();
+
+        window.openCreativeInventory = () => creativeInventory.open();
+        window.closeCreativeInventory = () => creativeInventory.close();
 
         // Ganha XP e sobe de nível quando preencher a barra
         function ganharXP(amount) {
@@ -3637,128 +3646,7 @@
             controles.lock();
         };
 
-        // Inventário Criativo - mostra todos os blocos disponíveis
-        window.openCreativeInventory = function() {
-            const creativeMenu = document.getElementById('creative-menu');
-            if (creativeMenu.style.display === 'flex') {
-                creativeMenu.style.display = 'none';
-                controles.lock();
-                return;
-            }
-            creativeMenu.style.display = 'flex';
-            controles.unlock();
-            
-            // Atualiza os itens do menu criativo
-            const grid = document.getElementById('creative-grid');
-            grid.innerHTML = '';
-            
-            // Lista de todos os blocos/itens disponíveis
-            const allItems = [
-                { id: 1, nome: 'Grama' },
-                { id: 2, nome: 'Terra' },
-                { id: 3, nome: 'Pedra' },
-                { id: 4, nome: 'Madeira' },
-                { id: 5, nome: 'Folhas' },
-                { id: 6, nome: 'Água' },
-                { id: 7, nome: 'Areia' },
-                { id: 8, nome: 'Tábua' },
-                { id: 9, nome: 'Bancada' },
-                { id: 10, nome: 'Min.Carvão' },
-                { id: 11, nome: 'Min.Ferro' },
-                { id: 12, nome: 'Min.Ouro' },
-                { id: 13, nome: 'Min.Diamante' },
-                { id: 14, nome: 'Pedregulho' },
-                { id: 15, nome: 'Graveto' },
-                { id: 18, nome: 'Grama Curta' },
-                { id: 19, nome: 'Papoula' },
-                { id: 20, nome: 'Dente-de-leão' },
-                { id: 21, nome: 'Centáurea' },
-                { id: 'picareta', nome: 'Picareta' },
-                { id: 'machado', nome: 'Machado' },
-                { id: 'picareta_pedra', nome: 'Pic.Pedra' },
-                { id: 'machado_pedra', nome: 'Mach.Pedra' },
-                { id: 'picareta_ferro', nome: 'Pic.Ferro' },
-                { id: 'machado_ferro', nome: 'Mach.Ferro' },
-                { id: 'picareta_diamante', nome: 'Pic.Diamante' },
-                { id: 'machado_diamante', nome: 'Mach.Diamante' },
-                { id: 'pa', nome: 'Pá Madeira' },
-                { id: 'pa_pedra', nome: 'Pá Pedra' },
-                { id: 'pa_ferro', nome: 'Pá Ferro' },
-                { id: 'pa_diamante', nome: 'Pá Diamante' },
-                { id: 'tesoura', nome: 'Tesoura' },
-                { id: 22, nome: 'Fornalha' },
-                { id: 23, nome: 'Bloco Carvão' },
-                { id: 'carvao', nome: 'Carvão' },
-                { id: 'barra_ferro', nome: 'Barra Ferro' },
-                { id: 'barra_ouro', nome: 'Barra Ouro' },
-                { id: 'carne_vaca_assada', nome: 'Bife' },
-                { id: 'carne_porco_assada', nome: 'Porco Assado' },
-                { id: 'frango_assado', nome: 'Frango Assado' },
-                { id: 'carneirinho_assado', nome: 'Mutton Assado' },
-                { id: 31, nome: 'Granito' },
-                { id: 32, nome: 'Diorito' },
-                { id: 33, nome: 'Andesito' },
-                { id: 34, nome: 'Ardosia' },
-                { id: 35, nome: 'Min.Cobre' },
-                { id: 25, nome: 'Neve' },
-                // 🐑 Lãs
-                { id: 40, nome: 'Lã Branca' },
-                { id: 41, nome: 'Lã Laranja' },
-                { id: 42, nome: 'Lã Magenta' },
-                { id: 43, nome: 'Lã Azul C.' },
-                { id: 44, nome: 'Lã Amarela' },
-                { id: 45, nome: 'Lã Lima' },
-                { id: 46, nome: 'Lã Rosa' },
-                { id: 47, nome: 'Lã Cinza' },
-                { id: 48, nome: 'Lã Cinza C.' },
-                { id: 49, nome: 'Lã Ciano' },
-                { id: 50, nome: 'Lã Roxa' },
-                { id: 51, nome: 'Lã Azul' },
-                { id: 52, nome: 'Lã Marrom' },
-                { id: 53, nome: 'Lã Verde' },
-                { id: 54, nome: 'Lã Vermelha' },
-                { id: 55, nome: 'Lã Preta' },
-                // Redstone
-                { id: 56, nome: 'Min.Redstone' },
-                { id: 57, nome: 'Bloco Redstone' },
-                { id: 58, nome: 'Po Redstone (bloco)' },
-                { id: 59, nome: 'Tocha Redstone' },
-                { id: 61, nome: 'Lampada Redstone' },
-                { id: 63, nome: 'Alavanca' },
-                { id: 65, nome: 'Repetidor' },
-                { id: 67, nome: 'Comparador' },
-                { id: 69, nome: 'Pistao' },
-                { id: 70, nome: 'Pistao Pegajoso' },
-                { id: 71, nome: 'Distribuidor' },
-                { id: 72, nome: 'Dropador' },
-                { id: 'redstone', nome: 'Po Redstone (item)' },
-            ];
-            
-            allItems.forEach(item => {
-                const slot = document.createElement('div');
-                slot.className = 'creative-slot';
-                slot.title = item.nome;
-                
-                // Definir background baseado no tipo
-                const itemDef = uiBuilder.itemDefs[item.id];
-                if (itemDef && itemDef.svgBase) {
-                    slot.style.backgroundImage = itemDef.svgBase;
-                }
-                
-                slot.addEventListener('click', () => {
-                    // Adiciona 64 do item ao inventário
-                    uiBuilder.addItem(item.id, 64);
-                    callRenderUI();
-                });
-                
-                const label = document.createElement('span');
-                label.className = 'creative-label';
-                label.textContent = item.nome;
-                slot.appendChild(label);
-                
-                grid.appendChild(slot);
-            });
-        };
+        // Inventário Criativo modularizado em ui/inventoryCreative.js
 
         document.getElementById('btn-recipe-book').addEventListener('click', () => {
             const modal = document.getElementById('recipe-book-modal');
@@ -3821,15 +3709,6 @@
             if (e.key >= '1' && e.key <= '9') {
                 uiBuilder.selectedHotbarIndex = parseInt(e.key) - 1;
                 callRenderUI();
-            }
-            if (e.key.toLowerCase() === 'e') {
-                if (inventoryMenu.style.display === 'flex') {
-                    window.closeInventory();
-                } else if (furnaceMenu.style.display === 'block') {
-                    window.closeFurnace();
-                } else {
-                    window.openInventory(false);
-                }
             }
             if (e.key.toLowerCase() === 'y') {
                 // Open game mode selector
@@ -5034,6 +4913,7 @@
         // ── Game Mode Selector Buttons ──
         function applyGameMode(mode) {
             gameMode = mode;
+            gameState.mode = mode;
             localStorage.setItem('meucraft_gamemode', mode);
             document.getElementById('gamemode-selector').classList.remove('open');
             if (mode === 'creative') {
@@ -5057,27 +4937,35 @@
             menu.style.display = 'flex';
         });
 
-        // ── Hotbar "..." Inventory Button (Mobile) ──
-        const hotbarInvBtn = document.getElementById('hotbar-inv-btn');
-        if (hotbarInvBtn) {
-            hotbarInvBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const inv = document.getElementById('inventory-menu');
-                if (inv.style.display === 'flex') {
-                    inv.style.display = 'none';
-                } else {
-                    inv.style.display = 'flex';
-                    menu.style.display = 'none';
+        const inputManager = new InputManager({
+            toggleKey: 'e',
+            onToggleInventory: () => {
+                const creativeMenuEl = document.getElementById('creative-menu');
+                if (creativeMenuEl.style.display === 'flex') {
+                    window.closeCreativeInventory();
+                    return;
                 }
-            }, { passive: false });
-            hotbarInvBtn.addEventListener('click', () => {
-                const inv = document.getElementById('inventory-menu');
-                if (inv.style.display === 'flex') {
+                if (inventoryMenu.style.display === 'flex') {
                     window.closeInventory();
+                    return;
+                }
+                if (furnaceMenu.style.display === 'block') {
+                    window.closeFurnace();
+                    return;
+                }
+                if (gameMode === 'creative') {
+                    window.openCreativeInventory();
                 } else {
                     window.openInventory(false);
                 }
-            });
+            }
+        });
+        inputManager.bindKeyboard();
+
+        // ── Hotbar "..." Inventory Button (Mobile) ──
+        const hotbarInvBtn = document.getElementById('hotbar-inv-btn');
+        if (hotbarInvBtn) {
+            inputManager.bindMobileToggle(hotbarInvBtn);
         }
 
         // ── Hotbar Page Navigation (arrows for mobile) ──
@@ -5164,7 +5052,7 @@
                 } else {
                     inventoryMenu.style.display = 'none';
                     furnaceMenu.style.display = 'none';
-                    document.getElementById('creative-menu').style.display = 'none';
+                    if (window.closeCreativeInventory) window.closeCreativeInventory();
                     document.getElementById('settings-panel').style.display = 'none';
                     document.getElementById('gamemode-selector').classList.remove('open');
                     document.getElementById('recipe-book-modal').style.display = 'none';
