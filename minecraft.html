@@ -2620,7 +2620,7 @@
                     // Onda primaria - lenta e ampla
                     h += sin(pos.x * 1.8 + time * 1.5) * 0.06;
                     h += cos(pos.y * 2.0 + time * 1.2) * 0.05;
-                    // Onda secundaria - mais rapida e menor
+                    // Onda secundaria - mais rapida e menor (pos.y = coordenada z do mundo)
                     h += sin(pos.x * 3.5 + pos.y * 2.8 + time * 2.5) * 0.03;
                     // Onda terciaria - detalhe fino
                     h += cos(pos.x * 5.0 - pos.y * 4.0 + time * 3.0) * 0.015;
