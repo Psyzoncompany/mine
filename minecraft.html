@@ -1179,6 +1179,60 @@
                 font-size: 7px;
             }
         }
+
+        /* ── 🛠️ Debug Panel ── */
+        #debug-panel-btn {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 310;
+            background: rgba(0,0,0,0.65);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 15px;
+            border-radius: 4px;
+            line-height: 1;
+            display: none; /* shown only when game is active */
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        #debug-panel-btn:active { background: rgba(255,255,255,0.15); }
+
+        #debug-panel {
+            position: fixed;
+            top: 46px;
+            right: 8px;
+            z-index: 309;
+            background: rgba(0,0,0,0.78);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 7px;
+            line-height: 1.9;
+            padding: 8px 10px 10px;
+            border-radius: 4px;
+            min-width: 185px;
+            max-width: 240px;
+            display: none;
+            pointer-events: all;
+        }
+        #debug-metrics { margin-bottom: 6px; }
+        .debug-sep { border-top: 1px solid rgba(255,255,255,0.2); margin: 5px 0; }
+        .debug-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 3px;
+            cursor: pointer;
+        }
+        .debug-toggle-row input[type="checkbox"] { cursor: pointer; }
+        @media (max-width: 480px) {
+            #debug-panel { font-size: 6px; min-width: 160px; }
+        }
     </style>
 
     <script type="importmap">
@@ -1200,6 +1254,15 @@
 
     <div id="loading">Carregando mundo...</div>
     <div id="debug-overlay" style="position:fixed;top:8px;left:8px;color:#fff;font-family:'Press Start 2P',monospace;font-size:8px;line-height:14px;pointer-events:none;z-index:200;text-shadow:1px 1px 1px #000;display:none;"></div>
+
+    <!-- 🛠️ Debug Panel (rendering diagnostics + toggles) -->
+    <button id="debug-panel-btn" title="Debug">🛠️</button>
+    <div id="debug-panel">
+        <div id="debug-metrics"></div>
+        <div class="debug-sep"></div>
+        <label class="debug-toggle-row"><input type="checkbox" id="dtoggle-frustum"> Desativar Frustum Culling</label>
+        <label class="debug-toggle-row"><input type="checkbox" id="dtoggle-aabb"> Mostrar AABB dos Chunks</label>
+    </div>
     <div id="recursos" style="display:none;"></div> <!-- Ocultando pq agora temos inventário real -->
     <!-- HUD bottom: saúde + fome + oxigênio + barra de XP (estilo Minecraft) -->
     <div id="hud-wrapper">
@@ -1584,6 +1647,12 @@
         const corCeu = 0x78A7FF; // Azul mais parecido com o do Minecraft
         cena.background = new THREE.Color(corCeu);
         cena.fog = new THREE.Fog(corCeu, 20, 60);
+
+        // Camera far plane: covers horizontal render distance + full Y range diagonally
+        // Updated dynamically when render distance changes via syncCameraFar()
+        const WORLD_Y_MIN = -64;
+        const WORLD_Y_MAX = 50;
+        const WORLD_Y_RANGE = WORLD_Y_MAX - WORLD_Y_MIN + 10; // 124, with margin
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderizador = new THREE.WebGLRenderer({ antialias: false });
@@ -3079,6 +3148,16 @@
         let seedX = Math.random() * 10000;
         let seedZ = Math.random() * 10000;
 
+        // Synchronise camera near/far with render distance and world Y range.
+        // A larger render distance needs a larger far plane.
+        // Minimum far covers the full vertical extent of the world diagonally.
+        function syncCameraFar() {
+            const horiz = DISTANCIA_RENDER * TAMANHO_CHUNK * 1.5; // generous horizontal
+            camera.far = Math.max(300, Math.ceil(Math.sqrt(horiz * horiz + WORLD_Y_RANGE * WORLD_Y_RANGE)));
+            camera.updateProjectionMatrix();
+        }
+        syncCameraFar();
+
         // 🌍 WorldGen V2 – Minecraft-like procedural generation
         const worldGenV2 = new WorldGeneratorV2({
             seed: Math.floor(seedX * 1000 + seedZ),
@@ -3095,6 +3174,14 @@
         const villagerAI = new VillagerAI();
         const golemSystem = new GolemSystem();
         const generatedVillageChunks = new Set();
+
+        // 🛠️ Debug state (shared with construirChunkVisual and debug panel)
+        let debugFrustumDisabled = false;
+        let debugAabbEnabled = false;
+        const aabbHelpers = new Map(); // chunkId → Box3Helper
+        // Stub – real implementation set up by the debug panel block below
+        let updateDebugPanelMetrics = () => {};
+        let refreshAabbHelpers = () => {};
 
         // 🎨 Materiais LOD (cor sólida, sem textura, ultra leve)
         const materiaisLOD = {
@@ -3370,6 +3457,10 @@
                 const instancedMesh = new THREE.InstancedMesh(geometriaBloco, mat, pos.length);
                 const matriz = new THREE.Matrix4();
                 pos.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); instancedMesh.setMatrixAt(index, matriz); });
+                instancedMesh.instanceMatrix.needsUpdate = true;
+                // Pre-compute bounding sphere so frustum culling works correctly at deep Y
+                instancedMesh.computeBoundingSphere();
+                if (debugFrustumDisabled) instancedMesh.frustumCulled = false;
                 if (!isLOD) { instancedMesh.castShadow = true; instancedMesh.receiveShadow = true; }
                 instancedMesh.renderOrder = 0;
                 grupo.add(instancedMesh);
@@ -3381,6 +3472,9 @@
                 const instancedPlanta = new THREE.InstancedMesh(geometriaPlanta, mat, pos.length);
                 const matriz = new THREE.Matrix4();
                 pos.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); instancedPlanta.setMatrixAt(index, matriz); });
+                instancedPlanta.instanceMatrix.needsUpdate = true;
+                instancedPlanta.computeBoundingSphere();
+                if (debugFrustumDisabled) instancedPlanta.frustumCulled = false;
                 instancedPlanta.castShadow = true;
                 instancedPlanta.receiveShadow = true;
                 instancedPlanta.renderOrder = 0;
@@ -3392,6 +3486,9 @@
                 const aguaMesh = new THREE.InstancedMesh(geometriaBlocoAgua, matAgua, blocosAgua.length);
                 const matriz = new THREE.Matrix4();
                 blocosAgua.forEach((p, index) => { matriz.setPosition(p.x, p.y, p.z); aguaMesh.setMatrixAt(index, matriz); });
+                aguaMesh.instanceMatrix.needsUpdate = true;
+                aguaMesh.computeBoundingSphere();
+                if (debugFrustumDisabled) aguaMesh.frustumCulled = false;
                 aguaMesh.renderOrder = 1;
                 aguaMesh.castShadow = false;
                 aguaMesh.receiveShadow = false;
@@ -3430,6 +3527,7 @@
                             const grupo = chunksVisuais.get(id);
                             if (grupo.userData.isLOD && dist <= DISTANCIA_DETALHE) {
                                 cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
+                                if (aabbHelpers.has(id)) { cena.remove(aabbHelpers.get(id)); aabbHelpers.delete(id); }
                                 chunkFilaPendente.push({ cx, cz, dist });
                             }
                         }
@@ -3443,6 +3541,8 @@
                     const [cx, cz] = id.split(',').map(Number);
                     if (Math.abs(cx - px) > DISTANCIA_RENDER || Math.abs(cz - pz) > DISTANCIA_RENDER) {
                         cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
+                        // Remove AABB helper for this chunk if it exists
+                        if (aabbHelpers.has(id)) { cena.remove(aabbHelpers.get(id)); aabbHelpers.delete(id); }
                         animais = animais.filter(a => { if (a.chunkId === id) { cena.remove(a.mesh); return false; } return true; });
                     }
                 }
@@ -3484,7 +3584,11 @@
 
         function recriarChunkVisual(x, z) {
             const cx = Math.floor(x / TAMANHO_CHUNK); const cz = Math.floor(z / TAMANHO_CHUNK); const id = obterIdChunk(cx, cz);
-            if (chunksVisuais.has(id)) { const grupo = chunksVisuais.get(id); cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id); construirChunkVisual(cx, cz); }
+            if (chunksVisuais.has(id)) {
+                const grupo = chunksVisuais.get(id); cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
+                if (aabbHelpers.has(id)) { cena.remove(aabbHelpers.get(id)); aabbHelpers.delete(id); }
+                construirChunkVisual(cx, cz);
+            }
         }
 
         // 🏃‍♂️ CONTROLES
@@ -3840,6 +3944,11 @@
                 e.preventDefault();
                 const dbg = document.getElementById('debug-overlay');
                 dbg.style.display = dbg.style.display === 'none' ? 'block' : 'none';
+            }
+            if (e.key === 'F4') {
+                e.preventDefault();
+                // Toggle debug panel via keyboard shortcut
+                document.getElementById('debug-panel-btn').click();
             }
         });
 
@@ -4677,7 +4786,7 @@
                     }
                     camera.position.y = posAntiga.y; velocidadeY = 0; noChao = true;
                 } else noChao = false;
-                if (camera.position.y < -30) { camera.position.set(camera.position.x, 20, camera.position.z); velocidadeY = 0; }
+                if (camera.position.y < WORLD_Y_MIN - 2) { camera.position.set(camera.position.x, 20, camera.position.z); velocidadeY = 0; }
 
                 // 👣 FOOTSTEPS & SWIM SOUNDS
                 if (movendo && noChao && !naAgua) {
@@ -4789,9 +4898,13 @@
                     `Biome: ${biome}<br>` +
                     `Height: ${h}<br>` +
                     `Chunks: ${chunksVisuais.size}<br>` +
+                    `Near/Far: ${camera.near} / ${camera.far}<br>` +
                     `Seed: ${worldGenV2.seed}<br>` +
                     `[F3] toggle`;
             }
+
+            // 🛠️ Debug panel metrics update
+            updateDebugPanelMetrics();
 
             // Atualiza uniforms do shader de agua
             matAgua.uniforms.uTime.value = relogio.getElapsedTime();
@@ -4946,6 +5059,7 @@
             DISTANCIA_RENDER = val;
             DISTANCIA_DETALHE = Math.min(2, val);
             fogNormal.far = val * TAMANHO_CHUNK;
+            syncCameraFar(); // Update camera far when render distance changes
             // Forçar atualização de chunks ao mudar distância
             chunkAtualX = -999; chunkAtualZ = -999;
         });
@@ -5457,8 +5571,150 @@
             });
         }
 
+        // ── 🛠️ Debug Panel Logic ──
+        {
+            const btnDebug = document.getElementById('debug-panel-btn');
+            const panelDebug = document.getElementById('debug-panel');
+            const metricsEl = document.getElementById('debug-metrics');
+            const toggleFrustum = document.getElementById('dtoggle-frustum');
+            const toggleAabb = document.getElementById('dtoggle-aabb');
+
+            let debugPanelOpen = false;
+            let debugAutoHideTimer = null;
+
+            // Show the 🛠️ button whenever the renderer is visible (game is running)
+            btnDebug.style.display = 'flex';
+
+            function openDebugPanel() {
+                debugPanelOpen = true;
+                panelDebug.style.display = 'block';
+                scheduleAutoHide();
+            }
+
+            function closeDebugPanel() {
+                debugPanelOpen = false;
+                panelDebug.style.display = 'none';
+                clearTimeout(debugAutoHideTimer);
+            }
+
+            function scheduleAutoHide() {
+                clearTimeout(debugAutoHideTimer);
+                debugAutoHideTimer = setTimeout(() => {
+                    closeDebugPanel();
+                }, 5000);
+            }
+
+            btnDebug.addEventListener('click', () => {
+                if (debugPanelOpen) closeDebugPanel();
+                else openDebugPanel();
+            });
+
+            // Reset auto-hide timer on any interaction with the panel
+            panelDebug.addEventListener('pointerenter', scheduleAutoHide);
+            panelDebug.addEventListener('change', scheduleAutoHide);
+
+            // Toggle: disable frustum culling (for diagnostics)
+            toggleFrustum.addEventListener('change', () => {
+                debugFrustumDisabled = toggleFrustum.checked;
+                cena.traverse(obj => {
+                    if (obj.isInstancedMesh) obj.frustumCulled = !debugFrustumDisabled;
+                });
+                scheduleAutoHide();
+            });
+
+            // Toggle: show AABB bounding boxes for each chunk
+            toggleAabb.addEventListener('change', () => {
+                debugAabbEnabled = toggleAabb.checked;
+                refreshAabbHelpers();
+                scheduleAutoHide();
+            });
+
+            // Recompute & refresh AABB Box3Helpers for all loaded chunks
+            refreshAabbHelpers = function() {
+                // Remove old helpers
+                for (const helper of aabbHelpers.values()) cena.remove(helper);
+                aabbHelpers.clear();
+
+                if (!debugAabbEnabled) return;
+
+                const _box = new THREE.Box3();
+                for (const [id, grupo] of chunksVisuais.entries()) {
+                    _box.makeEmpty();
+                    grupo.children.forEach(child => {
+                        if (child.isInstancedMesh) {
+                            if (!child.boundingSphere) child.computeBoundingSphere();
+                            // Use instance positions to build a rough AABB
+                            const m = new THREE.Matrix4();
+                            for (let i = 0; i < child.count; i++) {
+                                child.getMatrixAt(i, m);
+                                _box.expandByPoint(new THREE.Vector3().setFromMatrixPosition(m));
+                            }
+                        }
+                    });
+                    if (!_box.isEmpty()) {
+                        _box.expandByScalar(0.5); // one-block margin
+                        const helper = new THREE.Box3Helper(_box.clone(), 0x00ff88);
+                        helper.userData.isDebugHelper = true;
+                        cena.add(helper);
+                        aabbHelpers.set(id, helper);
+                    }
+                }
+            };
+
+            // Reuse a shared frustum to avoid GC pressure every frame
+            const _debugFrustum = new THREE.Frustum();
+            const _debugProjMat = new THREE.Matrix4();
+
+            // Called each frame from the render loop to refresh the metrics display
+            updateDebugPanelMetrics = function() {
+                if (!debugPanelOpen) return;
+
+                const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
+                const wcx = Math.floor(px / TAMANHO_CHUNK), wcz = Math.floor(pz / TAMANHO_CHUNK);
+
+                // Compute frustum for culling estimate
+                _debugProjMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                _debugFrustum.setFromProjectionMatrix(_debugProjMat);
+
+                let totalTris = 0;
+                let meshCount = 0;
+                let culledCount = 0;
+
+                cena.traverse(obj => {
+                    if (!obj.isInstancedMesh || obj.userData.isDebugHelper) return;
+                    meshCount++;
+                    // Triangle estimate: geometry faces × instance count
+                    const geom = obj.geometry;
+                    const facesPerInstance = geom.index
+                        ? geom.index.count / 3
+                        : geom.attributes.position.count / 3;
+                    totalTris += facesPerInstance * obj.count;
+
+                    if (obj.frustumCulled) {
+                        // Quick sphere test
+                        const sp = obj.boundingSphere;
+                        if (sp && !_debugFrustum.intersectsSphere(sp)) culledCount++;
+                    }
+                });
+
+                metricsEl.innerHTML =
+                    `<b>Jogador</b><br>` +
+                    `X:${px.toFixed(1)} Y:${py.toFixed(1)} Z:${pz.toFixed(1)}<br>` +
+                    `Chunk: ${wcx}, ${wcz}<br>` +
+                    `<br><b>Renderizacao</b><br>` +
+                    `Chunks ativos: ${chunksVisuais.size}<br>` +
+                    `InstancedMesh: ${meshCount}<br>` +
+                    `Culled: ${culledCount}<br>` +
+                    `Triangulos: ~${(totalTris / 1000).toFixed(1)}k<br>` +
+                    `<br><b>Camera</b><br>` +
+                    `Near: ${camera.near}<br>` +
+                    `Far: ${camera.far}<br>` +
+                    `FOV: ${camera.fov}`;
+            };
+        }
+
         // ── Touch UX: Prevent accidental zoom/scroll ──
-        const menuSelectors = '#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal, #gamemode-selector';
+        const menuSelectors = '#inventory-menu, #settings-panel, #creative-menu, #furnace-menu, #recipe-book-modal, #gamemode-selector, #debug-panel';
         document.addEventListener('touchmove', (e) => {
             // Allow scrolling inside menus/inventory
             if (e.target.closest(menuSelectors)) return;
