@@ -293,11 +293,7 @@ export class InventoryCreative {
 
     _pickToCursor(item) {
         const stack = item.stackSize || 64;
-        if (!this.uiState.cursorItem) {
-            this.uiState.cursorItem = { id: item.id, count: stack };
-        } else {
-            this.uiState.cursorItem = { id: item.id, count: stack };
-        }
+        this.uiState.cursorItem = { id: item.id, count: stack };
         this.uiBuilder.mouseSlot = { ...this.uiState.cursorItem };
         if (this.onRenderUI) this.onRenderUI();
         this._rememberRecent(item.id);
