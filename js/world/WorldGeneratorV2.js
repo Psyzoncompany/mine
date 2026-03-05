@@ -29,7 +29,8 @@ const BLOCK = Object.freeze({
     DIORITE:      32,
     ANDESITE:     33,
     DEEPSLATE:    34,
-    COPPER_ORE:   35,
+    COPPER_ORE:    35,
+    REDSTONE_ORE:  56,
 });
 
 const CHUNK_SIZE = 16;
@@ -374,11 +375,12 @@ export class WorldGeneratorV2 {
      * (e.g. -5 → terrainHeight - 5).
      */
     static ORE_TABLE = [
-        [BLOCK.COAL_ORE,    Y_MIN,  -3,  0.55,  9],
-        [BLOCK.IRON_ORE,    Y_MIN,  20,  0.60,  8],
-        [BLOCK.COPPER_ORE,  Y_MIN,  25,  0.62,  8],
-        [BLOCK.GOLD_ORE,    Y_MIN,   5,  0.65,  7],
-        [BLOCK.DIAMOND_ORE, Y_MIN,  -3,  0.72,  5],
+        [BLOCK.COAL_ORE,      Y_MIN,  -3,  0.55,  9],
+        [BLOCK.IRON_ORE,      Y_MIN,  20,  0.60,  8],
+        [BLOCK.COPPER_ORE,    Y_MIN,  25,  0.62,  8],
+        [BLOCK.GOLD_ORE,      Y_MIN,   5,  0.65,  7],
+        [BLOCK.DIAMOND_ORE,   Y_MIN,  -3,  0.72,  5],
+        [BLOCK.REDSTONE_ORE,  Y_MIN,  16,  0.68,  6],
     ];
 
     /** @private */

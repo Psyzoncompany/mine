@@ -1478,12 +1478,24 @@
             <p><b>Picareta/Machado de Pedra:</b> Igual a Mad. mas usando <b>Pedra</b> inves de Tabua!</p>
             <p><b>Picareta/Machado de Ferro:</b> Igual mas com <b>Min. Ferro</b> (3x3 na Bancada)</p>
             <p><b>Picareta/Machado de Diamante:</b> Igual mas com <b>Min. Diamante</b></p>
-            <p><b>Pá (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
+            <p><b>Pa (Mad/Pd/Fe/Di):</b> 1 Material + 2 Gravetos (vertical, 3x3 na Bancada)</p>
             <p><b>Fornalha:</b> 8 Pedregulhos ou Pedras (quadrado 3x3 com centro vazio)</p>
-            <p><b>Bloco de Carvão:</b> 9 Carvões (3x3)</p>
+            <p><b>Bloco de Carvao:</b> 9 Carvoes (3x3)</p>
             <p><b>Tesoura:</b> 2 Barras de Ferro (diagonal ou vertical)</p>
-            <p><b>Dica:</b> Use a Tesoura (bot. dir.) em Ovelhas para tosar e obter Lã!</p>
+            <p><b>Dica:</b> Use a Tesoura (bot. dir.) em Ovelhas para tosar e obter La!</p>
             <p><b>Dica:</b> Interaja (Clique Dir) com a Bancada para grades 3x3!</p>
+            <p style="margin-top:8px; color:#ff9944; font-weight:bold;">— REDSTONE —</p>
+            <p><b>Bloco de Redstone:</b> 9 Pos de Redstone (3x3)</p>
+            <p><b>Tocha de Redstone:</b> Po de Redstone + Graveto (vertical)</p>
+            <p><b>Lampada de Redstone:</b> Tocha no centro + 4 Pedras (cruz, 3x3)</p>
+            <p><b>Alavanca:</b> Graveto + Pedra (vertical)</p>
+            <p><b>Repetidor:</b> 2 Tochas + Po + 3 Pedras (linha inf, 3x3)</p>
+            <p><b>Comparador:</b> Tocha centro-topo + 2 Tochas lados + Po + 3 Pedras (3x3)</p>
+            <p><b>Pistao:</b> 3 Tabuas (topo) + Pedra (lados) + Ferro (centro) + Po (baixo)</p>
+            <p><b>Pistao Pegajoso:</b> Pistao + Po de Redstone (vertical)</p>
+            <p><b>Distribuidor:</b> Anel de Pedras + Fornalha (centro) + Po (baixo)</p>
+            <p><b>Dropador:</b> Anel de Pedras + Po de Redstone (centro)</p>
+            <p><b>Dica:</b> Mine Minerio de Redstone com picareta de ferro ou superior!</p>
         </div>
         <div style="padding:8px 16px 12px; border-top:2px solid #999; flex-shrink:0;">
             <button id="btn-close-recipe"
@@ -1565,6 +1577,7 @@
         import { GolemSystem } from './world/golemSystem.js';
         import { Villager } from './scripts/mobs/Villager.js';
         import { IronGolem } from './scripts/mobs/IronGolem.js';
+        import { RedstoneSystem } from './systems/redstoneSystem.js';
 
         // 🟢 CONFIGURAÇÕES BÁSICAS
         const cena = new THREE.Scene();
@@ -1896,6 +1909,9 @@
                 chunkAtualX = -999;
                 chunkAtualZ = -999;
 
+                // Recompute Redstone state after world load
+                setTimeout(() => redstoneSystem.notifyChange(0, 0, 0), 500);
+
                 callRenderUI();
 
                 // Feedback
@@ -2142,6 +2158,66 @@
             // Desfazer Bloco de Carvão (23 -> 9 Carvão)
             if (checkPattern(matrix, 1, 1, [[23]])) {
                 uiBuilder.craftOutput = { id: "carvao", count: 9 }; return;
+            }
+
+            // ── RECEITAS DE REDSTONE ──────────────────────────────────────────
+            const R = "redstone"; // Pó de Redstone
+            const Fe = "barra_ferro";
+
+            // Bloco de Redstone (57) — 9 Pós de Redstone
+            if (checkPattern(matrix, 3, 3, [[R, R, R], [R, R, R], [R, R, R]])) {
+                uiBuilder.craftOutput = { id: 57, count: 1 }; return;
+            }
+
+            // Desfazer Bloco de Redstone (57 -> 9 Pó)
+            if (checkPattern(matrix, 1, 1, [[57]])) {
+                uiBuilder.craftOutput = { id: R, count: 9 }; return;
+            }
+
+            // Tocha de Redstone (59) — Pó de Redstone sobre Graveto
+            if (checkPattern(matrix, 1, 2, [[R], [G]])) {
+                uiBuilder.craftOutput = { id: 59, count: 1 }; return;
+            }
+
+            // Lampada de Redstone (61) — Tocha + Pedra de Quartzo (simplificado: Tocha + Pedra)
+            if (checkPattern(matrix, 3, 3, [[0, 3, 0], [3, 59, 3], [0, 3, 0]]) ||
+                checkPattern(matrix, 3, 3, [[0, P, 0], [P, 59, P], [0, P, 0]])) {
+                uiBuilder.craftOutput = { id: 61, count: 1 }; return;
+            }
+
+            // Alavanca (63) — Graveto sobre Pedra
+            if (checkPattern(matrix, 1, 2, [[G], [P]]) || checkPattern(matrix, 1, 2, [[G], [14]])) {
+                uiBuilder.craftOutput = { id: 63, count: 1 }; return;
+            }
+
+            // Repetidor de Redstone (65) — 2 Tochas + Pó + Pedra lisa
+            if (checkPattern(matrix, 3, 3, [[0, 0, 0], [59, R, 59], [P, P, P]])) {
+                uiBuilder.craftOutput = { id: 65, count: 1 }; return;
+            }
+
+            // Comparador de Redstone (67) — 3 Tochas + Quartzo + Pedra (simplificado: 3 Tochas + Pó + Pedra)
+            if (checkPattern(matrix, 3, 3, [[0, 59, 0], [59, R, 59], [P, P, P]])) {
+                uiBuilder.craftOutput = { id: 67, count: 1 }; return;
+            }
+
+            // Pistão (69) — Tábua topo, Ferro meio, Redstone baixo, Pedra lados
+            if (checkPattern(matrix, 3, 3, [[T, T, T], [P, Fe, P], [P, R, P]])) {
+                uiBuilder.craftOutput = { id: 69, count: 1 }; return;
+            }
+
+            // Pistão Pegajoso (70) — Pistão + Slimeball (simplificado: Pistão sobre Pó de Redstone)
+            if (checkPattern(matrix, 1, 2, [[69], [R]])) {
+                uiBuilder.craftOutput = { id: 70, count: 1 }; return;
+            }
+
+            // Distribuidor (71) — 7 Pedras + Arco + Pó de Redstone (simplificado: Fornalha + Pó)
+            if (checkPattern(matrix, 3, 3, [[P, P, P], [P, 22, P], [P, R, P]])) {
+                uiBuilder.craftOutput = { id: 71, count: 1 }; return;
+            }
+
+            // Dropador (72) — 7 Pedras + Pó de Redstone (anel de pedras + pó no centro)
+            if (checkPattern(matrix, 3, 3, [[P, P, P], [P, R, P], [P, 0, P]])) {
+                uiBuilder.craftOutput = { id: 72, count: 1 }; return;
             }
         }
 
@@ -2495,7 +2571,9 @@
         const texCornflower = carregarTextura('java/textures/block/cornflower.png');
 
         // Set de blocos que são plantas (transparentes, sem colisão, formato X)
-        const PLANT_IDS = new Set([18, 19, 20, 21]);
+        const PLANT_IDS = new Set([18, 19, 20, 21, 58, 59, 60, 63, 64, 65, 66, 67, 68]);
+        // Redstone IDs that are flat/plant-like: dust(58), torches(59,60), lever(63,64), repeater(65,66), comparator(67,68)
+        const REDSTONE_FLAT_IDS = new Set([58, 59, 60, 63, 64, 65, 66, 67, 68]);
 
         // Material de Água Animado (Shaders)
         const matAgua = new THREE.MeshLambertMaterial({ map: texAgua, color: 0x3f76e4, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide });
@@ -2613,7 +2691,53 @@
             52: new THREE.MeshLambertMaterial({ map: texBrownWool }),      // Lã Marrom
             53: new THREE.MeshLambertMaterial({ map: texGreenWool }),      // Lã Verde
             54: new THREE.MeshLambertMaterial({ map: texRedWool }),        // Lã Vermelha
-            55: new THREE.MeshLambertMaterial({ map: texBlackWool })       // Lã Preta
+            55: new THREE.MeshLambertMaterial({ map: texBlackWool }),      // Lã Preta
+            // ── Redstone ───────────────────────────────────────────────────
+            56: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_ore.png') }),
+            57: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_block.png') }),
+            58: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_dust_dot.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, color: 0xff2200 }),
+            59: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_torch.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            60: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_torch_off.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            61: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_lamp.png') }),
+            62: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/redstone_lamp_on.png'), emissive: new THREE.Color(0xff4400), emissiveIntensity: 0.4 }),
+            63: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/lever.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            64: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/lever.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, color: 0xffff88 }),
+            65: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/repeater.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            66: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/repeater_on.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            67: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/comparator.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            68: new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/comparator_on.png'), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }),
+            69: [
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_top.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_bottom.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+            ],
+            70: [
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_top_sticky.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_bottom.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/piston_side.png') }),
+            ],
+            71: [
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_top.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_top.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/dispenser_front.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/dispenser_front.png') }),
+            ],
+            72: [
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_side.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_top.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/furnace_top.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/dropper_front.png') }),
+                new THREE.MeshLambertMaterial({ map: carregarTextura('java/textures/block/dropper_front.png') }),
+            ],
         };
 
         // Geometria especial para água
@@ -2666,7 +2790,23 @@
             LaMarrom: `url('java/textures/block/brown_wool.png')`,
             LaVerde: `url('java/textures/block/green_wool.png')`,
             LaVermelha: `url('java/textures/block/red_wool.png')`,
-            LaPreta: `url('java/textures/block/black_wool.png')`
+            LaPreta: `url('java/textures/block/black_wool.png')`,
+            RedstoneOre: `url('java/textures/block/redstone_ore.png')`,
+            RedstoneBlock: `url('java/textures/block/redstone_block.png')`,
+            RedstoneDust: `url('java/textures/item/redstone.png')`,
+            RedstoneTorchOn: `url('java/textures/block/redstone_torch.png')`,
+            RedstoneTorchOff: `url('java/textures/block/redstone_torch_off.png')`,
+            RedstoneLampOff: `url('java/textures/block/redstone_lamp.png')`,
+            RedstoneLampOn: `url('java/textures/block/redstone_lamp_on.png')`,
+            Lever: `url('java/textures/block/lever.png')`,
+            RepeaterOff: `url('java/textures/item/repeater.png')`,
+            RepeaterOn: `url('java/textures/block/repeater_on.png')`,
+            ComparatorOff: `url('java/textures/item/comparator.png')`,
+            ComparatorOn: `url('java/textures/block/comparator_on.png')`,
+            PistonTop: `url('java/textures/block/piston_top.png')`,
+            PistonTopSticky: `url('java/textures/block/piston_top_sticky.png')`,
+            DispenserFront: `url('java/textures/block/dispenser_front.png')`,
+            DropperFront: `url('java/textures/block/dropper_front.png')`,
         });
         callRenderUI();
 
@@ -2896,13 +3036,25 @@
             52: new THREE.MeshLambertMaterial({ color: 0x6a4030 }), // Lã Marrom
             53: new THREE.MeshLambertMaterial({ color: 0x406020 }), // Lã Verde
             54: new THREE.MeshLambertMaterial({ color: 0xa02020 }), // Lã Vermelha
-            55: new THREE.MeshLambertMaterial({ color: 0x202020 })  // Lã Preta
+            55: new THREE.MeshLambertMaterial({ color: 0x202020 }),  // Lã Preta
+            // Redstone LOD
+            56: new THREE.MeshLambertMaterial({ color: 0x880000 }), // Redstone Ore
+            57: new THREE.MeshLambertMaterial({ color: 0xcc0000 }), // Redstone Block
+            61: new THREE.MeshLambertMaterial({ color: 0x442222 }), // Redstone Lamp Off
+            62: new THREE.MeshLambertMaterial({ color: 0xff4400 }), // Redstone Lamp On
+            69: new THREE.MeshLambertMaterial({ color: 0x8B6914 }), // Pistao
+            70: new THREE.MeshLambertMaterial({ color: 0x8B6914 }), // Pistao Pegajoso
+            71: new THREE.MeshLambertMaterial({ color: 0x888888 }), // Distribuidor
+            72: new THREE.MeshLambertMaterial({ color: 0x888888 }), // Dropador
         };
 
         // Fila de chunks para gerar progressivamente (evita travar)
         let filaChunks = [];
 
         function obterIdChunk(cx, cz) { return `${cx},${cz}`; }
+
+        // 🔴 SISTEMA DE REDSTONE
+        const redstoneSystem = new RedstoneSystem(mundo, (x, z) => recriarChunkVisual(x, z));
 
         function gerarArvore(x, y, z) {
             const altura = Math.floor(Math.random() * 3) + 4;
@@ -3076,9 +3228,9 @@
             const id = obterIdChunk(cx, cz); if (chunksVisuais.has(id)) return;
             const grupo = new THREE.Group();
             grupo.userData.isLOD = !!isLOD;
-            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [], 24: [], 25: [], 26: [], 27: [], 28: [], 29: [], 30: [], 40: [], 41: [], 42: [], 43: [], 44: [], 45: [], 46: [], 47: [], 48: [], 49: [], 50: [], 51: [], 52: [], 53: [], 54: [], 55: [] };
+            const blocosChunk = { 1: [], 2: [], 3: [], 4: [], 5: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 16: [], 17: [], 22: [], 23: [], 24: [], 25: [], 26: [], 27: [], 28: [], 29: [], 30: [], 40: [], 41: [], 42: [], 43: [], 44: [], 45: [], 46: [], 47: [], 48: [], 49: [], 50: [], 51: [], 52: [], 53: [], 54: [], 55: [], 56: [], 57: [], 61: [], 62: [], 69: [], 70: [], 71: [], 72: [] };
             const blocosAgua = [];
-            const blocosPlantas = { 18: [], 19: [], 20: [], 21: [] };
+            const blocosPlantas = { 18: [], 19: [], 20: [], 21: [], 58: [], 59: [], 60: [], 63: [], 64: [], 65: [], 66: [], 67: [], 68: [] };
             const yMax = 55;
             for (let lx = 0; lx < TAMANHO_CHUNK; lx++) {
                 for (let lz = 0; lz < TAMANHO_CHUNK; lz++) {
@@ -3453,7 +3605,21 @@
                 { id: 52, nome: 'Lã Marrom' },
                 { id: 53, nome: 'Lã Verde' },
                 { id: 54, nome: 'Lã Vermelha' },
-                { id: 55, nome: 'Lã Preta' }
+                { id: 55, nome: 'Lã Preta' },
+                // Redstone
+                { id: 56, nome: 'Min.Redstone' },
+                { id: 57, nome: 'Bloco Redstone' },
+                { id: 58, nome: 'Po Redstone' },
+                { id: 59, nome: 'Tocha Redstone' },
+                { id: 61, nome: 'Lampada Redstone' },
+                { id: 63, nome: 'Alavanca' },
+                { id: 65, nome: 'Repetidor' },
+                { id: 67, nome: 'Comparador' },
+                { id: 69, nome: 'Pistao' },
+                { id: 70, nome: 'Pistao Pegajoso' },
+                { id: 71, nome: 'Distribuidor' },
+                { id: 72, nome: 'Dropador' },
+                { id: 'redstone', nome: 'Po Redstone (item)' },
             ];
             
             allItems.forEach(item => {
@@ -3802,9 +3968,20 @@
                         window.openFurnace();
                         return;
                     }
+                    // Alavanca de Redstone: liga/desliga ao clicar com botão direito
+                    if (alvoInteract === RedstoneSystem.LEVER_OFF || alvoInteract === RedstoneSystem.LEVER_ON) {
+                        redstoneSystem.toggleLever(hitX, hitY, hitZ);
+                        recriarChunkVisual(hitX, hitZ);
+                        soundManager.playSound('click');
+                        return;
+                    }
 
                     const slot = uiBuilder.inventory[uiBuilder.selectedHotbarIndex];
-                    if (!slot || uiBuilder.itemDefs[slot.id]?.type !== "block" || slot.count === 0) return;
+                    // Allow redstone dust item to be placed as block 58
+                    const isPlaceable = slot && slot.count > 0 &&
+                        (uiBuilder.itemDefs[slot.id]?.type === "block" ||
+                         slot.id === "redstone");
+                    if (!isPlaceable) return;
 
                     const placeX = hitX + nx; const placeY = hitY + ny; const placeZ = hitZ + nz;
 
@@ -3845,6 +4022,8 @@
                             else if (Math.abs(nz) === 1) blockIdToPlace = 17;  // Eixo Z
                             // ny = eixo Y (padrão = 4)
                         }
+                        // Pó de Redstone (item) -> coloca como bloco de pó (58)
+                        if (slot.id === "redstone") blockIdToPlace = 58;
                         mundo.set(`${placeX},${placeY},${placeZ}`, blockIdToPlace);
                         agendarUpdateFluido(placeX, placeY, placeZ);
 
@@ -3855,6 +4034,11 @@
                         agendarUpdateFluido(placeX, placeY - 1, placeZ);
                         agendarUpdateFluido(placeX, placeY, placeZ + 1);
                         agendarUpdateFluido(placeX, placeY, placeZ - 1);
+
+                        // Notifica o sistema de Redstone se for um bloco de Redstone
+                        if (redstoneSystem.isRedstoneBlock(blockIdToPlace)) {
+                            redstoneSystem.notifyChange(placeX, placeY, placeZ);
+                        }
 
                         soundManager.playSound('place', { blockType: slot.id });
                         // Creative mode: infinite blocks
@@ -4108,7 +4292,7 @@
                         const def = uiBuilder.itemDefs[slotAtivo.id] || { type: "unknown" };
                         if (def.type === "tool") {
                             const toolId = slotAtivo.id;
-                            const blocosPicareta = [3, 10, 11, 12, 13, 14, 24, 28, 31, 32, 33, 34, 35]; // Pedra, Ores, Pedregulho, Sandstone, Bedrock, Granite, Diorite, Andesite, Deepslate, Copper Ore
+                            const blocosPicareta = [3, 10, 11, 12, 13, 14, 24, 28, 31, 32, 33, 34, 35, 56, 57, 61, 62, 69, 70, 71, 72]; // Pedra, Ores, Pedregulho, Sandstone, Bedrock, Granite, Diorite, Andesite, Deepslate, Copper Ore, Redstone
                             const blocosMachado = [4, 5, 8, 16, 17, 29, 30]; // Madeira, Folhas, Tábua, Logs, Spruce
                             const blocosPa = [1, 2, 7, 25, 26]; // Grama, Terra, Areia, Snow, Gravel
 
@@ -4195,11 +4379,22 @@
                             agendarUpdateFluido(x, y, z+1);
                             agendarUpdateFluido(x, y, z-1);
 
+                            // Notifica sistema de Redstone quando bloco Redstone é quebrado
+                            if (redstoneSystem.isRedstoneBlock(tipoBlocoQuebrando)) {
+                                redstoneSystem.notifyChange(x, y, z);
+                            }
+
                             // Logs rotados (16, 17) dropam como madeira normal (4)
                             // Grama curta (18), flores (19,20,21), Folhas (5, 30) só dropam com tesoura; Bedrock (28) não dropa
                             let tipoDropar = (tipoBlocoQuebrando === 16 || tipoBlocoQuebrando === 17) ? 4 : tipoBlocoQuebrando;
                             if (tipoBlocoQuebrando === 29) tipoDropar = 29; // Spruce log dropa como si mesmo
                             if (tipoBlocoQuebrando === 10) tipoDropar = "carvao"; // Minério de Carvão dropa Carvão (item)
+                            if (tipoBlocoQuebrando === 56) tipoDropar = "redstone"; // Minério de Redstone dropa Pó de Redstone
+                            if (tipoBlocoQuebrando === 60) tipoDropar = 59; // Tocha apagada dropa tocha ligada
+                            if (tipoBlocoQuebrando === 64) tipoDropar = 63; // Alavanca ligada dropa alavanca
+                            if (tipoBlocoQuebrando === 66) tipoDropar = 65; // Repetidor ligado dropa repetidor
+                            if (tipoBlocoQuebrando === 68) tipoDropar = 67; // Comparador ligado dropa comparador
+                            if (tipoBlocoQuebrando === 62) tipoDropar = 61; // Lampada ligada dropa lampada desligada
                             
                             // Blocos que só dropam com tesoura (grama, flores, folhas)
                             const SHEAR_ONLY_BLOCKS = new Set([5, 18, 19, 20, 21, 30]);
@@ -4211,7 +4406,7 @@
                             }
                             soundManager.playSound('pop', { blockType: tipoBlocoQuebrando });
                             // XP por blocos quebrados (pedra dá mais XP)
-                            const xpPorBloco = { 3: 2, 7: 1, 10: 4, 11: 6, 12: 10, 13: 20, 14: 2, 31: 2, 32: 2, 33: 2, 34: 3, 35: 8 }; // Minérios dão mais XP
+                            const xpPorBloco = { 3: 2, 7: 1, 10: 4, 11: 6, 12: 10, 13: 20, 14: 2, 31: 2, 32: 2, 33: 2, 34: 3, 35: 8, 56: 5 }; // Minérios dão mais XP
                             ganharXP(xpPorBloco[tipoBlocoQuebrando] || 1);
 
                             recriarChunkVisual(x, z);
