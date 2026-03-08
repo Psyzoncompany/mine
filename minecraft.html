@@ -1915,6 +1915,7 @@
                 }
 
                 // Força reconstrução de chunks visuais
+                filaGeracaoDados = []; chunkFilaPendente = [];
                 chunkAtualX = -999;
                 chunkAtualZ = -999;
 
@@ -2522,7 +2523,30 @@
         const texBancadaLado = carregarTextura('java/textures/block/crafting_table_side.png');
         const texBancadaTopo = carregarTextura('java/textures/block/crafting_table_top.png');
         const texBancadaFrente = carregarTextura('java/textures/block/crafting_table_front.png');
-        const texAgua = carregarTextura('java/textures/block/water_still.png');
+        // Textura de agua animada gerada em canvas (estilo Minecraft)
+        const aguaCanvas = document.createElement('canvas');
+        aguaCanvas.width = 16; aguaCanvas.height = 16;
+        const _aguaCtx = aguaCanvas.getContext('2d');
+        const texAgua = new THREE.CanvasTexture(aguaCanvas);
+        texAgua.wrapS = THREE.RepeatWrapping;
+        texAgua.wrapT = THREE.RepeatWrapping;
+        texAgua.magFilter = THREE.NearestFilter;
+        texAgua.minFilter = THREE.NearestFilter;
+        (function() {
+            const img = _aguaCtx.createImageData(16, 16);
+            for (let py = 0; py < 16; py++) {
+                for (let px2 = 0; px2 < 16; px2++) {
+                    const v = (Math.sin(px2 * 1.1 + py * 0.7) * 0.5 + 0.5) *
+                              (Math.cos(px2 * 0.8 - py * 1.3) * 0.5 + 0.5);
+                    const idx = (py * 16 + px2) * 4;
+                    img.data[idx]   = Math.floor(10 + v * 25);
+                    img.data[idx+1] = Math.floor(50 + v * 90);
+                    img.data[idx+2] = Math.floor(180 + v * 75);
+                    img.data[idx+3] = 255;
+                }
+            }
+            _aguaCtx.putImageData(img, 0, 0);
+        })();
         
         // Novos blocos
         const texCoalOre = carregarTextura('java/textures/block/coal_ore.png');
@@ -3411,41 +3435,29 @@
 
         // Fila de chunks pendentes para carregamento suave
         let chunkFilaPendente = [];
+        let filaGeracaoDados = []; // Fila de geração de dados progressiva (evita congelamento)
         const CHUNKS_POR_FRAME = 2; // Número de chunks construídos por frame
+        const DADOS_MS_POR_FRAME = 10; // Orçamento de tempo por frame para geração de dados (ms)
 
         function atualizarChunks() {
             const px = Math.floor(camera.position.x / TAMANHO_CHUNK); const pz = Math.floor(camera.position.z / TAMANHO_CHUNK);
             if (px !== chunkAtualX || pz !== chunkAtualZ || chunksVisuais.size === 0) {
-                document.getElementById('loading').innerText = "Carregando área...";
+                document.getElementById('loading').innerText = "Carregando area...";
                 chunkAtualX = px; chunkAtualZ = pz;
 
-                // Gera dados de todos os chunks (+1 buffer para vizinhos de borda / cavernas pré-renderizadas)
+                // Enfileira geração de dados de forma progressiva (em vez de sincrona)
+                const pendDataSet = new Set(filaGeracaoDados.map(e => `${e.cx},${e.cz}`));
                 for (let cx = px - DISTANCIA_RENDER - 1; cx <= px + DISTANCIA_RENDER + 1; cx++) {
                     for (let cz = pz - DISTANCIA_RENDER - 1; cz <= pz + DISTANCIA_RENDER + 1; cz++) {
-                        gerarDadosChunk(cx, cz);
-                    }
-                }
-
-                // Monta fila de chunks que precisam ser construídos (ordenado por distância)
-                chunkFilaPendente = [];
-                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
-                    for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
                         const id = obterIdChunk(cx, cz);
-                        const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
-                        if (!chunksVisuais.has(id)) {
-                            chunkFilaPendente.push({ cx, cz, dist });
-                        } else {
-                            // Rebuild LOD chunks that are now within detail range
-                            const grupo = chunksVisuais.get(id);
-                            if (grupo.userData.isLOD && dist <= DISTANCIA_DETALHE) {
-                                cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id);
-                                chunkFilaPendente.push({ cx, cz, dist });
-                            }
+                        if (!chunksGerados.has(id) && !pendDataSet.has(id)) {
+                            const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
+                            filaGeracaoDados.push({ cx, cz, dist });
+                            pendDataSet.add(id);
                         }
                     }
                 }
-                // Ordena: mais perto primeiro
-                chunkFilaPendente.sort((a, b) => a.dist - b.dist);
+                filaGeracaoDados.sort((a, b) => a.dist - b.dist);
 
                 // Limpeza de chunks fora do range
                 for (const [id, grupo] of chunksVisuais.entries()) {
@@ -3461,18 +3473,56 @@
                     const mobDist = camera.position.distanceTo(a.mesh.position) / TAMANHO_CHUNK;
                     a.mesh.visible = mobDist <= DISTANCIA_MOB;
                 });
+            }
 
-                if (!window.playerSpawned && chunksVisuais.size > 0) {
-                    // Blocos de chão válidos para spawn (não árvores, água, lava ou plantas)
-                    const GROUND_BLOCKS = new Set([1, 2, 3, 7, 24, 25, 26, 28, 31, 32, 33, 34]); // Grama, Terra, Pedra, Areia, Sandstone, Neve, Gravel, Bedrock, Granite, Diorite, Andesite, Deepslate
-                    for (let y = 55; y >= -64; y--) {
-                        const tipo = mundo.get(`0,${y},0`);
-                        if (tipo && GROUND_BLOCKS.has(tipo)) { // Só spawna em blocos de chão sólidos
-                            camera.position.set(0, y + 2.12, 0);
-                            window.playerSpawned = true;
-                            velocidadeY = 0;
-                            break;
-                        }
+            // Processa fila de geração de dados com orçamento de tempo por frame
+            if (filaGeracaoDados.length > 0) {
+                const t0 = performance.now();
+                while (filaGeracaoDados.length > 0 && performance.now() - t0 < DADOS_MS_POR_FRAME) {
+                    const { cx, cz } = filaGeracaoDados.shift();
+                    gerarDadosChunk(cx, cz);
+                }
+            }
+
+            // Reconstroi fila visual baseada nos chunks que já têm dados prontos
+            {
+                const visPendSet = new Set(chunkFilaPendente.map(e => `${e.cx},${e.cz}`));
+                for (let cx = px - DISTANCIA_RENDER; cx <= px + DISTANCIA_RENDER; cx++) {
+                    for (let cz = pz - DISTANCIA_RENDER; cz <= pz + DISTANCIA_RENDER; cz++) {
+                        const id = obterIdChunk(cx, cz);
+                        const dist = Math.max(Math.abs(cx - px), Math.abs(cz - pz));
+                        const grupo = chunksVisuais.get(id);
+                        // Ja construido no LOD correto — pula
+                        if (grupo && !(grupo.userData.isLOD && dist <= DISTANCIA_DETALHE)) continue;
+                        if (visPendSet.has(id)) continue;
+                        // Verifica se dados do chunk e vizinhos estao prontos
+                        if (!chunksGerados.has(id) ||
+                            !chunksGerados.has(obterIdChunk(cx - 1, cz)) ||
+                            !chunksGerados.has(obterIdChunk(cx + 1, cz)) ||
+                            !chunksGerados.has(obterIdChunk(cx, cz - 1)) ||
+                            !chunksGerados.has(obterIdChunk(cx, cz + 1))) continue;
+                        // Remove LOD antigo se necessario
+                        if (grupo) { cena.remove(grupo); grupo.children.forEach(m => m.dispose()); chunksVisuais.delete(id); }
+                        chunkFilaPendente.push({ cx, cz, dist });
+                        visPendSet.add(id);
+                    }
+                }
+                chunkFilaPendente.sort((a, b) => a.dist - b.dist);
+            }
+
+            // Spawn do jogador so em blocos solidos (nunca em agua, arvore ou ar)
+            if (!window.playerSpawned && chunksVisuais.size > 0) {
+                const GROUND_BLOCKS = new Set([1, 2, 3, 7, 24, 25, 26, 28, 31, 32, 33, 34]); // Grama, Terra, Pedra, Areia, Sandstone, Neve, Gravel, Bedrock, Granite, Diorite, Andesite, Deepslate
+                for (let y = 55; y >= -64; y--) {
+                    const tipo = mundo.get(`0,${y},0`);
+                    if (tipo && GROUND_BLOCKS.has(tipo)) { // So spawna em blocos de chao solidos
+                        const acima1 = mundo.get(`0,${y + 1},0`);
+                        const acima2 = mundo.get(`0,${y + 2},0`);
+                        if (acima1 === 6 || acima2 === 6) continue; // Nao spawnar embaixo d'agua
+                        camera.position.set(0, y + 2.12, 0);
+                        window.playerSpawned = true;
+                        velocidadeY = 0;
+                        break;
                     }
                 }
             }
@@ -3486,6 +3536,8 @@
                     construirChunkVisual(cx, cz, isLOD);
                 }
                 document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size} (${chunkFilaPendente.length} restantes)`;
+            } else if (filaGeracaoDados.length > 0) {
+                document.getElementById('loading').innerText = `Gerando: ${filaGeracaoDados.length} areas...`;
             } else {
                 document.getElementById('loading').innerText = `Chunks: ${chunksVisuais.size}`;
             }
@@ -4673,9 +4725,28 @@
             }
 
             // Atualiza uniforms do shader de agua
-            matAgua.uniforms.uTime.value = relogio.getElapsedTime();
+            const _elapsedAgua = relogio.getElapsedTime();
+            matAgua.uniforms.uTime.value = _elapsedAgua;
             matAgua.uniforms.uCameraPos.value.copy(camera.position);
             matAgua.uniforms.uSunDir.value.copy(luzSol.position).normalize();
+            // Atualiza textura de agua animada (~10fps)
+            if (Math.floor(_elapsedAgua * 10) !== Math.floor((_elapsedAgua - 0.016) * 10)) {
+                const _img = _aguaCtx.createImageData(16, 16);
+                const _t = _elapsedAgua;
+                for (let _py = 0; _py < 16; _py++) {
+                    for (let _px = 0; _px < 16; _px++) {
+                        const _v = (Math.sin(_px * 1.1 + _py * 0.7 + _t * 2.0) * 0.5 + 0.5) *
+                                   (Math.cos(_px * 0.8 - _py * 1.3 + _t * 1.5) * 0.5 + 0.5);
+                        const _i = (_py * 16 + _px) * 4;
+                        _img.data[_i]   = Math.floor(10 + _v * 25);
+                        _img.data[_i+1] = Math.floor(50 + _v * 90);
+                        _img.data[_i+2] = Math.floor(180 + _v * 75);
+                        _img.data[_i+3] = 255;
+                    }
+                }
+                _aguaCtx.putImageData(_img, 0, 0);
+                texAgua.needsUpdate = true;
+            }
 
             renderizador.clear();
             renderizador.render(cena, camera);
@@ -4826,6 +4897,7 @@
             DISTANCIA_DETALHE = Math.min(2, val);
             fogNormal.far = val * TAMANHO_CHUNK;
             // Forçar atualização de chunks ao mudar distância
+            filaGeracaoDados = []; chunkFilaPendente = [];
             chunkAtualX = -999; chunkAtualZ = -999;
         });
 
