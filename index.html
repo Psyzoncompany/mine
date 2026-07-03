@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEGASTRUCTURE: NODE ZERO</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="start-screen" class="overlay">
+    <div class="panel title-panel">
+      <p class="eyebrow">PROTOCOLO DE EXPLORAÇÃO // NODE ZERO</p>
+      <h1>MEGASTRUCTURE:<br><span>NODE ZERO</span></h1>
+      <p class="intro">Acorde dentro de uma megaestrutura procedural, brutalista e infinita. Colete fragmentos de dados, sobreviva às máquinas sentinelas e avance pelo concreto sem horizonte.</p>
+      <button id="start-button">INICIAR PROTÓTIPO</button>
+      <p class="controls">WASD mover · Mouse olhar · Shift correr · Clique atirar · R reiniciar · ESC liberar mouse</p>
+    </div>
+  </div>
+
+  <div id="game-over" class="overlay hidden">
+    <div class="panel">
+      <p class="eyebrow alert">SINAL VITAL PERDIDO</p>
+      <h2>GAME OVER</h2>
+      <p>O Node Zero absorveu sua presença. Reinicie para gerar outra rota pela megaestrutura.</p>
+      <button id="restart-button">REINICIAR</button>
+    </div>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div>VIDA <span id="health">100</span></div>
+    <div>ENERGIA <span id="energy">100</span></div>
+    <div>FRAGMENTOS <span id="fragments">0</span></div>
+    <div>HOSTIS DESTRUÍDOS <span id="kills">0</span></div>
+    <div>CHUNK <span id="chunk">0, 0</span></div>
+  </div>
+
+  <div id="crosshair" class="hidden"></div>
+  <div id="damage-flash"></div>
+  <div class="scanlines"></div>
+
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.165.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
