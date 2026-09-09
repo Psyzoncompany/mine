@@ -1,12 +1,14 @@
 {
-    "name": "meu-craft-infinito",
-    "version": "1.0.0",
-    "description": "Minecraft Clone em Three.js",
-    "main": "minecraft.html",
-    "scripts": {
-        "start": "serve ."
-    },
-    "dependencies": {
-        "serve": "^14.2.0"
-    }
+  "name": "seven-ki",
+  "version": "16.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node scripts/test.mjs",
+    "check:sprites": "node tests/sprite-atlas-check.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "optionalDependencies": { "@napi-rs/canvas": "0.1.100" }
 }
