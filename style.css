@@ -1,0 +1,70 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #020507;
+  color: #bff9ff;
+  font-family: "Courier New", monospace;
+}
+canvas { display: block; image-rendering: pixelated; }
+.hidden { display: none !important; }
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(8, 31, 36, .86), rgba(0, 0, 0, .96));
+}
+.panel {
+  width: min(760px, calc(100vw - 42px));
+  border: 1px solid rgba(0, 245, 255, .48);
+  box-shadow: 0 0 38px rgba(0, 245, 255, .14), inset 0 0 50px rgba(0, 20, 24, .8);
+  background: linear-gradient(145deg, rgba(3, 9, 12, .94), rgba(12, 23, 27, .9));
+  padding: 34px;
+  text-align: center;
+  text-transform: uppercase;
+}
+h1 { font-size: clamp(2.4rem, 8vw, 5.8rem); line-height: .88; margin: 8px 0 20px; letter-spacing: -4px; color: #e8fdff; text-shadow: 5px 5px 0 #071315, 0 0 18px #00eaff; }
+h1 span, .alert { color: #ff334e; text-shadow: 0 0 16px #ff002b; }
+h2 { font-size: 4rem; margin: 0 0 18px; color: #ff334e; }
+.eyebrow, .controls { color: #4cecff; letter-spacing: 2px; }
+.intro { color: #8fb0b5; line-height: 1.55; max-width: 640px; margin: 0 auto 24px; text-transform: none; }
+button {
+  cursor: pointer;
+  border: 1px solid #4cecff;
+  color: #031014;
+  background: #4cecff;
+  padding: 14px 22px;
+  font: bold 16px "Courier New", monospace;
+  letter-spacing: 2px;
+  box-shadow: 0 0 22px rgba(76, 236, 255, .36);
+}
+button:hover { background: #ff334e; border-color: #ff334e; color: white; }
+#hud {
+  position: fixed;
+  left: 18px;
+  top: 16px;
+  z-index: 10;
+  padding: 12px 14px;
+  min-width: 230px;
+  background: rgba(0, 8, 10, .58);
+  border-left: 3px solid #4cecff;
+  text-shadow: 0 0 8px #00eaff;
+  font-size: 14px;
+  line-height: 1.65;
+}
+#hud span { float: right; color: #fff; }
+#crosshair {
+  position: fixed;
+  left: 50%; top: 50%;
+  width: 18px; height: 18px;
+  transform: translate(-50%, -50%);
+  z-index: 9;
+}
+#crosshair::before, #crosshair::after { content: ""; position: absolute; background: #bff9ff; box-shadow: 0 0 8px #4cecff; }
+#crosshair::before { left: 8px; top: 0; width: 2px; height: 18px; }
+#crosshair::after { left: 0; top: 8px; width: 18px; height: 2px; }
+#damage-flash { pointer-events: none; position: fixed; inset: 0; z-index: 12; background: rgba(255, 0, 38, 0); transition: background .16s; }
+#damage-flash.hit { background: rgba(255, 0, 38, .38); }
+.scanlines { pointer-events: none; position: fixed; inset: 0; z-index: 30; opacity: .16; background: repeating-linear-gradient(0deg, rgba(255,255,255,.08), rgba(255,255,255,.08) 1px, transparent 1px, transparent 4px); mix-blend-mode: overlay; }
